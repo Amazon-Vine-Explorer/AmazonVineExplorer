@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Vine Viewer Database Converter
 // @namespace    http://tampermonkey.net/
-// @version      0.2.4
+// @version      0.2.5
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/DataBaseMigrator.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/DataBaseMigrator.user.js
 // @description  Converts VineViewer Database to Vine Explorer Database

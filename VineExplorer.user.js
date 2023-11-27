@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.5.0
+// @version      0.5.1
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/mainVineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
@@ -28,6 +28,11 @@
 
     Todo:
         
+    - Zum Löschen markierten Produkten die Information hinzufügen wann sie gelöscht werden
+
+    - Zu den TOP Buttons die Anzahl der Elemente in der jeweiligen Kategorie hinzufügen
+    - Reload der Neue Produkte Seite nach einem Click auf "Alle als gesehen Markieren"
+
     - Originale Pagination auf den eigenen Seiten verstecken
     - Automatisches Datenbank Cleanup
     - Last Seen Update 
@@ -38,7 +43,7 @@
 
 'use strict';
 
-const VVE_VERSION = '0.4.0';
+const VVE_VERSION = '0.5.1';
 
 const FAV_BTN_COLOR = localStorage.getItem('FAV_BTN_COLOR') || "rgb(255, 255, 102)";
 const CSS_PRODUCT_NEWTAG = localStorage.getItem('CSS_PRODUCT_NEWTAG') || "border: 2mm ridge rgba(218, 247, 166, .6); background-color: rgba(218, 247, 166, .2)";
