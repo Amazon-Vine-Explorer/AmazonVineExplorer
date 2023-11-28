@@ -31,20 +31,12 @@
     - Pageination nach oben schieben || Kopieren
     - Tooltipp mit der langen Beschreibung auf der kurzen
     - Bestellte Produkte mit Tag versehen ?
-    - Verstecken des Footers und der Producktvorschläge am Unteren Rand der Seite
     - Automatisches Bestellen via Prioliste ?!?
 
     Todo:
         
-    - Zum Löschen markierten Produkten die Information hinzufügen wann sie gelöscht werden
-
     - Zu den TOP Buttons die Anzahl der Elemente in der jeweiligen Kategorie hinzufügen
     - Reload der Neue Produkte Seite nach einem Click auf "Alle als gesehen Markieren"
-
-    - Originale Pagination auf den eigenen Seiten verstecken
-    - Automatisches Datenbank Cleanup
-    - Last Seen Update 
-    - Löschen von Produkten die nicht mehr in Vine verfügbar sind
     - Changelog hinzufügen
 */
 
@@ -697,10 +689,11 @@ function init() {
                     _currTile.classList.add('vve-element-fav');
                 }
                 _currTile.style.cssText = _style;
-                
-                // Update Timestamps
+                _product.ts_lastSeen = unixTimeStamp();
+                database.update(_product);
             }
             _currTile.prepend(createFavStarElement(_product, i));
+
 
            if (_tilesToDoCount == 0) {
                 if(INIT_AUTO_SCAN) {
