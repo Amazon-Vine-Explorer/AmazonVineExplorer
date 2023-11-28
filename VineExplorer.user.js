@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.6.2
+// @version      0.7.2
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
@@ -20,8 +20,9 @@
 // @grant        GM.openInTab
 // @grant        unsafeWindow
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/globals.js
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_db_handler.js
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_product.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_db_handler.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_rdb_handler.js
 
 // ==/UserScript==
 
@@ -47,11 +48,27 @@ loadSettings();
 fastStyleChanges();
 
 let productDBIds = [];
-const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res, err) => {
-    if (err) {
-        console.error(`Somithing was going wrong while init database :'(`);
-        return;
-    } else {
+
+const database = new RDB_HANDLER(DATABASE_NAME, (success) => {
+    database.getAllKeys((res) => {
+        if (res.length == 0) { // We need to convert the DB first
+            console.log('Converting Databse from IDB to RDB');
+            const _old_database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res, err) => {
+                if (err) {
+                    console.error(`Somithing was going wrong while init database :'(`);
+                    return;
+                } else {
+                    _old_database.getAll((prodsArr) => {
+                        console.log(`${prodsArr.length} Items to convert...`);
+                        for (let i = 0; i < prodsArr.length; i++) {
+                            database.add(prodsArr[i]);
+                        }
+                        console.log('Migration done...lets start over to normal mode');
+                    })
+                }
+            });
+        }
+
         database.getAllKeys((keys) => {
             if (SETTINGS.DebugLevel > 0) console.log('All keys:', keys);
             productDBIds = keys;
@@ -63,9 +80,13 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res,
                 addBrandig();
                 init();
             })
-    });
-    }
-});
+        })
+    })
+})
+
+
+
+
 
 // Check if Product exists in our Database or if it is a new one
 function existsProduct(id) { 
