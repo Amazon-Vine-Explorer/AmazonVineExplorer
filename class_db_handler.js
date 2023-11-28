@@ -83,6 +83,7 @@ class DB_HANDLER {
 
     /**
     * Add Object to Database
+    * @async
     * @param {object} dbName Name your Database
     * @param {function} [cb] Callback function executes when database is successfull created
     */ 
@@ -102,6 +103,7 @@ class DB_HANDLER {
 
     /**
     * Get Object by ID
+    * @async
     * @param {string} id Object ID
     * @param {function} cb Callback function executes when database query is done returns result or undefined
     */ 
@@ -116,19 +118,32 @@ class DB_HANDLER {
 
     /**
     * Update Object
+    * @async
     * @param {object} obj Object to update
     * @param {function} [cb] Callback function executes when object update is done
     */ 
     async update(obj, cb){
+        console.log('Called DB_HANDLER:update()');
         if (typeof(obj) != 'object') throw new Error('DB_HANDLER.update(): obj is not defined or is not type of object');
-        
+        console.log('Called DB_HANDLER:update() Stage 2');
+
         const _request = this.#getStore(true).put(obj);
-        _request.onerror = (event) => {cb(); throw new Error(`DB_HANDLER.update(): ${event.target.error.name}`);};
-        _request.onsuccess = (event) => {cb(true);}
+        console.log('Called DB_HANDLER:update() Stage 3');
+
+        _request.onerror = (event) => {
+            console.log('DB_HANDLER:update() --> had an Error');
+            cb(); 
+            throw new Error(`DB_HANDLER.update(): ${event.target.error.name}`)
+            ;};
+        _request.onsuccess = (event) => {
+            console.log('Called DB_HANDLER:update() --> success');
+            cb(true);
+        }
     };
 
     /**
     * Query Database for Searchstring
+    * @async
     * @param {string} queryText String to find
     * @param {function} cb Callback function executes when database query is done
     */ 
@@ -143,11 +158,11 @@ class DB_HANDLER {
             const _cursor = event.target.result;
 
             if (_cursor) {
-                const _descriptionFull = (cursor.value.description_full || '').toLowerCase();
+                const _descriptionFull = (_cursor.value.description_full || '').toLowerCase();
                 const _queryLower = queryTxt.toLowerCase();
 
                 if (_descriptionFull.includes(queryLower)) {
-                    _result.push(cursor.value);
+                    _result.push(_cursor.value);
                 }
 
                 _cursor.continue();
@@ -157,7 +172,7 @@ class DB_HANDLER {
             }
         };
 
-        cursorRequest.onerror = (event) => {
+        _request.onerror = (event) => {
             console.error('Error querying records:', event.target.error.name);
             cb([]);
         };
@@ -166,6 +181,7 @@ class DB_HANDLER {
 
    /**
     * Get all keys from Database
+    * @async
     * @param {function} cb Callback function executes when database query is done
     */     
     async getAllKeys(cb){
@@ -179,6 +195,7 @@ class DB_HANDLER {
 
    /**
     * Get all new "unseen" products from Database
+    * @async
     * @param {function} cb Callback function executes when database query is done
     */     
     async getNewEntries(cb){
@@ -204,6 +221,7 @@ class DB_HANDLER {
 
    /**
     * Get all Favorite products from Database
+    * @async
     * @param {function} cb Callback function executes when database query is done
     */     
     async getFavEntries(cb){
@@ -229,6 +247,7 @@ class DB_HANDLER {
     
    /**
     * Get all the Objects stored in our DB
+    * @async
     * @param {function} cb Callback function executes when database query is done
     */     
     async getAll(cb){
@@ -236,10 +255,10 @@ class DB_HANDLER {
         const _result = [];
         const _request = this.#getStore().openCursor();
 
-        cursorRequest.onsuccess = (event) => {
+        _request.onsuccess = (event) => {
             const _cursor = event.target.result;
-            if (cursor) {
-                _result.push(cursor.value);
+            if (_cursor) {
+                _result.push(_cursor.value);
                 _cursor.continue();
             } else { // No more entries
                 cb(_result);
@@ -251,15 +270,15 @@ class DB_HANDLER {
 
     /**
     * Removes Object with given ID from Database
+    * @async
     * @param {string} id Object ID
     * @param {function} [cb] Callback function executes when database query is done returns result or undefined
     */ 
     async removeID(id, cb){
         if (typeof(id) != 'string') throw new Error('DB_HANDLER.removeID(): id is not defined or is not typeof string');
 
-        const _request = this.#getStore().delete(id);
-
-        request.onsuccess = (event) => {
+        const _request = this.#getStore(true).delete(id);
+        _request.onsuccess = (event) => {
             cb(true);
         };
 
