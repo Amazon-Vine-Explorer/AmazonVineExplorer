@@ -55,6 +55,8 @@ loadSettings();
 fastStyleChanges();
 
 let productDBIds = [];
+searchInputTimeout = null;
+
 const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res, err) => {
     if (err) {
         console.error(`Somithing was going wrong while init database :'(`);
@@ -774,14 +776,19 @@ function init() {
         const _input = _searchBarInput.value
         if (SETTINGS.DebugLevel > 0) console.log(`Updated Input: ${_input}`);
         if (_input.length >= 3) {
-            database.query(_input, (_objArr) => {
-                if (SETTINGS.DebugLevel > 0) console.log(`Found ${_objArr.length} Items with this Search`);
-
-                // for (let i = 0; i < _objArr.length; i++) {
-                //     console.log(`Item${i}: => ${_objArr[i].description_full}`);
-                // }
-                createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
-            }) 
+            if (searchInputTimeout) clearTimeout(searchInputTimeout);
+            searchInputTimeout = setTimeout(() => {
+                timeMessage('Start text query...');
+                database.query(_input, (_objArr) => {
+                    if (SETTINGS.DebugLevel > 0) console.log(`Found ${_objArr.length} Items with this Search`);
+                    timeMessage('END text query...');
+                    // for (let i = 0; i < _objArr.length; i++) {
+                    //     console.log(`Item${i}: => ${_objArr[i].description_full}`);
+                    // }
+                    createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
+                    searchInputTimeout = null;
+                }) 
+            }, 150);
         }
     });
 
