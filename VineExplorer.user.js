@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.6.2
+// @version      0.6.3
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
@@ -716,14 +716,14 @@ function init() {
     
     if (AUTO_SCAN_IS_RUNNING) return;
 
-    // Detect Browser Language
-    let _lang;
-    if(navigator.browserLanguage){
-        _lang = navigator.browserLanguage;
-    }else{
-        _lang = navigator.language;
-    }
-    local_lang = _lang.substr(0,2).toLowerCase();
+    // // Detect Browser Language
+    // let _lang;
+    // if(navigator.browserLanguage){
+    //     _lang = navigator.browserLanguage;
+    // }else{
+    //     _lang = navigator.language;
+    // }
+    // local_lang = _lang.substr(0,2).toLowerCase();
     
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
     // Add Searchbar and all other stuff from this script ;)
