@@ -227,6 +227,8 @@ function createButton(text, style, clickHandler){
     _btnSpan.setAttribute('id', 'vve-btn-updateDB');
     _btnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
     _btnSpan.setAttribute('aria-checked', 'true');
+    _btnSpan.style.position = "sticky";
+    _btnSpan.style.top = "5px";
     _btnSpan.innerHTML = `
         <span class="a-button-inner" style="${style || ''}">
             <span class="a-button-text">${text}</span>
