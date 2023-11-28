@@ -1,2 +1,2 @@
 # AmazonVineExplorer
-Makes the Amazon Vine Website evan a bit better
+Makes the Amazon Vine Website even a bit better
