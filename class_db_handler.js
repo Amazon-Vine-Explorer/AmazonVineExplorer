@@ -22,7 +22,7 @@ class DB_HANDLER {
 
     // Private Init
     async #init(cb) {
-       const _request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
+       const _request = indexedDB.open(this.#dbName, this.#version);
         
         _request.onerror = (event) => {
             cb(undefined, true)
