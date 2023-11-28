@@ -161,7 +161,7 @@ class DB_HANDLER {
                 const _descriptionFull = (_cursor.value.description_full || '').toLowerCase();
                 const _queryLower = queryTxt.toLowerCase();
 
-                if (_descriptionFull.includes(queryLower)) {
+                if (_descriptionFull.includes(_queryLower)) {
                     _result.push(_cursor.value);
                 }
 
