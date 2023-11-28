@@ -778,17 +778,12 @@ function init() {
         if (_input.length >= 3) {
             if (searchInputTimeout) clearTimeout(searchInputTimeout);
             searchInputTimeout = setTimeout(() => {
-                timeMessage('Start text query...');
                 database.query(_input, (_objArr) => {
                     if (SETTINGS.DebugLevel > 0) console.log(`Found ${_objArr.length} Items with this Search`);
-                    timeMessage('END text query...');
-                    // for (let i = 0; i < _objArr.length; i++) {
-                    //     console.log(`Item${i}: => ${_objArr[i].description_full}`);
-                    // }
                     createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
                     searchInputTimeout = null;
                 }) 
-            }, 150);
+            }, 250);
         }
     });
 
