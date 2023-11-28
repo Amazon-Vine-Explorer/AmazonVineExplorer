@@ -15,6 +15,9 @@
 // @grant        GM.xmlHttpRequest
 // @grant        GM.openInTab
 // @grant        unsafeWindow
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/globals.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/db_handler.js
+
 // ==/UserScript==
 
 /* 
@@ -40,46 +43,23 @@
     - Changelog hinzufügen
 */
 
-
 'use strict';
 
-const VVE_VERSION = '0.5.1';
+console.log("Init VineVoicesExplorer...");
 
-const FAV_BTN_COLOR = localStorage.getItem('FAV_BTN_COLOR') || "rgb(255, 255, 102)";
-const CSS_PRODUCT_NEWTAG = localStorage.getItem('CSS_PRODUCT_NEWTAG') || "border: 2mm ridge rgba(218, 247, 166, .6); background-color: rgba(218, 247, 166, .2)";
-const CSS_PRODUCT_SAVED = localStorage.getItem('CSS_PRODUCT_SAVED') || "border: 2mm ridge rgba(105, 163, 0, .6); background-color: rgba(105, 163, 0, .2)";
-const CSS_PRODUCT_FAV = localStorage.getItem('CSS_PRODUCT_FAV') || "border: 2mm ridge rgba(255, 255, 102, .6); background-color: rgba(255, 255, 102, .2)";
-const CSS_PRODUCT_MARKED_REMOVAL = localStorage.getItem('CSS_PRODUCT_FAV') || "border: 2mm ridge rgba(255, 87, 51, .6); background-color: rgba(255, 87, 51, .2)";
-const CSS_PRODUCT_DEFAULT = localStorage.getItem('CSS_PRODUCT_DEFAULT') || "";
-
-const FAV_STAR_COLOR_DEFAULT = localStorage.getItem('FAV_STAR_COLOR_DEFAULT') || 'white'
-const FAV_STAR_COLOR_CHECKED = localStorage.getItem('FAV_STAR_COLOR_CHECKED') || '#ffe143' // Gelb
-const CSS_PRODUCT_FAV_STAR = `float: right; display: flex; margin: 0px; color: ${FAV_STAR_COLOR_DEFAULT}; height: 0px; font-size: 25px; text-shadow: black -1px 0px, black 0px 1px, black 1px 0px, black 0px -1px; cursor: pointer;`;
-
-const MAX_ITEMS_PER_PAGE = parseInt(localStorage.getItem('MAX_ITEMS_PER_PAGE')) || 500;
-const DEBUG = localStorage.getItem('DEBUG') || false;
-const INIT_AUTO_SCAN = (localStorage.getItem('INIT_AUTO_SCAN') == 'true') ? true : false;
-const AUTO_SCAN_IS_RUNNING = (localStorage.getItem('AUTO_SCAN_IS_RUNNING') == 'true') ? true : false;
-const AUTO_SCAN_PAGE_CURRENT = parseInt(localStorage.getItem('AUTO_SCAN_PAGE_CURRENT')) || -1 
-const AUTO_SCAN_PAGE_MAX = parseInt(localStorage.getItem('AUTO_SCAN_PAGE_MAX')) || -1 
-const PAGE_LOAD_MIN_DELAY = localStorage.getItem('PAGE_LOAD_MIN_DELAY') || 750;
-const PAGE_LOAD_TIMESTAMP = Date.now();
-
-
-const DATABASE_NAME = 'VineVoiceExplorer';
-const DATABASE_VERSION = 2;
-const OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
-const SECONDS_PER_WEEK = 604800 / 2;
-const SECONDS_PER_DAY = 86400;
-const NOT_SEEN_COUNT_MAX = 5;
-
-
-
-const FETCH_RETRY_TIME = localStorage.getItem('FETCH_RETRY_TIME') || 50; // Retry all 50 ms if all data are ready to read, ! shot description delay of amazon :'(
-const FETCH_RETRY_MAX_TIME = localStorage.getItem('FETCH_RETRY_MAX_TIME') || 5000; // After this time in ms the parser abort to try to get all data and creates the Missing data himself but sets a flag that we now later that there was anything wrong
-
-if (DEBUG) console.log("Init VineExplorer");
-
+let productDBIds = [];
+const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res, err) => {
+    if (err) {
+        console.error(`Somithing was going wrong while init database :'(`);
+        return;
+    } else {
+        database.getAllKeys((keys) => {
+            if (DEBUG) console.log('All keys:', keys);
+            productDBIds = keys;
+            init();
+    });
+    }
+});
 
 class Product {
   
@@ -96,8 +76,8 @@ class Product {
     isFav = false;
     isNew = true;
     gotRemoved = false;
-    ts_firstSeen = linuxTimeStamp();
-    ts_lastSeen = linuxTimeStamp();
+    ts_firstSeen = unixTimeStamp();
+    ts_lastSeen = unixTimeStamp();
     notSeenCounter = 0;
     order_success = false;
     generated_short = false;
@@ -109,11 +89,12 @@ class Product {
 
 
 
-const database = new Object(); // Create database Object
+
+
 let local_lang; // Local Language
 let db;         // Database Object
 // let productDB;  // Database Transaction
-let productDBIds = [];
+
 
 // Check if Product exists in our Database or if it is a new one
 function existsProduct(id) { 
@@ -121,20 +102,7 @@ function existsProduct(id) {
     return (productDBIds.lastIndexOf(id) != -1);
 }
 
-// Timestamp in Seconds
-function linuxTimeStamp () {
-  return Math.floor(Date.now() / 1000)
-}
 
-// Convert Millis Timestamp to Seconds Timestamp
-function toLinuxTimestamp(now) {
-    return Math.floor(now / 1000)
-}
-
-// Convert Seconds Timestamp to Millis Timestamp
-function toTimestamp(_linuxTimestamp) {
-    return (_linuxTimestamp * 1000);
-}
 
 
 async function parseTileData(tile, cb) {
@@ -175,8 +143,8 @@ async function parseTileData(tile, cb) {
     
     _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
     _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-    // _newProduct.ts_firstSeen = linuxTimeStamp();
-    // _newProduct.ts_lastSeen = linuxTimeStamp();
+    // _newProduct.ts_firstSeen = unixTimeStamp();
+    // _newProduct.ts_lastSeen = unixTimeStamp();
     _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
     
     
@@ -631,7 +599,7 @@ function addBrandig() {
     _text.style.backgroundColor = 'rgba(218, 247, 166, .75)';
     _text.style.textAlign = 'left';
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
-    _text.style.zIndex = '999';
+    _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
     _text.innerHTML = `<p id="vve-brandig-text">VineExplorer - ${VVE_VERSION}</p>`;
 
@@ -673,7 +641,7 @@ function cleanUpDatabase(cb = () => {}) {
             
             // Checking Product Vars
             if (!_currEntry.ts_firstSeen){
-                _currEntry.ts_firstSeen = (linuxTimeStamp() - Math.round(Math.random() * (SECONDS_PER_WEEK / 2)));
+                _currEntry.ts_firstSeen = (unixTimeStamp() - Math.round(Math.random() * (SECONDS_PER_WEEK / 2)));
                 _needUpdate = true;
             }
             
@@ -683,7 +651,7 @@ function cleanUpDatabase(cb = () => {}) {
             }
 
             
-            const _notSeenCounter = (_currEntry.ts_lastSeen > (linuxTimeStamp() - SECONDS_PER_WEEK)) ? 0 : _currEntry.notSeenCounter + 1;
+            const _notSeenCounter = (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) ? 0 : _currEntry.notSeenCounter + 1;
             if (_currEntry.notSeenCounter != _notSeenCounter) {
                 _currEntry.notSeenCounter = _notSeenCounter;
                 _needUpdate = true;
@@ -691,7 +659,10 @@ function cleanUpDatabase(cb = () => {}) {
 
             if (_currEntry.notSeenCounter > NOT_SEEN_COUNT_MAX && !_currEntry.isFav) {
                 if (DEBUG) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
-                database.removeID(_currEntry.id, (callback) => {_returned++;});
+                database.removeID(_currEntry.id, (callback) => {
+                    productDBIds.splice(productDBIds.indexOf(_currEntry.id), 1) // Remove it also from our array
+                    _returned++;
+                });
             } else if (!_needUpdate){
                 _returned++;
             } else {
@@ -754,6 +725,7 @@ function handleAutoScan() {
 
 function init() {
     // Get all Products on this page ;)
+    addBrandig();
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
     const _tiles = document.getElementsByClassName('vvp-item-tile');
     const _tilesLength = _tiles.length;
@@ -923,280 +895,3 @@ function init() {
 }
 
 
-// Init database
-database.init = (cb) => {
-    addBrandig();
-    database._request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
-    
-    database._request.onerror = (event) => {
-        console.log("Fehler beim Öffnen der Datenbank");
-    }
-
-    database._request.onsuccess = (event) => {
-        if (DEBUG) console.log("Verbindung zur Datenbank hergestellt");
-        database._db = event.target.result;
-        cb(true);
-    }
-
-    database._request.onupgradeneeded = function (event) {
-        if (DEBUG) console.log('running onupgradeneeded');
-        // Get a reference to the request related to this event
-        const _request = event.target;
-
-        // Get a reference to the IDBDatabase object for this request
-        const _db = _request.result;
-
-        if (!_db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
-            if (DEBUG) console.log('Database needs to be created...');
-            const _storeOS = _db.createObjectStore(OBJECT_STORE_NAME, { keyPath: 'id' });
-            _storeOS.createIndex('isNew', 'isNew', { unique: false });
-            _storeOS.createIndex('isFav', 'isFav', { unique: false });
-        } else {
-            // Get a reference to the implicit transaction for this request
-            // @type IDBTransaction
-            const _transaction = _request.transaction;
-
-            // Now, get a reference to the existing object store
-            // @type IDBObjectStore
-            const _store = _transaction.objectStore(OBJECT_STORE_NAME);
-
-            switch(event.oldVersion) { // existing db version
-                //case 0: // We had to Create the DB, but this case should never happen
-                case 1: { // Update DB from Verion 1 to 2
-                    // Add index for New and Favorites
-                    _store.createIndex('isNew', 'isNew', { unique: false });
-                    _store.createIndex('isFav', 'isFav', { unique: false });
-                }
-                default: {
-                    console.error(`There was any Unknown Error while Updating Database from ${event.oldVersion} to ${DATABASE_VERSION}`);
-                }
-            }
-        }
-    };
-};
-
-// Fügt einen Datensatz zu den Datenbank hinzu
-database.add = (obj) => {
-  if (!database._db) return;
-  const _transaction = database._db.transaction([OBJECT_STORE_NAME], 'readwrite');
-  const _store = _transaction.objectStore(OBJECT_STORE_NAME);
-  const request = _store.add(obj);
-
-  request.onerror = function (e) {
-    console.error('Error', e.target.error.name);
-  };
-  request.onsuccess = function (e) {
-    if (DEBUG) console.log(`Created Database Entry for ${obj.data_recommendation_id}`);
-  };
-};
-
-
-database.get = (id, callback = () => {}) => {
-    if (!database._db || !id) return;
-    
-    const transaction = database._db.transaction([OBJECT_STORE_NAME], 'readonly');
-    const store = transaction.objectStore(OBJECT_STORE_NAME);
-    const request = store.get(id);
-
-    request.onsuccess = (event) => {
-        const result = event.target.result;
-        callback(result);
-    };
-
-    request.onerror = (event) => {
-        console.error('Error getting DB entry:', event.target.error.name);
-        callback(null);
-    };
-};
-
-// Updated den Datensatz in der Datenbank
-database.update = (obj, callback) => {
-    if (!database._db) return;
-
-    const transaction = database._db.transaction([OBJECT_STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(OBJECT_STORE_NAME);
-    const request = store.put(obj);
-
-    request.onsuccess = (event) => {
-        if (DEBUG) console.log('Record updated successfully');
-        callback(true);
-    };
-
-    request.onerror = (event) => {
-        console.error('Error updating record:', event.target.error.name);
-        callback(false);
-    };
-};
-// Suche nach Einträgen, deren description_full-String den queryTxt enthält, und gibt die Objekte als Array zurück
-database.query = (queryTxt, callback) => {
-    if (!database._db) return;
-
-    const transaction = database._db.transaction([OBJECT_STORE_NAME], 'readonly');
-    const store = transaction.objectStore(OBJECT_STORE_NAME);
-
-    const result = [];
-    const cursorRequest = store.openCursor();
-
-    cursorRequest.onsuccess = (event) => {
-        const cursor = event.target.result;
-
-        if (cursor) {
-            const descriptionFull = (cursor.value.description_full || '').toLowerCase();
-            const queryLower = queryTxt.toLowerCase();
-
-            if (descriptionFull.includes(queryLower)) {
-                result.push(cursor.value);
-            }
-
-            cursor.continue();
-        } else {
-            // No more entries
-            callback(result);
-        }
-    };
-
-    cursorRequest.onerror = (event) => {
-        console.error('Error querying records:', event.target.error.name);
-        callback([]);
-    };
-};
-
-
-// Gibt alle Schlüssel als Array zurück
-database.getAllKeys = (callback) => {
-    if (!database._db) return;
-
-    const transaction = database._db.transaction([OBJECT_STORE_NAME], 'readonly');
-    const store = transaction.objectStore(OBJECT_STORE_NAME);
-    const request = store.getAllKeys();
-
-    request.onsuccess = (event) => {
-        const result = event.target.result;
-        callback(result);
-    };
-
-    request.onerror = (event) => {
-        console.error('Error getting keys:', event.target.error.name);
-        callback([]);
-    };
-};
-
-// Gibt alle Einträge zurück, bei denen isNew gleich true ist
-database.getNewEntries = (callback) => {
-    if (!database._db) return;
-
-    const transaction = database._db.transaction([OBJECT_STORE_NAME], 'readonly');
-    const store = transaction.objectStore(OBJECT_STORE_NAME);
-
-    const result = [];
-    const cursorRequest = store.openCursor();
-
-    cursorRequest.onsuccess = (event) => {
-        const cursor = event.target.result;
-
-        if (cursor) {
-            if (cursor.value.isNew) {
-                result.push(cursor.value);
-            }
-
-            cursor.continue();
-        } else {
-            // No more entries
-            callback(result);
-        }
-    };
-
-    cursorRequest.onerror = (event) => {
-        console.log('Error get NEW Entrys:', event.target.error.name);
-        callback([]);
-    };
-};
-
-// Gibt alle Einträge zurück, bei denen isFav gleich true ist
-database.getFavEntries = (callback) => {
-    if (!database._db) return;
-
-    const transaction = database._db.transaction([OBJECT_STORE_NAME], 'readonly');
-    const store = transaction.objectStore(OBJECT_STORE_NAME);
-
-    const result = [];
-    const cursorRequest = store.openCursor();
-
-    cursorRequest.onsuccess = (event) => {
-        const cursor = event.target.result;
-
-        if (cursor) {
-            if (cursor.value.isFav) {
-                result.push(cursor.value);
-            }
-
-            cursor.continue();
-        } else {
-            // No more entries
-            callback(result);
-        }
-    };
-
-    cursorRequest.onerror = (event) => {
-        console.log('Error get NEW Entrys:', event.target.error.name);
-        callback([]);
-    };
-};
-
-database.getAll = (callback) => {
-    if (!database._db) return;
-
-    const transaction = database._db.transaction([OBJECT_STORE_NAME], 'readonly');
-    const store = transaction.objectStore(OBJECT_STORE_NAME);
-
-    const result = [];
-    const cursorRequest = store.openCursor();
-
-    cursorRequest.onsuccess = (event) => {
-        const cursor = event.target.result;
-        if (cursor) {
-            result.push(cursor.value);
-            cursor.continue();
-        } else {
-            // No more entries
-            callback(result);
-        }
-    };
-
-    cursorRequest.onerror = (event) => {
-        console.error('Error querying records:', event.target.error.name);
-        callback([]);
-    };
-};
-
-database.removeID = (id, callback) => {
-    if (!database._db || !id) return;
-
-    const transaction = database._db.transaction([OBJECT_STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(OBJECT_STORE_NAME);
-    const request = store.delete(id);
-
-    request.onsuccess = (event) => {
-        if (DEBUG) console.log(`Record with ID ${id} removed successfully`);
-        callback(true);
-    };
-
-    request.onerror = (event) => {
-        console.error('Error removing record:', event.target.error.name);
-        callback(false);
-    };
-};
-
-// Start all of the Trash :P
-database.init((_ret) => {
-    if (!_ret) {
-        console.error(`Somithins was going wrong while init database :'(`);
-        return;
-    } else {
-        database.getAllKeys((keys) => {
-            if (DEBUG) console.log('All keys:', keys);
-            productDBIds = keys;
-            init();
-    });
-    }
-});
