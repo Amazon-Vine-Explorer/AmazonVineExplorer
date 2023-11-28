@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      0.5.1
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
-// @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/mainVineExplorer.user.js
+// @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
 // @author       MarkusSR1984
 // @match        *://www.amazon.de/vine/*
@@ -11,12 +11,13 @@
 // @match        *://www.amazon.de/-/en/vine/*
 // @license      MIT
 // @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
-// @run-at       document-idle
+// @run-at       document-start
 // @grant        GM.xmlHttpRequest
 // @grant        GM.openInTab
 // @grant        unsafeWindow
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/globals.js
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/db_handler.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_db_handler.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_product.js
 
 // ==/UserScript==
 
@@ -47,6 +48,10 @@
 
 console.log("Init VineVoicesExplorer...");
 
+initSettings();
+fastStyleChanges();
+
+
 let productDBIds = [];
 const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res, err) => {
     if (err) {
@@ -56,39 +61,17 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res,
         database.getAllKeys((keys) => {
             if (DEBUG) console.log('All keys:', keys);
             productDBIds = keys;
-            init();
+            
+            let _execLock = false;
+            waitForHtmlElmement('.vvp-details-btn', () => {
+                if (_execLock) return;
+                _execLock = true;
+                addBrandig();
+                init();
+            })
     });
     }
 });
-
-class Product {
-  
-    id;
-    link;
-    description_full;
-    description_short;
-    data_recommendation_id;
-    data_recommendation_type;
-    data_img_url;
-    data_img_alt;
-    data_asin;
-
-    isFav = false;
-    isNew = true;
-    gotRemoved = false;
-    ts_firstSeen = unixTimeStamp();
-    ts_lastSeen = unixTimeStamp();
-    notSeenCounter = 0;
-    order_success = false;
-    generated_short = false;
-    gotFromDB = undefined;
-    constructor(id) {
-        this.id = id;
-    };
-}
-
-
-
 
 
 let local_lang; // Local Language
@@ -101,8 +84,6 @@ function existsProduct(id) {
     if (DEBUG) console.log(`Called existsProduct(${id})`);
     return (productDBIds.lastIndexOf(id) != -1);
 }
-
-
 
 
 async function parseTileData(tile, cb) {
@@ -179,60 +160,6 @@ async function parseTileData(tile, cb) {
 
 
 
-/* SuccessBox
-<div id="vvp-generic-order-success-msg" class="a-box a-alert a-alert-success" aria-live="polite" aria-atomic="true"><div class="a-box-inner a-alert-container"><h4 class="a-alert-heading">Erfolgreich!</h4><i class="a-icon a-icon-alert"></i><div class="a-alert-content">Ihre Produktanfrage wurde übermittelt.</div></div></div>
-*/
-
-
-/* Seitliche Eingliederung
-<div id="vvp-browse-nodes-container">
-    <p>
-        <a class="a-link-normal" href="/vine/vine-items?queue=last_chance">Alle anzeigen</a></p>
-
-    <div class="parent-node">
-                <a class="a-link-normal" href="/vine/vine-items?queue=last_chance&amp;pn=80084031">Baumarkt</a><span> (14)</span>
-            </div>
-        <div class="parent-node">
-                <a class="a-link-normal" href="/vine/vine-items?queue=last_chance&amp;pn=340846031">Lebensmittel &amp; Getränke</a><span> (11)</span>
-            </div>
-        <div class="parent-node">
-                <a class="a-link-normal" href="/vine/vine-items?queue=last_chance&amp;pn=64187031">Drogerie &amp; Körperpflege</a><span> (8)</span>
-            </div>
-        <div class="parent-node">
-                <a class="a-link-normal" href="/vine/vine-items?queue=last_chance&amp;pn=3167641">Küche, Haushalt &amp; Wohnen</a><span> (6)</span>
-            </div>
-        <div class="parent-node">
-                <a class="a-link-normal" href="/vine/vine-items?queue=last_chance&amp;pn=16435051">Sport &amp; Freizeit</a><span> (4)</span>
-            </div>
-        <div class="parent-node">
-                <a class="a-link-normal" href="/vine/vine-items?queue=last_chance&amp;pn=84230031">Kosmetik</a><span> (4)</span>
-            </div>
-        <div class="parent-node">
-                <a class="a-link-normal" href="/vine/vine-items?queue=last_chance&amp;pn=562066">Elektronik &amp; Foto</a><span> (2)</span>
-            </div>
-        <div class="parent-node">
-                <a class="a-link-normal" href="/vine/vine-items?queue=last_chance&amp;pn=340852031">Haustier</a><span> (2)</span>
-            </div>
-        <div class="parent-node">
-                <a class="a-link-normal" href="/vine/vine-items?queue=last_chance&amp;pn=192416031">Bürobedarf &amp; Schreibwaren</a><span> (1)</span>
-            </div>
-        <div class="parent-node">
-                <a class="a-link-normal" href="/vine/vine-items?queue=last_chance&amp;pn=355007011">Baby</a><span> (1)</span>
-            </div>
-        </div>
-*/ // ENDE Seitliche Eingliederung
-
-/* Item Grid Container
-<div id="vvp-items-grid-container">
-        <p>Anzeigen von <strong>1 -1</strong> von <strong>1</strong> Ergebnissen</p>
-        
-        <div id="vvp-items-grid" class="a-section">
-        
-         **** ITEM TILES SPACE ******
-        </div>
-    </div></div>
-
-*/ // ENDE Item Grind Container
 
 
 function addLeftSideButtons(forceClean) {
@@ -491,14 +418,17 @@ function favStarEventhandlerClick(event, data) {
 
 
 function updateTileStyle(prod) {
-    if (DEBUG) console.log(`Called updateTileStyle(${JSON.stringify(prod)})`);
+    if (DEBUG) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
     const _tiles = document.getElementsByClassName('vvp-item-tile');
     const _tilesLength = _tiles.length;
 
+    if (DEBUG) console.log(`Searching for tile with id ${prod.id}`);
     for (let i = 0; i < _tilesLength; i++) {
         const _tile = _tiles[i];
         const _id = _tile.getAttribute('data-recommendation-id');
+        
         if (_id == prod.data_recommendation_id) {
+            if (DEBUG) console.log(`Found Tile with id: ${prod.id}`);
             _tile.setAttribute('style', (prod.isFav) ? CSS_PRODUCT_FAV : (prod.isNew) ? CSS_PRODUCT_NEWTAG : CSS_PRODUCT_DEFAULT);
             const _favStar = _tile.querySelector('.vve-favorite-star');
             _favStar.style.color = (prod.isFav) ? FAV_STAR_COLOR_CHECKED : 'white'; // FAV_STAR_COLOR_CHECKED = Gelb;
@@ -627,13 +557,24 @@ function getPageinationData() {
 
 
 // CleanUp and Fix Database Entrys
-function cleanUpDatabase(cb = () => {}) {
+async function cleanUpDatabase(cb = () => {}) {
     if (DEBUG) console.log('Called cleanUpDatabase()');
     database.getAll((prodArr) => {
         const _prodArrLength = prodArr.length;
         if (DEBUG) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
-        
+
         let _returned = 0;
+        let _updated = 0;
+        let _deleted = 0;
+
+        const _localReturn = () => { // Dirty, I'm so fucking dirty, but its needed to speed things up
+            _returned++
+            if (_returned == _prodArrLength) {
+                if (DEBUG) console.log(`Databasecleanup Finished: Entrys:${_returned} Updated:${_updated} Deleted:${_deleted}`);
+                cb(true);
+            }
+        }
+
         for (let i = 0; i < _prodArrLength; i++) {
             const _currEntry = prodArr[i];
             let _needUpdate = false;
@@ -659,19 +600,17 @@ function cleanUpDatabase(cb = () => {}) {
 
             if (_currEntry.notSeenCounter > NOT_SEEN_COUNT_MAX && !_currEntry.isFav) {
                 if (DEBUG) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
-                database.removeID(_currEntry.id, (callback) => {
-                    productDBIds.splice(productDBIds.indexOf(_currEntry.id), 1) // Remove it also from our array
-                    _returned++;
+                
+                database.removeID(_currEntry.id, (ret) => {
+                    if (ret) productDBIds.splice(productDBIds.indexOf(_currEntry.id), 1) // Remove it also from our array
+                    _deleted++;
+                    _localReturn();
                 });
             } else if (!_needUpdate){
-                _returned++;
+                _localReturn();
             } else {
-                database.update(_currEntry, () => {_returned++});
-            }
-
-            if (_returned == _prodArrLength) {
-                if (DEBUG) console.log(`cleanUpDatabase() - FINISHED`);
-                cb(true);
+                
+                database.update(_currEntry, (ret) => {_updated++ ; _localReturn();});
             }
         }
     });
@@ -725,7 +664,7 @@ function handleAutoScan() {
 
 function init() {
     // Get all Products on this page ;)
-    addBrandig();
+    
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
     const _tiles = document.getElementsByClassName('vvp-item-tile');
     const _tilesLength = _tiles.length;
@@ -735,23 +674,29 @@ function init() {
         const _currTile = _tiles[i];
         _currTile.style.cssText = "background-color: yellow;";
          parseTileData(_currTile, (_product) => {
-            // console.log(`Got TileData Back: ${JSON.stringify(_product, null, 4)}`);
-            
-            // _currTile.style.cssText = `background-color: ${!_product.generated_short ? 'lightgreen': 'lightblue'};`;
+            console.log(`Got TileData Back: ${JSON.stringify(_product, null, 4)}`);
             
             _countdown++;
             const _tilesToDoCount = _tilesLength - _countdown;
-            if (DEBUG) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tales to get parsed`)
+            if (DEBUG) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
             if (DEBUG && _tilesToDoCount == 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Parsing ${_tilesLength} has taken ${Date.now() - _parseStartTime} ms`);
 
             if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
                 database.add(_product);
                 _currTile.style.cssText = CSS_PRODUCT_SAVED;
+                _currTile.classList.add('vve-element-saved');
             } else {
                 let _style = CSS_PRODUCT_DEFAULT;
-                if(_product.isNew) _style = CSS_PRODUCT_NEWTAG;
-                if(_product.isFav) _style = CSS_PRODUCT_FAV;
+                if(_product.isNew) {
+                    _style = CSS_PRODUCT_NEWTAG;
+                    _currTile.classList.add('vve-element-new');
+                }
+                if(_product.isFav) {
+                    _style = CSS_PRODUCT_FAV;
+                    _currTile.classList.add('vve-element-fav');
+                }
                 _currTile.style.cssText = _style;
+                
                 // Update Timestamps
             }
             _currTile.prepend(createFavStarElement(_product, i));
