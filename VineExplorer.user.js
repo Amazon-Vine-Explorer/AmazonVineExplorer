@@ -42,15 +42,24 @@
 */
 
 'use strict';
-console.log(`Init Vine Voices Explorer ${VVE_VERSION}`);
+let timeMesurementStore = Date.now();
+timeMessage(`Init Vine Voices Explorer ${VVE_VERSION}`);
 
 loadSettings();
+timeMessage('loaded Settings');
 fastStyleChanges();
+timeMessage('loaded fastStyleChanges');
 
 let productDBIds = [];
+timeMessage('loaded fastStyleChanges');
+
+let searchInputTimeout;
+
+
 
 const database = new RDB_HANDLER(DATABASE_NAME, (success) => {
     database.getAllKeys((res) => {
+        timeMessage('loaded Database 1');
         if (res.length == 0) { // We need to convert the DB first
             console.log('Converting Databse from IDB to RDB');
             const _old_database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res, err) => {
@@ -70,22 +79,29 @@ const database = new RDB_HANDLER(DATABASE_NAME, (success) => {
         }
 
         database.getAllKeys((keys) => {
+            timeMessage('loaded Database 2');
             if (SETTINGS.DebugLevel > 0) console.log('All keys:', keys);
             productDBIds = keys;
             
             let _execLock = false;
             waitForHtmlElmement('.vvp-details-btn', () => {
                 if (_execLock) return;
+                timeMessage('got HTML Element');
                 _execLock = true;
                 addBrandig();
+                timeMessage('added Branding');
                 init();
+                timeMessage('init has finished');
             })
         })
     })
 })
 
 
-
+async function timeMessage(text) {
+    console.log(`[TIMER][${Date.now()-timeMesurementStore}ms] since last mesurement: => ${text}`);
+    timeMesurementStore = Date.now();
+}
 
 
 // Check if Product exists in our Database or if it is a new one
@@ -788,14 +804,19 @@ function init() {
         const _input = _searchBarInput.value
         if (SETTINGS.DebugLevel > 0) console.log(`Updated Input: ${_input}`);
         if (_input.length >= 3) {
-            database.query(_input, (_objArr) => {
-                if (SETTINGS.DebugLevel > 0) console.log(`Found ${_objArr.length} Items with this Search`);
-
-                // for (let i = 0; i < _objArr.length; i++) {
-                //     console.log(`Item${i}: => ${_objArr[i].description_full}`);
-                // }
-                createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
-            }) 
+            if (searchInputTimeout) clearTimeout(searchInputTimeout);
+            searchInputTimeout = setTimeout(() => {
+                timeMessage('Start text query...');
+                database.query(_input, (_objArr) => {
+                    if (SETTINGS.DebugLevel > 0) console.log(`Found ${_objArr.length} Items with this Search`);
+                    timeMessage('END text query...');
+                    // for (let i = 0; i < _objArr.length; i++) {
+                    //     console.log(`Item${i}: => ${_objArr[i].description_full}`);
+                    // }
+                    createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
+                    searchInputTimeout = null;
+                }) 
+            }, 150);
         }
     });
 

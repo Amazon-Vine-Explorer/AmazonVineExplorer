@@ -6,6 +6,10 @@ const VVE_VERSION = (/@version\s+([0-9+.]+)/.exec(GM_info.scriptMetaStr)[1]) || 
 const SECONDS_PER_WEEK = 604800 / 2;
 const SECONDS_PER_DAY = 86400;
 
+// Global variables
+
+
+
 // Obsolete sobald der Backgroundscan läuft
 const INIT_AUTO_SCAN = (localStorage.getItem('INIT_AUTO_SCAN') == 'true') ? true : false;
 const AUTO_SCAN_IS_RUNNING = (localStorage.getItem('AUTO_SCAN_IS_RUNNING') == 'true') ? true : false;
@@ -16,6 +20,8 @@ const PAGE_LOAD_TIMESTAMP = Date.now();
 // Obsolete sobald die Datenbank über Tampermonkey läuft
 const DATABASE_NAME = 'VineVoiceExplorer';
 const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
+
+
 
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;

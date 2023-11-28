@@ -2,6 +2,7 @@ console.log('loaded class_rdb_handler.js');
 class RDB_HANDLER {
     #dbName;
     #ramDB;
+    #keysBuffer;
     #needsSaveToStorage = false;
 
     /**
@@ -36,6 +37,7 @@ class RDB_HANDLER {
         if (typeof(obj.id) != 'string') throw new Error('RDB_HANDLER.add(): Object is no valid Product');
 
         this.#ramDB[obj.id] = obj;
+        this.#keysBuffer.push(obj.id);
         this.#needsSaveToStorage = true;
         cb(true);
     };
@@ -103,7 +105,12 @@ class RDB_HANDLER {
     */     
     async getAllKeys(cb){
         if (typeof(cb) != 'function') throw new Error('DB_HANDLER.getAllKeys(): cb is not defined or is not typeof function');
-        cb(Object.keys(this.#ramDB));
+        if (this.#keysBuffer) {
+            cb(this.#keysBuffer)
+        } else {
+            cb(Object.keys(this.#ramDB));
+            this.#keysBuffer = Object.keys(this.#ramDB);
+        }
     };
 
 
@@ -178,6 +185,7 @@ class RDB_HANDLER {
         
         if (this.#ramDB[id]) {
             delete this.#ramDB[id];
+            if (this.#keysBuffer) this.#keysBuffer.splice(this.#keysBuffer.indexOf(id), 1);
             cb(true);
         } else {
             cb();
