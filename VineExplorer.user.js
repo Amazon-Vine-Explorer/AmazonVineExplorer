@@ -823,7 +823,6 @@ function init() {
 
         const _btn = document.createElement('li');
         _btn.setAttribute('class', 'a-last');
-        _btn.setAttribute('style', 'background-color: lime');
         _btn.addEventListener('click', () => {
             markAllCurrentSiteProductsAsSeen(() => {
                 window.location.href = (_nextBtnLink);
@@ -833,6 +832,7 @@ function init() {
         
 
         const _btn_a = document.createElement('a');
+        _btn_a.setAttribute('style', 'background-color: lime');
         _btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
 
         _btn.appendChild(_btn_a);
