@@ -12,6 +12,10 @@
 // @license      MIT
 // @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
 // @run-at       document-start
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM.getValue
+// @grant        GM.setValue
 // @grant        GM.xmlHttpRequest
 // @grant        GM.openInTab
 // @grant        unsafeWindow
@@ -45,12 +49,10 @@
 */
 
 'use strict';
+console.log(`Init Vine Voices Explorer ${VVE_VERSION}`);
 
-console.log("Init VineVoicesExplorer...");
-
-initSettings();
+loadSettings();
 fastStyleChanges();
-
 
 let productDBIds = [];
 const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res, err) => {
@@ -59,7 +61,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res,
         return;
     } else {
         database.getAllKeys((keys) => {
-            if (DEBUG) console.log('All keys:', keys);
+            if (SETTINGS.DebugLevel > 0) console.log('All keys:', keys);
             productDBIds = keys;
             
             let _execLock = false;
@@ -81,13 +83,13 @@ let db;         // Database Object
 
 // Check if Product exists in our Database or if it is a new one
 function existsProduct(id) { 
-    if (DEBUG) console.log(`Called existsProduct(${id})`);
+    if (SETTINGS.DebugLevel > 0) console.log(`Called existsProduct(${id})`);
     return (productDBIds.lastIndexOf(id) != -1);
 }
 
 
 async function parseTileData(tile, cb) {
-    if (DEBUG) console.log(`Called parseTileData(${tile})`);
+    if (SETTINGS.DebugLevel > 0) console.log(`Called parseTileData(${tile})`);
 
     const _id = tile.getAttribute('data-recommendation-id');
 
@@ -131,8 +133,8 @@ async function parseTileData(tile, cb) {
     
     if (_newProduct.description_short == '') {
         let _timeLoopCounter = 0;
-        const _maxLoops = Math.round(FETCH_RETRY_MAX_TIME / FETCH_RETRY_TIME);
-        const _halfdelay = (FETCH_RETRY_TIME / 2)
+        const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
+        const _halfdelay = (SETTINGS.FetchRetryTime / 2)
         function timeLoop() {
             if (_timeLoopCounter++ < _maxLoops){
                     setTimeout(() => {
@@ -155,7 +157,7 @@ async function parseTileData(tile, cb) {
             cb(_newProduct);
         }
         
-    // if (DEBUG) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+    // if (SETTINGS.DebugLevel > 0) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
 }
 
 
@@ -171,14 +173,14 @@ function addLeftSideButtons(forceClean) {
     _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
     const _setAllSeenBtn = createButton('Alle als gesehen markieren', 'background-color: lime;', () => {
-        if (DEBUG) console.log('Clicked All Seen Button');
+        if (SETTINGS.DebugLevel > 0) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
 
     _nodesContainer.appendChild(_setAllSeenBtn);
 
     // const _clearDBBtn = createButton('Datenbank Bereinigen', 'background-color: orange;', () => {
-    //     if (DEBUG) console.log('Clicked clear DB Button');
+    //     if (SETTINGS.DebugLevel > 0) console.log('Clicked clear DB Button');
     //     cleanUpDatabase();
     // });
 
@@ -205,11 +207,11 @@ function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
 }
 
 function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
-    if (DEBUG) console.log('Called markAllCurrentDatabaseProductsAsSeen()');
+    if (SETTINGS.DebugLevel > 0) console.log('Called markAllCurrentDatabaseProductsAsSeen()');
     database.getNewEntries((prods) => {
         const _prodsLength = prods.length;
         let _returned = 0;
-        if (DEBUG) console.log(`markAllCurrentDatabaseProductsAsSeen() - Got ${_prodsLength} Products with Tag isNew`);
+        if (SETTINGS.DebugLevel > 0) console.log(`markAllCurrentDatabaseProductsAsSeen() - Got ${_prodsLength} Products with Tag isNew`);
         if (_prodsLength == 0) {
             cb(true);
             return;
@@ -218,7 +220,7 @@ function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
             const _currProd = prods[i];
             _currProd.isNew = false;
             database.update(_currProd, ()=> {
-                if (DEBUG) console.log(`markAllCurrentDatabaseProductsAsSeen() - Updated ${_currProd.id}`);
+                if (SETTINGS.DebugLevel > 0) console.log(`markAllCurrentDatabaseProductsAsSeen() - Updated ${_currProd.id}`);
                 _returned++
                 if (_returned == _prodsLength) cb(true);
             })
@@ -247,14 +249,14 @@ function createButton(text, style, clickHandler){
 }
 
 async function createTileFromProduct(product, btnID, cb) {
-    if (!product && DEBUG) console.error(`createTileFromProduct got no valid product element`);
+    if (!product && SETTINGS.DebugLevel > 0) console.error(`createTileFromProduct got no valid product element`);
     const _btnAutoID = btnID || Math.round(Math.random() * 10000);
     
     const _tile = document.createElement('div');
     _tile.setAttribute('class', 'vvp-item-tile');
     _tile.setAttribute('data-recommendation-id', product.data_recommendation_id);
     _tile.setAttribute('data-img-url', product.data_img_url);
-    _tile.setAttribute('style', (product.notSeenCounter > 0) ? CSS_PRODUCT_MARKED_REMOVAL : (product.isFav) ? CSS_PRODUCT_FAV : (product.isNew) ? CSS_PRODUCT_NEWTAG : CSS_PRODUCT_DEFAULT);
+    _tile.setAttribute('style', (product.notSeenCounter > 0) ? SETTINGS.CssProductRemovalTag : (product.isFav) ? SETTINGS.CssProductNewTag : (product.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
     _tile.innerHTML =`
         <div class="vvp-item-tile-content">
             <img alt="${product.data_img_alt}" src="${product.data_img_url}">
@@ -282,9 +284,9 @@ function createFavStarElement(prod, index) {
     const _favElement = document.createElement('div');
     _favElement.setAttribute("id", `p-fav-${index || Math.round(Math.random() * 5000)}`);
     _favElement.classList.add('vve-favorite-star');
-    _favElement.style.cssText = CSS_PRODUCT_FAV_STAR;
+    _favElement.style.cssText = SETTINGS.CssProductFavStar();
     _favElement.textContent = '★';
-    if (prod.isFav) _favElement.style.color = FAV_STAR_COLOR_CHECKED; // FAV_STAR_COLOR_CHECKED = Gelb;
+    if (prod.isFav) _favElement.style.color = SETTINGS.FavStarColorChecked; // SETTINGS.FavStarColorChecked = Gelb;
     return _favElement;
 }
 
@@ -293,8 +295,8 @@ async function createProductSite(productArray, cb) {
     if (!productArray) return;
     
     const _productArrayLength = productArray.length;
-    const _fastCount = Math.min(_productArrayLength, MAX_ITEMS_PER_PAGE);
-    if (DEBUG) console.log(`Create Overview for ${_productArrayLength} Products`);
+    const _fastCount = Math.min(_productArrayLength, SETTINGS.MaxItemsPerPage);
+    if (SETTINGS.DebugLevel > 0) console.log(`Create Overview for ${_productArrayLength} Products`);
 
     
     // Remove Pagination
@@ -322,7 +324,7 @@ async function createProductSite(productArray, cb) {
         createTileFromProduct(productArray[_index], _index, (tile) => {
             _tilesGrid.append(tile);
             _returned++;
-            if (DEBUG) console.log(`Created Tile (${_returned}/${_fastCount})`);
+            if (SETTINGS.DebugLevel > 0) console.log(`Created Tile (${_returned}/${_fastCount})`);
             if (_returned == _fastCount) cb(true);
         });
     }
@@ -394,7 +396,7 @@ function createNewSite(type, data) {
 
 
 function btnEventhandlerClick(event, data) {
-    if (DEBUG) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
+    if (SETTINGS.DebugLevel > 0) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
         database.get(data.recommendation_id, (prod) => {
             if (prod) {
@@ -408,7 +410,7 @@ function btnEventhandlerClick(event, data) {
 }
 
 function favStarEventhandlerClick(event, data) {
-    if (DEBUG) console.log(`called favStarEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
+    if (SETTINGS.DebugLevel > 0) console.log(`called favStarEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
         database.get(data.recommendation_id, (prod) => {
             if (prod) {
@@ -423,20 +425,20 @@ function favStarEventhandlerClick(event, data) {
 
 
 function updateTileStyle(prod) {
-    if (DEBUG) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
+    if (SETTINGS.DebugLevel > 0) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
     const _tiles = document.getElementsByClassName('vvp-item-tile');
     const _tilesLength = _tiles.length;
 
-    if (DEBUG) console.log(`Searching for tile with id ${prod.id}`);
+    if (SETTINGS.DebugLevel > 0) console.log(`Searching for tile with id ${prod.id}`);
     for (let i = 0; i < _tilesLength; i++) {
         const _tile = _tiles[i];
         const _id = _tile.getAttribute('data-recommendation-id');
         
         if (_id == prod.data_recommendation_id) {
-            if (DEBUG) console.log(`Found Tile with id: ${prod.id}`);
-            _tile.setAttribute('style', (prod.isFav) ? CSS_PRODUCT_FAV : (prod.isNew) ? CSS_PRODUCT_NEWTAG : CSS_PRODUCT_DEFAULT);
+            if (SETTINGS.DebugLevel > 0) console.log(`Found Tile with id: ${prod.id}`);
+            _tile.setAttribute('style', (prod.isFav) ? SETTINGS.CssProductFavTag : (prod.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
             const _favStar = _tile.querySelector('.vve-favorite-star');
-            _favStar.style.color = (prod.isFav) ? FAV_STAR_COLOR_CHECKED : 'white'; // FAV_STAR_COLOR_CHECKED = Gelb;
+            _favStar.style.color = (prod.isFav) ? SETTINGS.FavStarColorChecked : 'white'; // SETTINGS.FavStarColorChecked = Gelb;
             return;
         }
     }
@@ -444,7 +446,7 @@ function updateTileStyle(prod) {
 
 // Adds Eventhandler to Product Buttons
 function initTileEventHandlers() {
-    if (DEBUG) console.log('Called inttTileEventHandlers() >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+    if (SETTINGS.DebugLevel > 0) console.log('Called inttTileEventHandlers() >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
     const _tiles = document.getElementsByClassName('vvp-item-tile');
     const _tileLength = _tiles.length;
 
@@ -453,7 +455,7 @@ function initTileEventHandlers() {
     
     // Thats Fucking Messy, but i don´t have an better solution for this atm. :'((((((
     for(let i = 0; i < _tileLength; i++) {
-        if (DEBUG) console.log(`Adding Eventhandler to Tile ${i}`);
+        if (SETTINGS.DebugLevel > 0) console.log(`Adding Eventhandler to Tile ${i}`);
         const _currTile = _tiles[i];
         
         const _favStar = _currTile.querySelector('.vve-favorite-star');
@@ -468,7 +470,7 @@ function initTileEventHandlers() {
         _btn.addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
     
         for(let j = 0; j < _childs.length; j++) {
-            if (DEBUG) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
+            if (SETTINGS.DebugLevel > 0) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
             _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
         }
     
@@ -543,7 +545,7 @@ function addBrandig() {
 }
 
 function getPageinationData() {
-    if (DEBUG) console.log('Called getPageinationData()');
+    if (SETTINGS.DebugLevel > 0) console.log('Called getPageinationData()');
     const _ret = new Object();
     const _paginationContainer = document.querySelector('.a-pagination');
     
@@ -563,10 +565,10 @@ function getPageinationData() {
 
 // CleanUp and Fix Database Entrys
 async function cleanUpDatabase(cb = () => {}) {
-    if (DEBUG) console.log('Called cleanUpDatabase()');
+    if (SETTINGS.DebugLevel > 0) console.log('Called cleanUpDatabase()');
     database.getAll((prodArr) => {
         const _prodArrLength = prodArr.length;
-        if (DEBUG) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
+        if (SETTINGS.DebugLevel > 0) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
 
         let _returned = 0;
         let _updated = 0;
@@ -575,7 +577,7 @@ async function cleanUpDatabase(cb = () => {}) {
         const _localReturn = () => { // Dirty, I'm so fucking dirty, but its needed to speed things up
             _returned++
             if (_returned == _prodArrLength) {
-                if (DEBUG) console.log(`Databasecleanup Finished: Entrys:${_returned} Updated:${_updated} Deleted:${_deleted}`);
+                if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_returned} Updated:${_updated} Deleted:${_deleted}`);
                 cb(true);
             }
         }
@@ -583,7 +585,7 @@ async function cleanUpDatabase(cb = () => {}) {
         for (let i = 0; i < _prodArrLength; i++) {
             const _currEntry = prodArr[i];
             let _needUpdate = false;
-            if (DEBUG) console.log(`cleanUpDatabase() - Checking Entry ${_currEntry.id} `);
+            if (SETTINGS.DebugLevel > 0) console.log(`cleanUpDatabase() - Checking Entry ${_currEntry.id} `);
             
             // Checking Product Vars
             if (!_currEntry.ts_firstSeen){
@@ -603,8 +605,8 @@ async function cleanUpDatabase(cb = () => {}) {
                 _needUpdate = true;
             }
 
-            if (_currEntry.notSeenCounter > NOT_SEEN_COUNT_MAX && !_currEntry.isFav) {
-                if (DEBUG) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
+            if (_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount && !_currEntry.isFav) {
+                if (SETTINGS.DebugLevel > 0) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
                 
                 database.removeID(_currEntry.id, (ret) => {
                     if (ret) productDBIds.splice(productDBIds.indexOf(_currEntry.id), 1) // Remove it also from our array
@@ -623,10 +625,10 @@ async function cleanUpDatabase(cb = () => {}) {
 
 
 function startAutoScan() {
-    if (DEBUG) console.log('Called startAutoScan()');
+    if (SETTINGS.DebugLevel > 0) console.log('Called startAutoScan()');
     showAutoScanScreen('Init Autoscan, please wait...');
     markAllCurrentDatabaseProductsAsSeen(() => {
-        if (DEBUG) console.log('startAutoScan() - Got Callback from markAllCurrentDatabaseProductsAsSeen()');
+        if (SETTINGS.DebugLevel > 0) console.log('startAutoScan() - Got Callback from markAllCurrentDatabaseProductsAsSeen()');
         const _pageiDat = getPageinationData();
         localStorage.setItem('INIT_AUTO_SCAN', false);
         localStorage.setItem('AUTO_SCAN_IS_RUNNING', true);
@@ -634,7 +636,7 @@ function startAutoScan() {
         localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', 1);
         setTimeout(() => {
             const _url = `${_pageiDat.href}1`;
-            if (DEBUG) console.log(`Loding new Page ${_url}`)
+            if (SETTINGS.DebugLevel > 0) console.log(`Loding new Page ${_url}`)
             window.location.href = _url;
         }, 5000);
     })
@@ -643,8 +645,8 @@ function startAutoScan() {
 
 function handleAutoScan() {
     let _href;
-    const _delay = Math.max(PAGE_LOAD_MIN_DELAY - (Date.now() - PAGE_LOAD_TIMESTAMP), 0) + 500;
-    if (DEBUG) console.log(`handleAutoScan() - _delay: ${_delay}`);
+    const _delay = Math.max(SETTINGS.PageLoadMinDelay - (Date.now() - PAGE_LOAD_TIMESTAMP), 0) + 500;
+    if (SETTINGS.DebugLevel > 0) console.log(`handleAutoScan() - _delay: ${_delay}`);
     if (AUTO_SCAN_PAGE_CURRENT < AUTO_SCAN_PAGE_MAX) {
         const _nextPage = AUTO_SCAN_PAGE_CURRENT + 1;
         localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', _nextPage);
@@ -683,21 +685,21 @@ function init() {
             
             _countdown++;
             const _tilesToDoCount = _tilesLength - _countdown;
-            if (DEBUG) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
-            if (DEBUG && _tilesToDoCount == 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Parsing ${_tilesLength} has taken ${Date.now() - _parseStartTime} ms`);
+            if (SETTINGS.DebugLevel > 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
+            if (SETTINGS.DebugLevel > 0 && _tilesToDoCount == 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Parsing ${_tilesLength} has taken ${Date.now() - _parseStartTime} ms`);
 
             if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
                 database.add(_product);
-                _currTile.style.cssText = CSS_PRODUCT_SAVED;
+                _currTile.style.cssText = SETTINGS.CssProductSaved;
                 _currTile.classList.add('vve-element-saved');
             } else {
-                let _style = CSS_PRODUCT_DEFAULT;
+                let _style = SETTINGS.CssProductDefault;
                 if(_product.isNew) {
-                    _style = CSS_PRODUCT_NEWTAG;
+                    _style = SETTINGS.CssProductNewTag;
                     _currTile.classList.add('vve-element-new');
                 }
                 if(_product.isFav) {
-                    _style = CSS_PRODUCT_FAV;
+                    _style = SETTINGS.CssProductFavTag;
                     _currTile.classList.add('vve-element-fav');
                 }
                 _currTile.style.cssText = _style;
@@ -737,7 +739,7 @@ function init() {
     _favBtnSpan.setAttribute('id', 'vve-btn-favorites');
     _favBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
     _favBtnSpan.innerHTML = `
-        <span class="a-button-inner" style="background-color: ${FAV_BTN_COLOR}">
+        <span class="a-button-inner" style="background-color: ${SETTINGS.FavBtnColor}">
             <span class="a-button-text">${'Favoriten'}</span>
         </span>
     `;
@@ -776,10 +778,10 @@ function init() {
     _searchBarInput.style.cssText = `width: 30em;`;
     _searchBarInput.addEventListener('keyup', (ev) => {
         const _input = _searchBarInput.value
-        if (DEBUG) console.log(`Updated Input: ${_input}`);
+        if (SETTINGS.DebugLevel > 0) console.log(`Updated Input: ${_input}`);
         if (_input.length >= 3) {
             database.query(_input, (_objArr) => {
-                if (DEBUG) console.log(`Found ${_objArr.length} Items with this Search`);
+                if (SETTINGS.DebugLevel > 0) console.log(`Found ${_objArr.length} Items with this Search`);
 
                 // for (let i = 0; i < _objArr.length; i++) {
                 //     console.log(`Item${i}: => ${_objArr[i].description_full}`);
@@ -815,7 +817,7 @@ function init() {
     // Modify Pageination if exists
     const _pageinationContainer = document.getElementsByClassName('a-pagination')[0];
     if (_pageinationContainer) {
-        if (DEBUG) console.log('Manipulating Pageination');
+        if (SETTINGS.DebugLevel > 0) console.log('Manipulating Pageination');
         
         const _nextBtn = _pageinationContainer.lastChild;
         const _isNextBtnDisabled = (_nextBtn.getAttribute('class') != 'a-last');

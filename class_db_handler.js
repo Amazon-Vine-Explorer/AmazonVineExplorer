@@ -1,6 +1,6 @@
 console.log('loaded db_handler.js');
 class DB_HANDLER {
-    #version = 1;
+    #version = 2;
     #dbName;
     #storeName;
     #db;
@@ -23,6 +23,7 @@ class DB_HANDLER {
     // Private Init
     async #init(cb) {
        const _request = indexedDB.open(this.#dbName, this.#version);
+       const _storeName = this.#storeName; // private class variable is not accessable inside _request functions
         
         _request.onerror = (event) => {
             cb(undefined, true)
@@ -40,9 +41,9 @@ class DB_HANDLER {
             const _req = event.target;
             const _db = _req.result;
 
-            if (!_db.objectStoreNames.contains(OBJECT_STORE_NAME)) {
-                if (DEBUG) console.log('Database needs to be created...');
-                const _storeOS = _db.createObjectStore(OBJECT_STORE_NAME, { keyPath: 'id' });
+            if (!_db.objectStoreNames.contains(_storeName)) {
+                if (SETTINGS.DebugLevel > 0) console.log('Database needs to be created...');
+                const _storeOS = _db.createObjectStore(_storeName, { keyPath: 'id' });
                 _storeOS.createIndex('isNew', 'isNew', { unique: false });
                 _storeOS.createIndex('isFav', 'isFav', { unique: false });
             } else {
@@ -52,7 +53,7 @@ class DB_HANDLER {
 
                 // Now, get a reference to the existing object store
                 // @type IDBObjectStore
-                const _store = _transaction.objectStore(OBJECT_STORE_NAME);
+                const _store = _transaction.objectStore(_storeName);
 
                 switch(event.oldVersion) { // existing db version
                     //case 0: // We had to Create the DB, but this case should never happen

@@ -9,7 +9,8 @@ class Product {
     data_img_url;
     data_img_alt;
     data_asin;
-
+    data_estimated_tax;
+    prize;
     isFav = false;
     isNew = true;
     gotRemoved = false;
