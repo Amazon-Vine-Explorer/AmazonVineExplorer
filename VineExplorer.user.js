@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.6.1
+// @version      0.6.2
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
@@ -74,12 +74,6 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res,
     });
     }
 });
-
-
-let local_lang; // Local Language
-let db;         // Database Object
-// let productDB;  // Database Transaction
-
 
 // Check if Product exists in our Database or if it is a new one
 function existsProduct(id) { 
