@@ -26,6 +26,16 @@
 // ==/UserScript==
 
 /* 
+    Versioning: 
+    a.b.c[.d]
+
+    a => Hauptversion(Major), änerdt sich nur bei breaking oder anderen gravirenden änderungen. Solle In diesem Fall also die 1 nie überschreiten.
+    b => Feature(Minor), ändert sich nur wenn neue Features hinzukommen oder gößere umstellungen im Hintergrund passiert sind
+    c => Patch, kleinere Änderungen oder "größere" Bugfixes
+    d => Micro(OPTIONAL), kleine Bugfixes die nur wenige Zeilen Code beinhalten. Wird normalerweise nicht an die Versionnummer angehängt und nur in ausnahmefällen verwendet. Wie z.B. 0.6.4.1 - Das war nur eine Fehlerhafte Variablendeklaration. musste aber public gehen weil es ein Breaking Bug war
+
+
+
     Sammlung der Ideen:
     - Datenbank Import und Export, Idee von "Finding_Won_Ton_Chin" - MyDeals
     - Pageination nach oben schieben || Kopieren
@@ -42,9 +52,7 @@
     - Reload der Neue Produkte Seite nach einem Click auf "Alle als gesehen Markieren"
 
     - Originale Pagination auf den eigenen Seiten verstecken
-    - Automatisches Datenbank Cleanup
     - Last Seen Update 
-    - Löschen von Produkten die nicht mehr in Vine verfügbar sind
     - Changelog hinzufügen
 */
 
