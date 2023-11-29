@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.6.4
+// @version      0.6.4.1
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
@@ -55,7 +55,7 @@ loadSettings();
 fastStyleChanges();
 
 let productDBIds = [];
-searchInputTimeout = null;
+let searchInputTimeout;
 
 const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res, err) => {
     if (err) {
