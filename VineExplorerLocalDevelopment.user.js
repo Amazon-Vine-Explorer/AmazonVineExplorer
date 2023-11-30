@@ -31,10 +31,12 @@
  * - Auf der Seite die Option "Zugriff auf Datei-URLs zulassen" aktivieren
  * 
  * Dieses Template als eigenes script in Tampermonkey hinzufügen oder mit dem link istallieren
- * - Link folgt wenn es das erste mal per git hochgeladen wurde...
+ * - https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/VineExplorerLocalDevelopment.user.js
  * - Die Pfade der Dateien bei @require and eure localen Pfade anpassen
  * 
  * NICHT VERGESSEN die Onlineversion deaktivieren wenn ihr mit dieser arbeitet
+ * 
+ * Die @grant Einstellungen immer gegenchecken, da die Header des Hauptscripts nicht beachtet werden und Tampermonkey nur die hier gesetzten Optionen verwendet
  * 
  * Vorteil: Lokale Dateiänderungen werden sofort nach Websitereload angewendet, das macht das entwickeln leichter und effektiver
  */
