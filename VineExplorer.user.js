@@ -176,10 +176,12 @@ function addLeftSideButtons(forceClean) {
     
     _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
-    const _setAllSeenBtn = createButton('Alle als gesehen markieren', 'background-color: lime;', () => {
+    const _setAllSeenBtn = createButton('Alle als gesehen markieren','vve-btn-allseen',  'background-color: lime;', () => {
+        
         if (SETTINGS.DebugLevel > 0) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
+    
 
     _nodesContainer.appendChild(_setAllSeenBtn);
 
@@ -232,9 +234,9 @@ function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
     });
 }
 
-function createButton(text, style, clickHandler){
+function createButton(text, id, style, clickHandler){
     const _btnSpan = document.createElement('span');
-    _btnSpan.setAttribute('id', 'vve-btn-updateDB');
+    _btnSpan.setAttribute('id', id);
     _btnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
     _btnSpan.setAttribute('aria-checked', 'true');
     _btnSpan.innerHTML = `
@@ -670,6 +672,36 @@ function handleAutoScan() {
                 }, 10000);
             }, _delay + 2000);
         });
+    }
+}
+
+window.onscroll = () => { // ONSCROLL Event handler
+    stickElementToTopScrollEVhandler('vve-btn-allseen', 5);
+};
+
+function stickElementToTopScrollEVhandler(elemID, dist) {
+    const _elem = document.getElementById(elemID);
+    if (_elem) {
+        const maxScrollHeight = Math.max(
+            document.body.scrollHeight - window.innerHeight, 
+            document.documentElement.scrollHeight - window.innerHeight
+        );
+
+        requestAnimationFrame(() => { 
+            const _elemRect = _elem.getBoundingClientRect();
+
+            const _elemInitialTop = parseInt(_elem.getAttribute('vve-data-default-top'));
+            if (!_elemInitialTop) {_elem.setAttribute('vve-data-default-top', (window.scrollY + _elemRect.top)); return;}
+
+            console.log(`### scrollY:${window.scrollY} maxScrollHeigt ${maxScrollHeight} initialTop: ${_elemInitialTop}`);
+
+            if (window.scrollY >= (_elemInitialTop - dist)) {
+                _elem.style.position = "fixed";
+                _elem.style.top = '5px';
+            } else {
+                _elem.style.position = "static";
+            }
+        })
     }
 }
 
