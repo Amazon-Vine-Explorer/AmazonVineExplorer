@@ -64,8 +64,11 @@ fastStyleChanges();
 
 let productDBIds = [];
 let searchInputTimeout;
+unsafeWindow.vve = new Object();
+unsafeWindow.vve.DB_HANDLER = DB_HANDLER;
+unsafeWindow.vve.settings = SETTINGS;
 
-const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res, err) => {
+const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATABASE_VERSION, (res, err) => {
     if (err) {
         console.error(`Somithing was going wrong while init database :'(`);
         return;
@@ -75,15 +78,26 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res,
             productDBIds = keys;
             
             let _execLock = false;
-            waitForHtmlElmement('.vvp-details-btn', () => {
-                if (_execLock) return;
+            console.log('Lets Check where we are....');
+            if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\//.test(window.location.href)){
+                 console.log('We are on Amazon Vine'); // We are on the amazon vine site
+                waitForHtmlElmement('.vvp-details-btn', () => {
+                    if (_execLock) return;
+                    _execLock = true;
+                    addBrandig();
+                    init();
+                });
+            } else if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/(?!vine)(?!gp\/video)(?!music)/.test(window.location.href)) {
+                console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
                 _execLock = true;
-                addBrandig();
-                init();
-            })
-    });
+                addBrandig(); // For now, olny show that the script is active
+            }
+    	});
     }
 });
+
+
+unsafeWindow.vve.database = database; // Make it accessable from console
 
 // Check if Product exists in our Database or if it is a new one
 function existsProduct(id) { 
@@ -99,7 +113,6 @@ async function parseTileData(tile, cb) {
 
     
     if (existsProduct(_id)) {
-        
         database.get(_id, (_ret) => {
             _ret.gotFromDB = true;
             _ret.ts_lastSeen = unixTimeStamp();

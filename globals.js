@@ -16,6 +16,7 @@ const PAGE_LOAD_TIMESTAMP = Date.now();
 // Obsolete sobald die Datenbank über Tampermonkey läuft
 const DATABASE_NAME = 'VineVoiceExplorer';
 const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
+const DATABASE_VERSION = 2;
 
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;
@@ -37,10 +38,24 @@ class SETTINGS_DEFAULT {
     CssProductRemovalTag = "border: 2mm ridge rgba(255, 87, 51, .6); background-color: rgba(255, 87, 51, .2)";
     CssProductDefault = "border: 2mm ridge rgba(173,216,230, .6); background-color: rgba(173,216,230, .2)";
 
-    constructor() {}
+    constructor() {
+        unsafeWindow.addEventListener('vve-save-cofig', () => {
+            console.log('Got Save Event');
+            this.save(true);
+        })
+    }
 
     CssProductFavStar() {
         return `float: right; display: flex; margin: 0px; color: ${this.FavStarColorDefault}; height: 0px; font-size: 25px; text-shadow: black -1px 0px, black 0px 1px, black 1px 0px, black 0px -1px; cursor: pointer;`;
+    }
+    
+    save(local) {
+        if (local) {
+            console.warn('Saving Config:', this);
+            return GM_setValue('VVE_SETTINGS', this);
+        } else {
+            unsafeWindow.dispatchEvent(new Event('vve-save-cofig')); // A little trick to beat the Namespace Problem ;)
+        }
     }
 }
 
@@ -51,6 +66,7 @@ const SETTINGS = new SETTINGS_DEFAULT();
   */ 
 function loadSettings() {
     const _settingsStore = GM_getValue('VVE_SETTINGS', {});
+    console.log('Got Settings from GM:', _settingsStore);
     const _keys = Object.keys(_settingsStore);
     const _keysLength = _keys.length;
 
