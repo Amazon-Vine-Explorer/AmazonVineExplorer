@@ -4,6 +4,7 @@ class DB_HANDLER {
     #dbName;
     #storeName;
     #db;
+    #eventDelayTimeout;
 
     /**
     * Db Handler to easy use of IndexedDB Object Store Databases
@@ -127,9 +128,12 @@ class DB_HANDLER {
     /**
      * Fires the Event vve-database-changed when any writeaccess has happend
      */
-    
     #fireDataChangedEvent() {
-        vve_eventhandler.emit('vve-database-changed');
+        if (this.#eventDelayTimeout) clearTimeout(this.#eventDelayTimeout);
+        this.#eventDelayTimeout = setTimeout(() => {
+            vve_eventhandler.emit('vve-database-changed');
+            this.#eventDelayTimeout = null;
+        }, 250);
     }
 
     /**

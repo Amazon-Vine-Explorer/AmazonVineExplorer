@@ -108,6 +108,9 @@ unsafeWindow.vve.database = database;
 
 vve_eventhandler.on('vve-database-changed', () => {
     console.warn('EVENT - Database has new Data for us! we should look what has changed');
+
+    updateNewProductsBtn();
+    
 })
 
 
@@ -749,6 +752,7 @@ function initBackgroundScan() {
                 function _scanFinished() {
                     if (SETTINGS.DebugLevel > 0) console.log(`initBackgroundScan()._scanFinished()`);
                     localStorage.setItem('BACKGROUND_SCAN_STAGE', _backGroundScanStage);
+                    localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                     _loopIsWorking = false;
                 }
             }, SETTINGS.BackGroundScanDelayPerPage);
@@ -773,6 +777,7 @@ function backGroundTileScanner(url, cb) {
             for (let i = 0; i < _tilesLength; i++) {
                 parseTileData(_tiles[i], (prod) => {
                     _returned++;
+                    if (!prod.gotFromDB) database.add(prod);
                     if (SETTINGS.DebugLevel > 0) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
                     if (_returned == _tilesLength) cb(true);
                 })
@@ -855,6 +860,70 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
     }
 }
 
+
+
+
+    function updateNewProductsBtn() {
+        if (SETTINGS.DebugLevel > 0) console.log('Called updateNewProductsBtn()');
+        database.getNewEntries((prodArr) => { 
+            const _btnBadge = document.getElementById('vve-new-items-btn-badge');
+            const _prodArrLength = prodArr.length;
+            if (SETTINGS.DebugLevel > 0) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
+
+            if (_prodArrLength > 0) {
+                _btnBadge.style.display = 'inline-block';
+                _btnBadge.innerText = _prodArrLength;
+            } else {
+                _btnBadge.style.display = 'none';
+                _btnBadge.innerText = '';
+            }
+        })
+    }
+
+
+
+
+    function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeValue) {
+        const _btn = document.createElement('span');
+        _btn.setAttribute('id', mainID);
+        _btn.setAttribute('class', 'a-button a-button-normal a-button-toggle');
+        _btn.addEventListener('click', onclick);
+
+        const _btnInner = document.createElement('span');
+        _btnInner.classList.add('a-button-inner');
+        _btnInner.style.backgroundColor = color;
+        _btn.append(_btnInner);
+
+        const _btnInnerText = document.createElement('span');
+        _btnInnerText.setAttribute('id', textID);
+        _btnInnerText.classList.add('a-button-text');
+        _btnInnerText.innerText = text;
+        _btnInner.append(_btnInnerText);
+
+        if (badgeId) {
+            const _btnInnerBadge = document.createElement('span');
+            _btnInnerBadge.setAttribute('id', badgeId)
+            _btnInnerBadge.style.backgroundColor = 'red';
+            _btnInnerBadge.style.color = 'white';
+            _btnInnerBadge.style.minWidth = '20px';
+            _btnInnerBadge.style.width =  '40px';
+            _btnInnerBadge.style.display = 'inline-block';
+            _btnInnerBadge.style.textAlign = 'center';
+            _btnInnerBadge.style.borderRadius = '10px';
+            // _btnInnerBadge.style.transform = 'translate(-75%, -100%)';
+            _btnInnerBadge.style.zIndex = '50';
+            _btnInnerBadge.style.position = 'relativ';
+            // _btnInnerBadge.style.padding = '5px';
+            _btnInnerBadge.style.marginLeft = '5px';
+
+            _btnInnerBadge.innerText = badgeValue;
+            _btnInnerText.append(_btnInnerBadge);
+        }
+
+        return _btn;
+    }
+
+
 function init() {
     // Get all Products on this page ;)
     
@@ -921,35 +990,45 @@ function init() {
     // Add Searchbar and all other stuff from this script ;)
 
     // Favorites Button
-    const _favBtnSpan = document.createElement('span');
-    _favBtnSpan.setAttribute('id', 'vve-btn-favorites');
-    _favBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
-    _favBtnSpan.innerHTML = `
-        <span class="a-button-inner" style="background-color: ${SETTINGS.FavBtnColor}">
-            <span class="a-button-text">${'Favoriten'}</span>
-        </span>
-    `;
-    _favBtnSpan.addEventListener('click', (ev) => {
-        createNewSite(PAGETYPE.FAVORITES);
-    });
+    // const _favBtnSpan = document.createElement('span');
+    // _favBtnSpan.setAttribute('id', 'vve-btn-favorites');
+    // _favBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
+    // _favBtnSpan.innerHTML = `
+    //     <span class="a-button-inner" style="background-color: ${SETTINGS.FavBtnColor}">
+    //         <span class="a-button-text">${'Favoriten'}</span>
+    //     </span>
+    // `;
+    // _favBtnSpan.addEventListener('click', (ev) => {
+    //     createNewSite(PAGETYPE.FAVORITES);
+    // });
 
-    _searchbarContainer.appendChild(_favBtnSpan);
+    // _searchbarContainer.appendChild(_favBtnSpan);
 
 
     // Update DB Button
-    const _showNewBtnSpan = document.createElement('span');
-    _showNewBtnSpan.setAttribute('id', 'vve-btn-list-new');
-    _showNewBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
-    _showNewBtnSpan.innerHTML = `
-        <span class="a-button-inner">
-            <span class="a-button-text" id="vve-new-items-btn">Neue Produkte</span>
-        </span>
-    `;
-    _showNewBtnSpan.addEventListener('click', (ev) => {
-        createNewSite(PAGETYPE.NEW_ITEMS);
-    });
+    // const _showNewBtnSpan = document.createElement('span');
+    // _showNewBtnSpan.setAttribute('id', 'vve-btn-list-new');
+    // _showNewBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
+    // _showNewBtnSpan.innerHTML = `
+    //     <span class="a-button-inner">
+    //         <span class="a-button-text" id="vve-new-items-btn">Neue Produkte
+    //             <span id="vve-new-items-btn-badge" style="background-color: red;color: white;min-width: 20px;display: inline-block;text-align: center;border-radius: 10px;transform: translate(-75%, -100%);z-index: 50;position: fixed;padding: 5px ">1</span>
+    //         </span>
+    //     </span>
+    // `;
+    // _showNewBtnSpan.addEventListener('click', (ev) => {
+    //     createNewSite(PAGETYPE.NEW_ITEMS);
+    // });
 
-    _searchbarContainer.appendChild(_showNewBtnSpan);
+    // _searchbarContainer.appendChild(_showNewBtnSpan);
+
+    
+
+
+    _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
+    _searchbarContainer.appendChild(createNavButton('vve-btn-list-new', 'Neue Einträge', 'vve-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'vve-new-items-btn-badge', '-'));
+    updateNewProductsBtn();
+
 
     // Searchbar
     const _searchBarSpan = document.createElement('span');
