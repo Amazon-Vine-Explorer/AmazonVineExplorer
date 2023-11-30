@@ -26,6 +26,7 @@ class SETTINGS_DEFAULT {
     DisableSuggestions = true;
     DisableFooterShopping = false;
     DisableSuggestionsShopping = false;
+    EnableBackgroundScan = true;
     FavBtnColor = 'rgb(255, 255, 102)';
     FavStarColorDefault = 'white';
     FavStarColorChecked = '#ffe143';
@@ -35,6 +36,7 @@ class SETTINGS_DEFAULT {
     MaxItemsPerPage = 500;
     FetchRetryTime = 50;
     FetchRetryMaxTime = 5000;
+    BackGroundScanDelayPerPage = 4000;
 
     CssProductNewTag = "border: 2mm ridge rgba(218, 247, 166, .6); background-color: rgba(218, 247, 166, .2)";
     CssProductSaved = "border: 2mm ridge rgba(105, 163, 0, .6); background-color: rgba(105, 163, 0, .2)";
@@ -120,23 +122,24 @@ function toTimestamp(unixTimestamp) {
     * Waits until a HTML Element exists ans fires callback if it is found
     * @param {string} selector querySelector
     * @param {function} cb Callback Function 
+    * @param {object} [altDocument] Alternativ document root
     */ 
-async function waitForHtmlElmement(selector, cb) {
+async function waitForHtmlElmement(selector, cb, altDocument = document) {
     if (typeof(selector) != 'string') throw new Error('waitForHtmlElement(): selector is not defined or is not type of string');
     if (typeof(cb) != 'function') throw new Error('waitForHtmlElement(): cb is not defined or is not type of string');
 
-    if (document.querySelector(selector)) {
-        cb(document.querySelector(selector));
+    if (altDocument.querySelector(selector)) {
+        cb(altDocument.querySelector(selector));
     }
 
     const _observer = new MutationObserver(mutations => {
-        if (document.querySelector(selector)) {
+        if (altDocument.querySelector(selector)) {
             _observer.disconnect();
-            cb(document.querySelector(selector));
+            cb(altDocument.querySelector(selector));
         }
     });
 
-    _observer.observe(document.body || document, {
+    _observer.observe(altDocument.body || altDocument, {
         childList: true,
         subtree: true
     });

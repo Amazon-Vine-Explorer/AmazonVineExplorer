@@ -64,9 +64,15 @@ fastStyleChanges();
 
 let productDBIds = [];
 let searchInputTimeout;
-unsafeWindow.vve = new Object();
-unsafeWindow.vve.DB_HANDLER = DB_HANDLER;
-unsafeWindow.vve.settings = SETTINGS;
+let backGroundScanInterval;
+
+unsafeWindow.vve = {
+    classes: [
+        DB_HANDLER = DB_HANDLER
+    ],
+    config: SETTINGS,
+};
+
 
 const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATABASE_VERSION, (res, err) => {
     if (err) {
@@ -565,11 +571,14 @@ function addBrandig() {
     document.body.appendChild(_text);
 }
 
-function getPageinationData() {
+
+function getPageinationData(localDocument = document) {
     if (SETTINGS.DebugLevel > 0) console.log('Called getPageinationData()');
     const _ret = new Object();
-    const _paginationContainer = document.querySelector('.a-pagination');
-    
+    const _paginationContainer = localDocument.querySelector('.a-pagination');
+    if (!_paginationContainer) return;
+    if (!_paginationContainer.lastChild) return;
+
     let _currChild = _paginationContainer.lastChild;
 
     while ((!_ret.href || !_ret.maxPage) && _currChild) {
@@ -644,6 +653,124 @@ async function cleanUpDatabase(cb = () => {}) {
     });
 }
 
+function initBackgroundScan() {
+    if (SETTINGS.DebugLevel > 0) console.log('Called initBackgroundScan()');
+    const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+    
+     // Create iFrame if not exists
+    if (!document.querySelector('#vve-iframe-backgroundloader')) {
+        if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): create iFrame');
+        const iframe = document.createElement('iframe');
+            iframe.src = encodeURI(`${_baseUrl}?queue=encore&pn=&cn=&page=1`);
+            iframe.id = 'vve-iframe-backgroundloader';
+            iframe.style.position = 'fixed';
+            iframe.style.top = '0';
+            iframe.style.left = '-5000';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.display = 'none';
+            iframe.style.zIndex = '100';
+            document.body.appendChild(iframe);
+    } 
+    
+    const _paginatinWaitLoop = setInterval(() => {
+        const _pageinationData = getPageinationData(document.querySelector('#vve-iframe-backgroundloader').contentWindow.document);
+        if (_pageinationData) {
+            clearInterval(_paginatinWaitLoop);
+            if (!localStorage.getItem('BACKGROUND_SCAN_IS_RUNNING') || true) {
+                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): init localStorage Variables');
+                localStorage.setItem('BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
+                localStorage.setItem('BACKGROUND_SCAN_IS_RUNNING', true);
+                localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', 1);
+                localStorage.setItem('BACKGROUND_SCAN_STAGE', 0);
+            } 
+            
+            let _loopIsWorking = false;
+            let _subStage = 0;
+            const _stageZeroSites = ['queue=potluck', 'queue=last_chance']
+            
+            backGroundScanInterval = setInterval(() => {
+                if (_loopIsWorking) return;
+                _loopIsWorking = true;
+
+                let _backGroundScanStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_STAGE')) || 0;
+                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage);
+                
+                switch (_backGroundScanStage) {
+                    case 0:{    // potluck, last_chance
+                            if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
+                            if (_stageZeroSites[_subStage]) {
+                                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
+                                backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
+                                _subStage++
+                            } else {
+                                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
+                                _subStage = 0;
+                                _backGroundScanStage++;
+                                _scanFinished();
+                            }
+                            break;
+                        }
+                        case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
+                            _subStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_CURRENT'));
+                            if (_subStage < (parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
+                                backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
+                                _subStage++
+                                localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                            } else {
+                                _subStage = 0;
+                                _backGroundScanStage++;
+                                _scanFinished();
+                            }
+                        break;            }
+                        case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
+                                _subStage = 0;
+                                _backGroundScanStage++;
+                                _scanFinished();
+                            break;
+                        }   
+                        default: {
+                            _backGroundScanStage = 0;
+                            _subStage = 0;
+                            _scanFinished();
+                            clearInterval(backGroundScanInterval);
+                        }
+                }
+
+                function _scanFinished() {
+                    if (SETTINGS.DebugLevel > 0) console.log(`initBackgroundScan()._scanFinished()`);
+                    localStorage.setItem('BACKGROUND_SCAN_STAGE', _backGroundScanStage);
+                    _loopIsWorking = false;
+                }
+            }, SETTINGS.BackGroundScanDelayPerPage);
+        }
+    }, 250);
+}
+
+function backGroundTileScanner(url, cb) {
+    if (SETTINGS.DebugLevel > 0) console.log(`Called backgroundTileScanner(${url})`);
+    const _iframeDoc = document.querySelector('#vve-iframe-backgroundloader').contentWindow.document;
+    vve.backGroundIFrame = _iframeDoc;
+    _iframeDoc.location.href = url;
+    const _loopDelay = setInterval(() => {
+        if (SETTINGS.DebugLevel > 0) console.log(`backgroundTileScanner(): check if we have tiles to read...`);
+        const _tiles =_iframeDoc.querySelectorAll('.vvp-item-tile');
+        if (_tiles) {
+            if (SETTINGS.DebugLevel > 0) console.log(`backgroundTileScanner(): Found first Tile`);
+            const _tilesLength = _tiles.length;
+            if (SETTINGS.DebugLevel > 0) console.log(`BackgroundsScan Querryd: ${url} and got ${_tilesLength} Tiles`);
+            clearInterval(_loopDelay);
+            let _returned = 0;
+            for (let i = 0; i < _tilesLength; i++) {
+                parseTileData(_tiles[i], (prod) => {
+                    _returned++;
+                    if (SETTINGS.DebugLevel > 0) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
+                    if (_returned == _tilesLength) cb(true);
+                })
+            }
+        }
+    }, 100);
+}
 
 function startAutoScan() {
     if (SETTINGS.DebugLevel > 0) console.log('Called startAutoScan()');
@@ -662,7 +789,6 @@ function startAutoScan() {
         }, 5000);
     })
 }
-
 
 function handleAutoScan() {
     let _href;
@@ -732,7 +858,7 @@ function init() {
         const _currTile = _tiles[i];
         _currTile.style.cssText = "background-color: yellow;";
          parseTileData(_currTile, (_product) => {
-            console.log(`Got TileData Back: ${JSON.stringify(_product, null, 4)}`);
+            console.log(`Got TileData Back: `, _product);
             
             _countdown++;
             const _tilesToDoCount = _tilesLength - _countdown;
@@ -842,29 +968,33 @@ function init() {
         }
     });
 
-    _searchBarSpan.appendChild(_searchBarInput);
-    _searchbarContainer.appendChild(_searchBarSpan);
+    
+        _searchBarSpan.appendChild(_searchBarInput);
+        _searchbarContainer.appendChild(_searchBarSpan);
 
+    if (!SETTINGS.EnableBackgroundScan) { // When Backgroundscan ins Enabled we can not Scan Manually
+        // Update DB Button
+        const _updateDBBtnSpan = document.createElement('span');
+        _updateDBBtnSpan.setAttribute('id', 'vve-btn-updateDB');
+        _updateDBBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
+        _updateDBBtnSpan.setAttribute('aria-checked', 'true');
+        _updateDBBtnSpan.innerHTML = `
+            <span class="a-button-inner" style="background-color: lime">
+                <span class="a-button-text">Update Database</span>
+            </span>
+        `;
+        _updateDBBtnSpan.addEventListener('click', (ev) => {
+            localStorage.setItem('INIT_AUTO_SCAN', true);
+            window.location.href = "vine-items?queue=encore";
+        });
 
-    // Update DB Button
-    const _updateDBBtnSpan = document.createElement('span');
-    _updateDBBtnSpan.setAttribute('id', 'vve-btn-updateDB');
-    _updateDBBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
-    _updateDBBtnSpan.setAttribute('aria-checked', 'true');
-    _updateDBBtnSpan.innerHTML = `
-        <span class="a-button-inner" style="background-color: lime">
-            <span class="a-button-text">Update Database</span>
-        </span>
-    `;
-    _updateDBBtnSpan.addEventListener('click', (ev) => {
-        localStorage.setItem('INIT_AUTO_SCAN', true);
-        window.location.href = "vine-items?queue=encore";
-    });
-
-    _searchbarContainer.appendChild(_updateDBBtnSpan);
+        _searchbarContainer.appendChild(_updateDBBtnSpan);
+    }
 
     addLeftSideButtons();
 
+    if (SETTINGS.EnableBackgroundScan) initBackgroundScan();
+    
     // Modify Pageination if exists
     const _pageinationContainer = document.getElementsByClassName('a-pagination')[0];
     if (_pageinationContainer) {
