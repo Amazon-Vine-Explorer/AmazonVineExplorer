@@ -124,6 +124,13 @@ class DB_HANDLER {
         _request.onerror = (event) => {cb([]); throw new Error(`DB_HANDLER.#checkForDuplicatedAsin: ${event.target.error.name}`);};
     };
 
+    /**
+     * Fires the Event vve-database-changed when any writeaccess has happend
+     */
+    
+    #fireDataChangedEvent() {
+        vve_eventhandler.emit('vve-database-changed');
+    }
 
     /**
     * Get Object Store Object
@@ -154,6 +161,7 @@ class DB_HANDLER {
         
         _request.onsuccess = (event) => {
             cb(true);
+            this.#fireDataChangedEvent();
         };
     };
 
@@ -210,6 +218,7 @@ class DB_HANDLER {
         _request.onsuccess = (event) => {
             console.log('Called DB_HANDLER:update() --> success');
             cb(true);
+            this.#fireDataChangedEvent();
         }
     };
 
@@ -352,17 +361,11 @@ class DB_HANDLER {
         const _request = this.#getStore(true).delete(id);
         _request.onsuccess = (event) => {
             cb(true);
+            this.#fireDataChangedEvent();
         };
 
         _request.onerror = (event) => {cb(); throw new Error(`DB_HANDLER.removeID(): ${event.target.error.name}`);};
     };
-
-
-    
-
-
-
-
 }
 
 

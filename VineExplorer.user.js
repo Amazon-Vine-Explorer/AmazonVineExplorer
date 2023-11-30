@@ -66,11 +66,13 @@ let productDBIds = [];
 let searchInputTimeout;
 let backGroundScanInterval;
 
+// Make some things accessable from console
 unsafeWindow.vve = {
     classes: [
         DB_HANDLER = DB_HANDLER
     ],
     config: SETTINGS,
+    event: vve_eventhandler,
 };
 
 
@@ -102,8 +104,15 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
     }
 });
 
+unsafeWindow.vve.database = database;
 
-unsafeWindow.vve.database = database; // Make it accessable from console
+vve_eventhandler.on('vve-database-changed', () => {
+    console.warn('EVENT - Database has new Data for us! we should look what has changed');
+})
+
+
+
+
 
 // Check if Product exists in our Database or if it is a new one
 function existsProduct(id) { 

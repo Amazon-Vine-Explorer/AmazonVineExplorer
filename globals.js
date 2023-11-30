@@ -20,6 +20,35 @@ const DATABASE_NAME = 'VineVoiceExplorer';
 const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
 const DATABASE_VERSION = 2;
 
+class VVE_EVENTHANDLER {
+    
+     /**
+    * VVE Eventhandler
+    * A very basic and simple eventhandler/wrapper
+    * @constructor
+    * @return {VVE_EVENTHANDLER} VVE_EVENTHANDLER Object
+    */ 
+    constructor(){}
+    
+    /**
+    * Fire out an Event
+    * @param {string} eventName Thats the Name of the Event u want to fire
+    */
+    emit(eventName) {
+        unsafeWindow.dispatchEvent(new Event(eventName));
+    }
+
+    /**
+     * Add a Eventlistener
+     * @param {string} eventName Thats the Name of the Event u want to listen for
+     * @param {function} cb Thats the function who gets calles in case of this event
+     */
+    on(eventName, cb) {
+        unsafeWindow.addEventListener(eventName, cb);
+    }
+}
+const vve_eventhandler = new VVE_EVENTHANDLER();
+
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;
     DisableFooter = true;
@@ -45,7 +74,7 @@ class SETTINGS_DEFAULT {
     CssProductDefault = "border: 2mm ridge rgba(173,216,230, .6); background-color: rgba(173,216,230, .2)";
 
     constructor() {
-        unsafeWindow.addEventListener('vve-save-cofig', () => {
+        vve_eventhandler.on('vve-save-cofig', () => {
             console.log('Got Save Event');
             this.save(true);
         })
@@ -60,7 +89,7 @@ class SETTINGS_DEFAULT {
             console.warn('Saving Config:', this);
             return GM_setValue('VVE_SETTINGS', this);
         } else {
-            unsafeWindow.dispatchEvent(new Event('vve-save-cofig')); // A little trick to beat the Namespace Problem ;)
+            vve_eventhandler.emit('vve-save-cofig'); // A little trick to beat the Namespace Problem ;)
         }
     }
 }
