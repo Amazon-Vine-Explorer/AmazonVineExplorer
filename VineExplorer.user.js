@@ -102,6 +102,7 @@ async function parseTileData(tile, cb) {
         
         database.get(_id, (_ret) => {
             _ret.gotFromDB = true;
+            _ret.ts_lastSeen = unixTimeStamp();
             cb(_ret);
         });
 
@@ -130,8 +131,6 @@ async function parseTileData(tile, cb) {
     
     _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
     _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-    // _newProduct.ts_firstSeen = unixTimeStamp();
-    // _newProduct.ts_lastSeen = unixTimeStamp();
     _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
     
     
