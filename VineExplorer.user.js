@@ -6,9 +6,8 @@
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
 // @author       MarkusSR1984
-// @match        *://www.amazon.de/vine/*
-// @match        *://amazon.de/vine/*
-// @match        *://www.amazon.de/-/en/vine/*
+// @match        *://www.amazon.de/*
+// @match        *://www.amazon.com/*
 // @license      MIT
 // @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
 // @run-at       document-start
@@ -59,6 +58,7 @@
 'use strict';
 console.log(`Init Vine Voices Explorer ${VVE_VERSION}`);
 
+
 loadSettings();
 fastStyleChanges();
 
@@ -79,7 +79,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
             
             let _execLock = false;
             console.log('Lets Check where we are....');
-            if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\//.test(window.location.href)){
+            if (SITE_IS_VINE){
                  console.log('We are on Amazon Vine'); // We are on the amazon vine site
                 waitForHtmlElmement('.vvp-details-btn', () => {
                     if (_execLock) return;
@@ -87,7 +87,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                     addBrandig();
                     init();
                 });
-            } else if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/(?!vine)(?!gp\/video)(?!music)/.test(window.location.href)) {
+            } else if (SITE_IS_SHOPPING) {
                 console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
                 _execLock = true;
                 addBrandig(); // For now, olny show that the script is active
@@ -705,7 +705,7 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
             const _elemInitialTop = parseInt(_elem.getAttribute('vve-data-default-top'));
             if (!_elemInitialTop) {_elem.setAttribute('vve-data-default-top', (window.scrollY + _elemRect.top)); return;}
 
-            console.log(`### scrollY:${window.scrollY} maxScrollHeigt ${maxScrollHeight} initialTop: ${_elemInitialTop}`);
+            if (SETTINGS.DebugLevel > 10) console.log(`### scrollY:${window.scrollY} maxScrollHeigt ${maxScrollHeight} initialTop: ${_elemInitialTop}`);
 
             if (window.scrollY >= (_elemInitialTop - dist)) {
                 _elem.style.position = "fixed";

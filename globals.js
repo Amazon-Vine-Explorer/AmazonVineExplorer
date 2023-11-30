@@ -5,6 +5,8 @@ if (window.top != window.self) return; //don't run on frames or iframes
 const VVE_VERSION = (/@version\s+([0-9+.]+)/.exec(GM_info.scriptMetaStr)[1]) || 'ERR';
 const SECONDS_PER_WEEK = 604800 / 2;
 const SECONDS_PER_DAY = 86400;
+const SITE_IS_VINE = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\//.test(window.location.href);
+const SITE_IS_SHOPPING = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/(?!vine)(?!gp\/video)(?!music)/.test(window.location.href);
 
 // Obsolete sobald der Backgroundscan läuft
 const INIT_AUTO_SCAN = (localStorage.getItem('INIT_AUTO_SCAN') == 'true') ? true : false;
@@ -22,6 +24,8 @@ class SETTINGS_DEFAULT {
     EnableFullWidth = true;
     DisableFooter = true;
     DisableSuggestions = true;
+    DisableFooterShopping = false;
+    DisableSuggestionsShopping = false;
     FavBtnColor = 'rgb(255, 255, 102)';
     FavStarColorDefault = 'white';
     FavStarColorChecked = '#ffe143';
@@ -72,10 +76,8 @@ function loadSettings() {
 
     for (let i = 0; i < _keysLength; i++) {
         const _currKey = _keys[i];
-
-        if (!SETTINGS.hasOwnProperty(_currKey)) {
-            SETTINGS[_currKey] = _settingsStore[_currKey];
-        }
+        console.log(`Restore Setting: ${_currKey} with Value: ${_settingsStore[_currKey]}`)
+        SETTINGS[_currKey] = _settingsStore[_currKey];
     }
 }
 
@@ -83,7 +85,7 @@ function loadSettings() {
   * Save Settings to GM Storage
   */ 
 function saveSettings() {
-    GM.setValue('VVE_SETTINGS', SETTINGS).then(() => {'DONE ;)'});
+    SETTINGS.save();
 }
 
 /**
@@ -145,24 +147,45 @@ async function waitForHtmlElmement(selector, cb) {
     * This Function will Monitor and fire Style Changes asap
     */ 
 async function fastStyleChanges() {
-    if (SETTINGS.EnableFullWidth) {
-        waitForHtmlElmement('.vvp-body', (elem) => {
-            elem.style.maxWidth = '100%';
-        });
+  
+    if (SITE_IS_VINE) {
+        if (SETTINGS.EnableFullWidth) {
+            waitForHtmlElmement('.vvp-body', (elem) => {
+                elem.style.maxWidth = '100%';
+            });
+        }
+
+        if (SETTINGS.DisableSuggestions) {
+                        //rhf-frame
+            waitForHtmlElmement('.copilot-secure-display', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+        }
+
+        if (SETTINGS.DisableFooter) {
+            waitForHtmlElmement('#navFooter', (elem) => {
+                elem.style.display = 'none';
+                elem.style.visibility = 'hidden';
+            });
+        }
+    } else if (SITE_IS_SHOPPING) {
+
+        if (SETTINGS.DisableSuggestionsShopping) {
+                        //rhf-frame
+            waitForHtmlElmement('#rhf', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+        }
+
+        if (SETTINGS.DisableFooterShopping) {
+            waitForHtmlElmement('#navFooter', (elem) => {
+                elem.style.display = 'none';
+                elem.style.visibility = 'hidden';
+            });
+        }
     }
 
-    if (SETTINGS.DisableSuggestions) {
-                      //rhf-frame
-        waitForHtmlElmement('.copilot-secure-display', (elem) => {
-            elem.style.display = 'none';
-            // elem.style.visibility = 'hidden';
-        });
-    }
 
-    if (SETTINGS.DisableFooter) {
-        waitForHtmlElmement('#navFooter', (elem) => {
-            elem.style.display = 'none';
-            elem.style.visibility = 'hidden';
-        });
-    }
 }
