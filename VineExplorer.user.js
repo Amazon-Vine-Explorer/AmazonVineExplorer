@@ -491,8 +491,11 @@ function initTileEventHandlers() {
             if (SETTINGS.DebugLevel > 0) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
             _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
         }
-    
-        _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
+        
+        waitForHtmlElmement('.vve-favorite-star', (elem) => {
+            _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
+        }, _currTile);
+        
         
     }        
 }
