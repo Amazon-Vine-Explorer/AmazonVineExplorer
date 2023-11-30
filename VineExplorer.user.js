@@ -665,7 +665,7 @@ function handleAutoScan() {
             localStorage.setItem('AUTO_SCAN_PAGE_MAX', -1);
             localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', -1);
             setTimeout(() => {
-                updateAutoScanScreenText('Finished Database\nupdate and cleanup\n\nPage reloading incoming... pleae wait');
+                updateAutoScanScreenText('Finished Database\nupdate and cleanup\n\nPage reloading incoming... please wait');
                 setTimeout(()=> {
                     window.location.href = window.location.href.replace(/=[0-9]+/, '=1');
                 }, 10000);
