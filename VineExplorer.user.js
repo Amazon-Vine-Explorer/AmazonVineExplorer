@@ -903,15 +903,14 @@ function initBackgroundScan() {
                             break;
                         }   
                         default: {
-                            _backGroundScanStage = 0;
-                            _subStage = 0;
                             cleanUpDatabase(() => {
+                                _backGroundScanStage = 0;
+                                _subStage = 0;
                                 _scanFinished();
                             })
-                            clearInterval(backGroundScanInterval);
+                            //clearInterval(backGroundScanInterval);
                         }
                 }
-
                 function _scanFinished() {
                     if (SETTINGS.DebugLevel > 0) console.log(`initBackgroundScan()._scanFinished()`);
                     localStorage.setItem('BACKGROUND_SCAN_STAGE', _backGroundScanStage);
