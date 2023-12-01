@@ -702,6 +702,44 @@ function addDBLoadingSymbol(){
     return _loadingDiv;
 }
 
+function addLoadingSymbol(){
+    const _loadingDiv = document.createElement('div');
+    _loadingDiv.style.width = "25px";
+    _loadingDiv.style.height = "25px";
+    // _loadingDiv.style.position = 'absolute';
+    _loadingDiv.style.position = 'fixed';
+    _loadingDiv.style.zIndex = '9999';
+    _loadingDiv.style.left = '10px';
+    _loadingDiv.style.bottom = '35px';
+
+    _loadingDiv.innerHTML = `
+    <style>
+    .ave-db {
+    }
+    .ave-loading {
+        
+    }
+    .ave-loading svg {
+      animation: rotate 2s linear infinite;
+    }
+    @keyframes rotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(-360deg);
+      }
+    }
+    </style>
+    <div id="loadingVector" class="ave-loading"><svg fill="none" viewBox="0 0 24 24" id="update-alt" data-name="Line Color" xmlns="http://www.w3.org/2000/svg" class="icon line-color"><path id="primary" d="M5.07,8A8,8,0,0,1,20,12" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"></path><path id="primary-2" data-name="primary" d="M18.93,16A8,8,0,0,1,4,12" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"></path><polyline id="secondary" points="5 3 5 8 10 8" style="fill: none; stroke: rgb(44, 169, 188); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"></polyline><polyline id="secondary-2" data-name="secondary" points="19 21 19 16 14 16" style="fill: none; stroke: rgb(44, 169, 188); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"></polyline></svg></div>
+    `;
+    //Vector used
+    //Vector DB: https://www.svgrepo.com/svg/525311/database
+    //Vector Loading: https://www.svgrepo.com/svg/448500/loading
+    document.body.appendChild(_loadingDiv);
+    return _loadingDiv;
+}
+
 function getPageinationData(localDocument = document) {
     if (SETTINGS.DebugLevel > 0) console.log('Called getPageinationData()');
     const _ret = new Object();
@@ -887,6 +925,7 @@ function initBackgroundScan() {
 
 function backGroundTileScanner(url, cb) {
     if (SETTINGS.DebugLevel > 0) console.log(`Called backgroundTileScanner(${url})`);
+    const _iconLoading = addLoadingSymbol();
     const _iframeDoc = document.querySelector('#vve-iframe-backgroundloader').contentWindow.document;
     vve.backGroundIFrame = _iframeDoc;
     _iframeDoc.location.href = url;
@@ -905,13 +944,13 @@ function backGroundTileScanner(url, cb) {
                         _returned++;
                         if (!prod.gotFromDB) database.add(prod);
                         if (SETTINGS.DebugLevel > 0) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
-                        if (_returned == _tilesLength) cb(true);
+                        if (_returned == _tilesLength) {cb(true); _iconLoading.remove()};
                     })
                 }
             } else {
                 if (SETTINGS.DebugLevel > 0) console.log(`BACKGROUNDSCAN => We dont have to do here anything => resume autoscan`);
-                cb(true) // We dont have to do here anything
-
+                cb(true); // We dont have to do here anything
+                _iconLoading.remove();
             }
         }
     }, 100);
