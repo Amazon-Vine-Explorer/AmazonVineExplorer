@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.7.0
+// @version      0.7.1
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
@@ -66,6 +66,7 @@ let productDBIds = [];
 let searchInputTimeout;
 let backGroundScanInterval;
 
+
 // Make some things accessable from console
 unsafeWindow.vve = {
     classes: [
@@ -93,8 +94,15 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                     if (_execLock) return;
                     _execLock = true;
                     addBranding();
-                    init();
+                    init(true);
                 });
+                waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
+                    if (_execLock) return;
+                    _execLock = true;
+                    addBranding();
+                    init(false);
+                });
+
             } else if (SITE_IS_SHOPPING) {
                 console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
                 _execLock = true;
@@ -114,6 +122,12 @@ vve_eventhandler.on('vve-database-changed', () => {
 })
 
 
+
+function getUrlParameter(name) {
+    const _queryString = window.location.search;
+    const _urlParams = new URLSearchParams(_queryString);
+    return _urlParams.get(name);
+}
 
 
 
@@ -196,7 +210,13 @@ async function parseTileData(tile, cb) {
 
 
 
-
+function reloadPageWithSubpageTarget(target) {
+    if (window.location.href.includes('?')) {
+        window.location.href = window.location.href + `&vve-subpage=${target}`;
+    } else {
+        window.location.href = window.location.href + `?vve-subpage=${target}`;
+    }
+}
 
 function addLeftSideButtons(forceClean) {
     const _nodesContainer = document.getElementById('vvp-browse-nodes-container');
@@ -327,7 +347,7 @@ function createFavStarElement(prod, index) {
 }
 
 
-async function createProductSite(productArray, cb) {
+async function createProductSite(siteType, productArray, cb) {
     if (!productArray) return;
     
     const _productArrayLength = productArray.length;
@@ -341,16 +361,20 @@ async function createProductSite(productArray, cb) {
 
     // Cear Left Nodes Container
     const _nodesContainer = document.getElementById('vvp-browse-nodes-container');
-    _nodesContainer.innerHTML = '';
+    if (_nodesContainer) _nodesContainer.innerHTML = '';
 
     // Items Grid Container
     const _tilesContainer = document.getElementById('vvp-items-grid-container');
+    if (!_tilesContainer) reloadPageWithSubpageTarget(siteType);
 
     // Edit Top Line
-    const _topLine = _tilesContainer.getElementsByTagName('p')[0];
-    _topLine.innerHTML = `<p>Anzeigen von <strong>${_fastCount}</strong> von <strong>${_productArrayLength}</strong> Ergebnissen</p>`
+    if (_tilesContainer) {
+        const _topLine = _tilesContainer.getElementsByTagName('p')[0];
+        _topLine.innerHTML = `<p>Anzeigen von <strong>${_fastCount}</strong> von <strong>${_productArrayLength}</strong> Ergebnissen</p>`
+    }
                                                 
     const _tilesGrid = document.getElementById('vvp-items-grid');
+    if (!_tilesGrid) reloadPageWithSubpageTarget(siteType);
     _tilesGrid.innerHTML = '';
     
     let _index = 0;
@@ -399,7 +423,7 @@ function createNewSite(type, data) {
     switch(type) {
         case PAGETYPE.NEW_ITEMS:{
             database.getNewEntries((_prodArr) => {
-                createProductSite(_prodArr, () => {
+                createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
                     const _btn = document.getElementById('vve-btn-list-new');
                     _btn.classList.add('a-button-selected');
@@ -410,7 +434,7 @@ function createNewSite(type, data) {
         }
         case PAGETYPE.FAVORITES:{
             database.getFavEntries((_prodArr) => {
-                createProductSite(_prodArr, () => {
+                createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
                     const _btn = document.getElementById('vve-btn-favorites');
                     _btn.classList.add('a-button-selected');
@@ -420,7 +444,7 @@ function createNewSite(type, data) {
             break;
         }
         case PAGETYPE.SEARCH_RESULT:{
-            createProductSite(data, () => {
+            createProductSite(type, data, () => {
                 initTileEventHandlers();
             });
             break;
@@ -577,7 +601,7 @@ function addBranding() {
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
     _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
-    _text.innerHTML = `<p id="vve-brandig-text">VineExplorer - ${VVE_VERSION} - One Week of Development Special Version</p>`;
+    _text.innerHTML = `<p id="vve-brandig-text">VineExplorer - ${VVE_VERSION}</p>`;
 
     
     document.body.appendChild(_text);
@@ -689,6 +713,8 @@ function initBackgroundScan() {
         const _pageinationData = getPageinationData(document.querySelector('#vve-iframe-backgroundloader').contentWindow.document);
         if (_pageinationData) {
             clearInterval(_paginatinWaitLoop);
+            if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): pagination WaitLoop');
+
             if (!localStorage.getItem('BACKGROUND_SCAN_IS_RUNNING') || true) {
                 if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): init localStorage Variables');
                 localStorage.setItem('BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
@@ -706,7 +732,7 @@ function initBackgroundScan() {
                 _loopIsWorking = true;
 
                 let _backGroundScanStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_STAGE')) || 0;
-                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage);
+                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
                 
                 switch (_backGroundScanStage) {
                     case 0:{    // potluck, last_chance
@@ -725,6 +751,7 @@ function initBackgroundScan() {
                         }
                         case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
                             _subStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_CURRENT'));
+                            if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
                             if (_subStage < (parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
                                 backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
                                 _subStage++
@@ -744,7 +771,9 @@ function initBackgroundScan() {
                         default: {
                             _backGroundScanStage = 0;
                             _subStage = 0;
-                            _scanFinished();
+                            cleanUpDatabase(() => {
+                                _scanFinished();
+                            })
                             clearInterval(backGroundScanInterval);
                         }
                 }
@@ -773,14 +802,20 @@ function backGroundTileScanner(url, cb) {
             const _tilesLength = _tiles.length;
             if (SETTINGS.DebugLevel > 0) console.log(`BackgroundsScan Querryd: ${url} and got ${_tilesLength} Tiles`);
             clearInterval(_loopDelay);
+            if (_tilesLength > 0) {
             let _returned = 0;
-            for (let i = 0; i < _tilesLength; i++) {
-                parseTileData(_tiles[i], (prod) => {
-                    _returned++;
-                    if (!prod.gotFromDB) database.add(prod);
-                    if (SETTINGS.DebugLevel > 0) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
-                    if (_returned == _tilesLength) cb(true);
-                })
+                for (let i = 0; i < _tilesLength; i++) {
+                    parseTileData(_tiles[i], (prod) => {
+                        _returned++;
+                        if (!prod.gotFromDB) database.add(prod);
+                        if (SETTINGS.DebugLevel > 0) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
+                        if (_returned == _tilesLength) cb(true);
+                    })
+                }
+            } else {
+                if (SETTINGS.DebugLevel > 0) console.log(`BACKGROUNDSCAN => We dont have to do here anything => resume autoscan`);
+                cb(true) // We dont have to do here anything
+
             }
         }
     }, 100);
@@ -924,106 +959,71 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
     }
 
 
-function init() {
+function init(hasTiles) {
     // Get all Products on this page ;)
     
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
-    const _tiles = document.getElementsByClassName('vvp-item-tile');
-    const _tilesLength = _tiles.length;
-    let _countdown = 0;
-    const _parseStartTime = Date.now();
-    for (let i = 0; i < _tilesLength; i++) {
-        const _currTile = _tiles[i];
-        _currTile.style.cssText = "background-color: yellow;";
-         parseTileData(_currTile, (_product) => {
-            console.log(`Got TileData Back: `, _product);
-            
-            _countdown++;
-            const _tilesToDoCount = _tilesLength - _countdown;
-            if (SETTINGS.DebugLevel > 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
-            if (SETTINGS.DebugLevel > 0 && _tilesToDoCount == 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Parsing ${_tilesLength} has taken ${Date.now() - _parseStartTime} ms`);
+    
+    const _vveSubpageRequest = getUrlParameter('vve-subpage');
+    if (SETTINGS.DebugLevel > 0) console.log(`Got Subpage Parameter`, _vveSubpageRequest)
+    
+    if (_vveSubpageRequest) createNewSite(parseInt(_vveSubpageRequest));
 
-            if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
-                database.add(_product);
-                _currTile.style.cssText = SETTINGS.CssProductSaved;
-                _currTile.classList.add('vve-element-saved');
-            } else {
-                let _style = SETTINGS.CssProductDefault;
-                if(_product.isNew) {
-                    _style = SETTINGS.CssProductNewTag;
-                    _currTile.classList.add('vve-element-new');
-                }
-                if(_product.isFav) {
-                    _style = SETTINGS.CssProductFavTag;
-                    _currTile.classList.add('vve-element-fav');
-                }
-                _currTile.style.cssText = _style;
+    if (hasTiles) {
+        const _tiles = document.getElementsByClassName('vvp-item-tile');
+        const _tilesLength = _tiles.length;
+        let _countdown = 0;
+        const _parseStartTime = Date.now();
+        for (let i = 0; i < _tilesLength; i++) {
+            const _currTile = _tiles[i];
+            _currTile.style.cssText = "background-color: yellow;";
+            parseTileData(_currTile, (_product) => {
+                console.log(`Got TileData Back: `, _product);
                 
-                // Update Timestamps
-            }
-            _currTile.prepend(createFavStarElement(_product, i));
+                _countdown++;
+                const _tilesToDoCount = _tilesLength - _countdown;
+                if (SETTINGS.DebugLevel > 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
+                if (SETTINGS.DebugLevel > 0 && _tilesToDoCount == 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Parsing ${_tilesLength} has taken ${Date.now() - _parseStartTime} ms`);
 
-           if (_tilesToDoCount == 0) {
-                if(INIT_AUTO_SCAN) {
-                    startAutoScan();
-                } else if (AUTO_SCAN_IS_RUNNING) {
-                    handleAutoScan();
+                if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
+                    database.add(_product);
+                    _currTile.style.cssText = SETTINGS.CssProductSaved;
+                    _currTile.classList.add('vve-element-saved');
                 } else {
-                    completeDelayedInit();
+                    let _style = SETTINGS.CssProductDefault;
+                    if(_product.isNew) {
+                        _style = SETTINGS.CssProductNewTag;
+                        _currTile.classList.add('vve-element-new');
+                    }
+                    if(_product.isFav) {
+                        _style = SETTINGS.CssProductFavTag;
+                        _currTile.classList.add('vve-element-fav');
+                    }
+                    _currTile.style.cssText = _style;
+                    
+                    // Update Timestamps
                 }
-            }
-         });
+                _currTile.prepend(createFavStarElement(_product, i));
+
+            if (_tilesToDoCount == 0) {
+                    if(INIT_AUTO_SCAN) {
+                        startAutoScan();
+                    } else if (AUTO_SCAN_IS_RUNNING) {
+                        handleAutoScan();
+                    } else {
+                        completeDelayedInit();
+                    }
+                }
+            });
+        }
+    } else {
+        if (SETTINGS.DebugLevel > 0) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
     }
+
     
     if (AUTO_SCAN_IS_RUNNING) return;
-
-    // // Detect Browser Language
-    // let _lang;
-    // if(navigator.browserLanguage){
-    //     _lang = navigator.browserLanguage;
-    // }else{
-    //     _lang = navigator.language;
-    // }
-    // local_lang = _lang.substr(0,2).toLowerCase();
     
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
-    // Add Searchbar and all other stuff from this script ;)
-
-    // Favorites Button
-    // const _favBtnSpan = document.createElement('span');
-    // _favBtnSpan.setAttribute('id', 'vve-btn-favorites');
-    // _favBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
-    // _favBtnSpan.innerHTML = `
-    //     <span class="a-button-inner" style="background-color: ${SETTINGS.FavBtnColor}">
-    //         <span class="a-button-text">${'Favoriten'}</span>
-    //     </span>
-    // `;
-    // _favBtnSpan.addEventListener('click', (ev) => {
-    //     createNewSite(PAGETYPE.FAVORITES);
-    // });
-
-    // _searchbarContainer.appendChild(_favBtnSpan);
-
-
-    // Update DB Button
-    // const _showNewBtnSpan = document.createElement('span');
-    // _showNewBtnSpan.setAttribute('id', 'vve-btn-list-new');
-    // _showNewBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
-    // _showNewBtnSpan.innerHTML = `
-    //     <span class="a-button-inner">
-    //         <span class="a-button-text" id="vve-new-items-btn">Neue Produkte
-    //             <span id="vve-new-items-btn-badge" style="background-color: red;color: white;min-width: 20px;display: inline-block;text-align: center;border-radius: 10px;transform: translate(-75%, -100%);z-index: 50;position: fixed;padding: 5px ">1</span>
-    //         </span>
-    //     </span>
-    // `;
-    // _showNewBtnSpan.addEventListener('click', (ev) => {
-    //     createNewSite(PAGETYPE.NEW_ITEMS);
-    // });
-
-    // _searchbarContainer.appendChild(_showNewBtnSpan);
-
-    
-
 
     _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
     _searchbarContainer.appendChild(createNavButton('vve-btn-list-new', 'Neue Einträge', 'vve-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'vve-new-items-btn-badge', '-'));
@@ -1060,26 +1060,11 @@ function init() {
         _searchBarSpan.appendChild(_searchBarInput);
         _searchbarContainer.appendChild(_searchBarSpan);
 
-    if (!SETTINGS.EnableBackgroundScan) { // When Backgroundscan ins Enabled we can not Scan Manually
-        // Update DB Button
-        const _updateDBBtnSpan = document.createElement('span');
-        _updateDBBtnSpan.setAttribute('id', 'vve-btn-updateDB');
-        _updateDBBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
-        _updateDBBtnSpan.setAttribute('aria-checked', 'true');
-        _updateDBBtnSpan.innerHTML = `
-            <span class="a-button-inner" style="background-color: lime">
-                <span class="a-button-text">Update Database</span>
-            </span>
-        `;
-        _updateDBBtnSpan.addEventListener('click', (ev) => {
-            localStorage.setItem('INIT_AUTO_SCAN', true);
-            window.location.href = "vine-items?queue=encore";
-        });
 
-        _searchbarContainer.appendChild(_updateDBBtnSpan);
-    }
+    // Manual Autoscan and Backgroundscan can not run together, so don´t create the button
+    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('vve-btn-updateDB', 'Update Database', 'vve-btn-updateDB-text','lime', () => {localStorage.setItem('INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
 
-    addLeftSideButtons();
+    if (hasTiles) addLeftSideButtons();
 
     if (SETTINGS.EnableBackgroundScan) initBackgroundScan();
     
@@ -1104,8 +1089,6 @@ function init() {
                 window.location.href = (_nextBtnLink);
             });
         })
-
-        
 
         const _btn_a = document.createElement('a');
         _btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
