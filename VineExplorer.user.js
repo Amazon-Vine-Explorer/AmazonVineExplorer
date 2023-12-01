@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.6.4.1
+// @version      0.7.0
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
@@ -92,13 +92,13 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 waitForHtmlElmement('.vvp-details-btn', () => {
                     if (_execLock) return;
                     _execLock = true;
-                    addBrandig();
+                    addBranding();
                     init();
                 });
             } else if (SITE_IS_SHOPPING) {
                 console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
                 _execLock = true;
-                addBrandig(); // For now, olny show that the script is active
+                addBranding(); // For now, olny show that the script is active
             }
     	});
     }
@@ -555,7 +555,7 @@ function updateAutoScanScreenText(text = '') {
     _elem.textContent = text;
 }
 
-function addBrandig() {
+function addBranding() {
     // const _overlay = document.createElement('div');
     // _overlay.style.position = 'fixed';
     // _overlay.style.top = '0';
@@ -577,7 +577,7 @@ function addBrandig() {
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
     _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
-    _text.innerHTML = `<p id="vve-brandig-text">VineExplorer - ${VVE_VERSION}</p>`;
+    _text.innerHTML = `<p id="vve-brandig-text">VineExplorer - ${VVE_VERSION} - One Week of Development Special Version</p>`;
 
     
     document.body.appendChild(_text);
