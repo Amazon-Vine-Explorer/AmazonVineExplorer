@@ -1,14 +1,13 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.6.4.1
+// @version      0.7.0
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
 // @author       MarkusSR1984
-// @match        *://www.amazon.de/vine/*
-// @match        *://amazon.de/vine/*
-// @match        *://www.amazon.de/-/en/vine/*
+// @match        *://www.amazon.de/*
+// @match        *://www.amazon.com/*
 // @license      MIT
 // @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
 // @run-at       document-start
@@ -26,6 +25,16 @@
 // ==/UserScript==
 
 /* 
+    Versioning: 
+    a.b.c[.d]
+
+    a => Hauptversion(Major), änerdt sich nur bei breaking oder anderen gravirenden änderungen. Solle In diesem Fall also die 1 nie überschreiten.
+    b => Feature(Minor), ändert sich nur wenn neue Features hinzukommen oder gößere umstellungen im Hintergrund passiert sind
+    c => Patch, kleinere Änderungen oder "größere" Bugfixes
+    d => Micro(OPTIONAL), kleine Bugfixes die nur wenige Zeilen Code beinhalten. Wird normalerweise nicht an die Versionnummer angehängt und nur in ausnahmefällen verwendet. Wie z.B. 0.6.4.1 - Das war nur eine Fehlerhafte Variablendeklaration. musste aber public gehen weil es ein Breaking Bug war
+
+
+
     Sammlung der Ideen:
     - Datenbank Import und Export, Idee von "Finding_Won_Ton_Chin" - MyDeals
     - Pageination nach oben schieben || Kopieren
@@ -42,22 +51,32 @@
     - Reload der Neue Produkte Seite nach einem Click auf "Alle als gesehen Markieren"
 
     - Originale Pagination auf den eigenen Seiten verstecken
-    - Automatisches Datenbank Cleanup
     - Last Seen Update 
-    - Löschen von Produkten die nicht mehr in Vine verfügbar sind
     - Changelog hinzufügen
 */
 
 'use strict';
 console.log(`Init Vine Voices Explorer ${VVE_VERSION}`);
 
+
 loadSettings();
 fastStyleChanges();
 
 let productDBIds = [];
 let searchInputTimeout;
+let backGroundScanInterval;
 
-const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res, err) => {
+// Make some things accessable from console
+unsafeWindow.vve = {
+    classes: [
+        DB_HANDLER = DB_HANDLER
+    ],
+    config: SETTINGS,
+    event: vve_eventhandler,
+};
+
+
+const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATABASE_VERSION, (res, err) => {
     if (err) {
         console.error(`Somithing was going wrong while init database :'(`);
         return;
@@ -67,15 +86,36 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, (res,
             productDBIds = keys;
             
             let _execLock = false;
-            waitForHtmlElmement('.vvp-details-btn', () => {
-                if (_execLock) return;
+            console.log('Lets Check where we are....');
+            if (SITE_IS_VINE){
+                 console.log('We are on Amazon Vine'); // We are on the amazon vine site
+                waitForHtmlElmement('.vvp-details-btn', () => {
+                    if (_execLock) return;
+                    _execLock = true;
+                    addBranding();
+                    init();
+                });
+            } else if (SITE_IS_SHOPPING) {
+                console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
                 _execLock = true;
-                addBrandig();
-                init();
-            })
-    });
+                addBranding(); // For now, olny show that the script is active
+            }
+    	});
     }
 });
+
+unsafeWindow.vve.database = database;
+
+vve_eventhandler.on('vve-database-changed', () => {
+    console.warn('EVENT - Database has new Data for us! we should look what has changed');
+
+    updateNewProductsBtn();
+    
+})
+
+
+
+
 
 // Check if Product exists in our Database or if it is a new one
 function existsProduct(id) { 
@@ -91,9 +131,9 @@ async function parseTileData(tile, cb) {
 
     
     if (existsProduct(_id)) {
-        
         database.get(_id, (_ret) => {
             _ret.gotFromDB = true;
+            _ret.ts_lastSeen = unixTimeStamp();
             cb(_ret);
         });
 
@@ -122,8 +162,6 @@ async function parseTileData(tile, cb) {
     
     _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
     _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-    // _newProduct.ts_firstSeen = unixTimeStamp();
-    // _newProduct.ts_lastSeen = unixTimeStamp();
     _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
     
     
@@ -168,10 +206,12 @@ function addLeftSideButtons(forceClean) {
     
     _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
-    const _setAllSeenBtn = createButton('Alle als gesehen markieren', 'background-color: lime;', () => {
+    const _setAllSeenBtn = createButton('Alle als gesehen markieren','vve-btn-allseen',  'background-color: lime;', () => {
+        
         if (SETTINGS.DebugLevel > 0) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
+    
 
     _nodesContainer.appendChild(_setAllSeenBtn);
 
@@ -224,9 +264,9 @@ function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
     });
 }
 
-function createButton(text, style, clickHandler){
+function createButton(text, id, style, clickHandler){
     const _btnSpan = document.createElement('span');
-    _btnSpan.setAttribute('id', 'vve-btn-updateDB');
+    _btnSpan.setAttribute('id', id);
     _btnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
     _btnSpan.setAttribute('aria-checked', 'true');
     _btnSpan.innerHTML = `
@@ -469,8 +509,11 @@ function initTileEventHandlers() {
             if (SETTINGS.DebugLevel > 0) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
             _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
         }
-    
-        _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
+        
+        waitForHtmlElmement('.vve-favorite-star', (elem) => {
+            _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
+        }, _currTile);
+        
         
     }        
 }
@@ -512,7 +555,7 @@ function updateAutoScanScreenText(text = '') {
     _elem.textContent = text;
 }
 
-function addBrandig() {
+function addBranding() {
     // const _overlay = document.createElement('div');
     // _overlay.style.position = 'fixed';
     // _overlay.style.top = '0';
@@ -534,17 +577,20 @@ function addBrandig() {
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
     _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
-    _text.innerHTML = `<p id="vve-brandig-text">VineExplorer - ${VVE_VERSION}</p>`;
+    _text.innerHTML = `<p id="vve-brandig-text">VineExplorer - ${VVE_VERSION} - One Week of Development Special Version</p>`;
 
     
     document.body.appendChild(_text);
 }
 
-function getPageinationData() {
+
+function getPageinationData(localDocument = document) {
     if (SETTINGS.DebugLevel > 0) console.log('Called getPageinationData()');
     const _ret = new Object();
-    const _paginationContainer = document.querySelector('.a-pagination');
-    
+    const _paginationContainer = localDocument.querySelector('.a-pagination');
+    if (!_paginationContainer) return;
+    if (!_paginationContainer.lastChild) return;
+
     let _currChild = _paginationContainer.lastChild;
 
     while ((!_ret.href || !_ret.maxPage) && _currChild) {
@@ -619,6 +665,126 @@ async function cleanUpDatabase(cb = () => {}) {
     });
 }
 
+function initBackgroundScan() {
+    if (SETTINGS.DebugLevel > 0) console.log('Called initBackgroundScan()');
+    const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+    
+     // Create iFrame if not exists
+    if (!document.querySelector('#vve-iframe-backgroundloader')) {
+        if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): create iFrame');
+        const iframe = document.createElement('iframe');
+            iframe.src = encodeURI(`${_baseUrl}?queue=encore&pn=&cn=&page=1`);
+            iframe.id = 'vve-iframe-backgroundloader';
+            iframe.style.position = 'fixed';
+            iframe.style.top = '0';
+            iframe.style.left = '-5000';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.display = 'none';
+            iframe.style.zIndex = '100';
+            document.body.appendChild(iframe);
+    } 
+    
+    const _paginatinWaitLoop = setInterval(() => {
+        const _pageinationData = getPageinationData(document.querySelector('#vve-iframe-backgroundloader').contentWindow.document);
+        if (_pageinationData) {
+            clearInterval(_paginatinWaitLoop);
+            if (!localStorage.getItem('BACKGROUND_SCAN_IS_RUNNING') || true) {
+                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): init localStorage Variables');
+                localStorage.setItem('BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
+                localStorage.setItem('BACKGROUND_SCAN_IS_RUNNING', true);
+                localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', 1);
+                localStorage.setItem('BACKGROUND_SCAN_STAGE', 0);
+            } 
+            
+            let _loopIsWorking = false;
+            let _subStage = 0;
+            const _stageZeroSites = ['queue=potluck', 'queue=last_chance']
+            
+            backGroundScanInterval = setInterval(() => {
+                if (_loopIsWorking) return;
+                _loopIsWorking = true;
+
+                let _backGroundScanStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_STAGE')) || 0;
+                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage);
+                
+                switch (_backGroundScanStage) {
+                    case 0:{    // potluck, last_chance
+                            if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
+                            if (_stageZeroSites[_subStage]) {
+                                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
+                                backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
+                                _subStage++
+                            } else {
+                                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
+                                _subStage = 0;
+                                _backGroundScanStage++;
+                                _scanFinished();
+                            }
+                            break;
+                        }
+                        case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
+                            _subStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_CURRENT'));
+                            if (_subStage < (parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
+                                backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
+                                _subStage++
+                                localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                            } else {
+                                _subStage = 0;
+                                _backGroundScanStage++;
+                                _scanFinished();
+                            }
+                        break;            }
+                        case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
+                                _subStage = 0;
+                                _backGroundScanStage++;
+                                _scanFinished();
+                            break;
+                        }   
+                        default: {
+                            _backGroundScanStage = 0;
+                            _subStage = 0;
+                            _scanFinished();
+                            clearInterval(backGroundScanInterval);
+                        }
+                }
+
+                function _scanFinished() {
+                    if (SETTINGS.DebugLevel > 0) console.log(`initBackgroundScan()._scanFinished()`);
+                    localStorage.setItem('BACKGROUND_SCAN_STAGE', _backGroundScanStage);
+                    localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                    _loopIsWorking = false;
+                }
+            }, SETTINGS.BackGroundScanDelayPerPage);
+        }
+    }, 250);
+}
+
+function backGroundTileScanner(url, cb) {
+    if (SETTINGS.DebugLevel > 0) console.log(`Called backgroundTileScanner(${url})`);
+    const _iframeDoc = document.querySelector('#vve-iframe-backgroundloader').contentWindow.document;
+    vve.backGroundIFrame = _iframeDoc;
+    _iframeDoc.location.href = url;
+    const _loopDelay = setInterval(() => {
+        if (SETTINGS.DebugLevel > 0) console.log(`backgroundTileScanner(): check if we have tiles to read...`);
+        const _tiles =_iframeDoc.querySelectorAll('.vvp-item-tile');
+        if (_tiles) {
+            if (SETTINGS.DebugLevel > 0) console.log(`backgroundTileScanner(): Found first Tile`);
+            const _tilesLength = _tiles.length;
+            if (SETTINGS.DebugLevel > 0) console.log(`BackgroundsScan Querryd: ${url} and got ${_tilesLength} Tiles`);
+            clearInterval(_loopDelay);
+            let _returned = 0;
+            for (let i = 0; i < _tilesLength; i++) {
+                parseTileData(_tiles[i], (prod) => {
+                    _returned++;
+                    if (!prod.gotFromDB) database.add(prod);
+                    if (SETTINGS.DebugLevel > 0) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
+                    if (_returned == _tilesLength) cb(true);
+                })
+            }
+        }
+    }, 100);
+}
 
 function startAutoScan() {
     if (SETTINGS.DebugLevel > 0) console.log('Called startAutoScan()');
@@ -638,7 +804,6 @@ function startAutoScan() {
     })
 }
 
-
 function handleAutoScan() {
     let _href;
     const _delay = Math.max(SETTINGS.PageLoadMinDelay - (Date.now() - PAGE_LOAD_TIMESTAMP), 0) + 500;
@@ -656,7 +821,7 @@ function handleAutoScan() {
             localStorage.setItem('AUTO_SCAN_PAGE_MAX', -1);
             localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', -1);
             setTimeout(() => {
-                updateAutoScanScreenText('Finished Database\nupdate and cleanup\n\nPage reloading incoming... pleae wait');
+                updateAutoScanScreenText('Finished Database\nupdate and cleanup\n\nPage reloading incoming... please wait');
                 setTimeout(()=> {
                     window.location.href = window.location.href.replace(/=[0-9]+/, '=1');
                 }, 10000);
@@ -664,6 +829,100 @@ function handleAutoScan() {
         });
     }
 }
+
+window.onscroll = () => { // ONSCROLL Event handler
+    stickElementToTopScrollEVhandler('vve-btn-allseen', 5);
+};
+
+function stickElementToTopScrollEVhandler(elemID, dist) {
+    const _elem = document.getElementById(elemID);
+    if (_elem) {
+        const maxScrollHeight = Math.max(
+            document.body.scrollHeight - window.innerHeight, 
+            document.documentElement.scrollHeight - window.innerHeight
+        );
+
+        requestAnimationFrame(() => { 
+            const _elemRect = _elem.getBoundingClientRect();
+
+            const _elemInitialTop = parseInt(_elem.getAttribute('vve-data-default-top'));
+            if (!_elemInitialTop) {_elem.setAttribute('vve-data-default-top', (window.scrollY + _elemRect.top)); return;}
+
+            if (SETTINGS.DebugLevel > 10) console.log(`### scrollY:${window.scrollY} maxScrollHeigt ${maxScrollHeight} initialTop: ${_elemInitialTop}`);
+
+            if (window.scrollY >= (_elemInitialTop - dist)) {
+                _elem.style.position = "fixed";
+                _elem.style.top = '5px';
+            } else {
+                _elem.style.position = "static";
+            }
+        })
+    }
+}
+
+
+
+
+    function updateNewProductsBtn() {
+        if (SETTINGS.DebugLevel > 0) console.log('Called updateNewProductsBtn()');
+        database.getNewEntries((prodArr) => { 
+            const _btnBadge = document.getElementById('vve-new-items-btn-badge');
+            const _prodArrLength = prodArr.length;
+            if (SETTINGS.DebugLevel > 0) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
+
+            if (_prodArrLength > 0) {
+                _btnBadge.style.display = 'inline-block';
+                _btnBadge.innerText = _prodArrLength;
+            } else {
+                _btnBadge.style.display = 'none';
+                _btnBadge.innerText = '';
+            }
+        })
+    }
+
+
+
+
+    function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeValue) {
+        const _btn = document.createElement('span');
+        _btn.setAttribute('id', mainID);
+        _btn.setAttribute('class', 'a-button a-button-normal a-button-toggle');
+        _btn.addEventListener('click', onclick);
+
+        const _btnInner = document.createElement('span');
+        _btnInner.classList.add('a-button-inner');
+        _btnInner.style.backgroundColor = color;
+        _btn.append(_btnInner);
+
+        const _btnInnerText = document.createElement('span');
+        _btnInnerText.setAttribute('id', textID);
+        _btnInnerText.classList.add('a-button-text');
+        _btnInnerText.innerText = text;
+        _btnInner.append(_btnInnerText);
+
+        if (badgeId) {
+            const _btnInnerBadge = document.createElement('span');
+            _btnInnerBadge.setAttribute('id', badgeId)
+            _btnInnerBadge.style.backgroundColor = 'red';
+            _btnInnerBadge.style.color = 'white';
+            _btnInnerBadge.style.minWidth = '20px';
+            _btnInnerBadge.style.width =  '40px';
+            _btnInnerBadge.style.display = 'inline-block';
+            _btnInnerBadge.style.textAlign = 'center';
+            _btnInnerBadge.style.borderRadius = '10px';
+            // _btnInnerBadge.style.transform = 'translate(-75%, -100%)';
+            _btnInnerBadge.style.zIndex = '50';
+            _btnInnerBadge.style.position = 'relativ';
+            // _btnInnerBadge.style.padding = '5px';
+            _btnInnerBadge.style.marginLeft = '5px';
+
+            _btnInnerBadge.innerText = badgeValue;
+            _btnInnerText.append(_btnInnerBadge);
+        }
+
+        return _btn;
+    }
+
 
 function init() {
     // Get all Products on this page ;)
@@ -677,7 +936,7 @@ function init() {
         const _currTile = _tiles[i];
         _currTile.style.cssText = "background-color: yellow;";
          parseTileData(_currTile, (_product) => {
-            console.log(`Got TileData Back: ${JSON.stringify(_product, null, 4)}`);
+            console.log(`Got TileData Back: `, _product);
             
             _countdown++;
             const _tilesToDoCount = _tilesLength - _countdown;
@@ -731,35 +990,45 @@ function init() {
     // Add Searchbar and all other stuff from this script ;)
 
     // Favorites Button
-    const _favBtnSpan = document.createElement('span');
-    _favBtnSpan.setAttribute('id', 'vve-btn-favorites');
-    _favBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
-    _favBtnSpan.innerHTML = `
-        <span class="a-button-inner" style="background-color: ${SETTINGS.FavBtnColor}">
-            <span class="a-button-text">${'Favoriten'}</span>
-        </span>
-    `;
-    _favBtnSpan.addEventListener('click', (ev) => {
-        createNewSite(PAGETYPE.FAVORITES);
-    });
+    // const _favBtnSpan = document.createElement('span');
+    // _favBtnSpan.setAttribute('id', 'vve-btn-favorites');
+    // _favBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
+    // _favBtnSpan.innerHTML = `
+    //     <span class="a-button-inner" style="background-color: ${SETTINGS.FavBtnColor}">
+    //         <span class="a-button-text">${'Favoriten'}</span>
+    //     </span>
+    // `;
+    // _favBtnSpan.addEventListener('click', (ev) => {
+    //     createNewSite(PAGETYPE.FAVORITES);
+    // });
 
-    _searchbarContainer.appendChild(_favBtnSpan);
+    // _searchbarContainer.appendChild(_favBtnSpan);
 
 
     // Update DB Button
-    const _showNewBtnSpan = document.createElement('span');
-    _showNewBtnSpan.setAttribute('id', 'vve-btn-list-new');
-    _showNewBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
-    _showNewBtnSpan.innerHTML = `
-        <span class="a-button-inner">
-            <span class="a-button-text" id="vve-new-items-btn">Neue Produkte</span>
-        </span>
-    `;
-    _showNewBtnSpan.addEventListener('click', (ev) => {
-        createNewSite(PAGETYPE.NEW_ITEMS);
-    });
+    // const _showNewBtnSpan = document.createElement('span');
+    // _showNewBtnSpan.setAttribute('id', 'vve-btn-list-new');
+    // _showNewBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
+    // _showNewBtnSpan.innerHTML = `
+    //     <span class="a-button-inner">
+    //         <span class="a-button-text" id="vve-new-items-btn">Neue Produkte
+    //             <span id="vve-new-items-btn-badge" style="background-color: red;color: white;min-width: 20px;display: inline-block;text-align: center;border-radius: 10px;transform: translate(-75%, -100%);z-index: 50;position: fixed;padding: 5px ">1</span>
+    //         </span>
+    //     </span>
+    // `;
+    // _showNewBtnSpan.addEventListener('click', (ev) => {
+    //     createNewSite(PAGETYPE.NEW_ITEMS);
+    // });
 
-    _searchbarContainer.appendChild(_showNewBtnSpan);
+    // _searchbarContainer.appendChild(_showNewBtnSpan);
+
+    
+
+
+    _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
+    _searchbarContainer.appendChild(createNavButton('vve-btn-list-new', 'Neue Einträge', 'vve-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'vve-new-items-btn-badge', '-'));
+    updateNewProductsBtn();
+
 
     // Searchbar
     const _searchBarSpan = document.createElement('span');
@@ -787,29 +1056,33 @@ function init() {
         }
     });
 
-    _searchBarSpan.appendChild(_searchBarInput);
-    _searchbarContainer.appendChild(_searchBarSpan);
+    
+        _searchBarSpan.appendChild(_searchBarInput);
+        _searchbarContainer.appendChild(_searchBarSpan);
 
+    if (!SETTINGS.EnableBackgroundScan) { // When Backgroundscan ins Enabled we can not Scan Manually
+        // Update DB Button
+        const _updateDBBtnSpan = document.createElement('span');
+        _updateDBBtnSpan.setAttribute('id', 'vve-btn-updateDB');
+        _updateDBBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
+        _updateDBBtnSpan.setAttribute('aria-checked', 'true');
+        _updateDBBtnSpan.innerHTML = `
+            <span class="a-button-inner" style="background-color: lime">
+                <span class="a-button-text">Update Database</span>
+            </span>
+        `;
+        _updateDBBtnSpan.addEventListener('click', (ev) => {
+            localStorage.setItem('INIT_AUTO_SCAN', true);
+            window.location.href = "vine-items?queue=encore";
+        });
 
-    // Update DB Button
-    const _updateDBBtnSpan = document.createElement('span');
-    _updateDBBtnSpan.setAttribute('id', 'vve-btn-updateDB');
-    _updateDBBtnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
-    _updateDBBtnSpan.setAttribute('aria-checked', 'true');
-    _updateDBBtnSpan.innerHTML = `
-        <span class="a-button-inner" style="background-color: lime">
-            <span class="a-button-text">Update Database</span>
-        </span>
-    `;
-    _updateDBBtnSpan.addEventListener('click', (ev) => {
-        localStorage.setItem('INIT_AUTO_SCAN', true);
-        window.location.href = "vine-items?queue=encore";
-    });
-
-    _searchbarContainer.appendChild(_updateDBBtnSpan);
+        _searchbarContainer.appendChild(_updateDBBtnSpan);
+    }
 
     addLeftSideButtons();
 
+    if (SETTINGS.EnableBackgroundScan) initBackgroundScan();
+    
     // Modify Pageination if exists
     const _pageinationContainer = document.getElementsByClassName('a-pagination')[0];
     if (_pageinationContainer) {
