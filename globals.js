@@ -56,6 +56,7 @@ class SETTINGS_DEFAULT {
     DisableFooterShopping = false;
     DisableSuggestionsShopping = false;
     EnableBackgroundScan = true;
+    EnableDesktopNotifikation = false;
     FavBtnColor = 'rgb(255, 255, 102)';
     FavStarColorDefault = 'white';
     FavStarColorChecked = '#ffe143';

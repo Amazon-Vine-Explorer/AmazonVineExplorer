@@ -114,6 +114,8 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
 
 unsafeWindow.vve.database = database;
 
+let oldCountOfNewItems = 0;
+
 vve_eventhandler.on('vve-database-changed', () => {
     console.warn('EVENT - Database has new Data for us! we should look what has changed');
 
@@ -839,6 +841,8 @@ function startAutoScan() {
     })
 }
 
+
+
 function handleAutoScan() {
     let _href;
     const _delay = Math.max(SETTINGS.PageLoadMinDelay - (Date.now() - PAGE_LOAD_TIMESTAMP), 0) + 500;
@@ -896,67 +900,96 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
 }
 
 
+function updateNewProductsBtn() {
+    if (SETTINGS.DebugLevel > 0) console.log('Called updateNewProductsBtn()');
+    database.getNewEntries((prodArr) => { 
+        const _btnBadge = document.getElementById('vve-new-items-btn-badge');
+        const _prodArrLength = prodArr.length;
+        if (SETTINGS.DebugLevel > 0) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
 
-
-    function updateNewProductsBtn() {
-        if (SETTINGS.DebugLevel > 0) console.log('Called updateNewProductsBtn()');
-        database.getNewEntries((prodArr) => { 
-            const _btnBadge = document.getElementById('vve-new-items-btn-badge');
-            const _prodArrLength = prodArr.length;
-            if (SETTINGS.DebugLevel > 0) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
-
-            if (_prodArrLength > 0) {
-                _btnBadge.style.display = 'inline-block';
-                _btnBadge.innerText = _prodArrLength;
-            } else {
-                _btnBadge.style.display = 'none';
-                _btnBadge.innerText = '';
-            }
-        })
-    }
-
-
-
-
-    function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeValue) {
-        const _btn = document.createElement('span');
-        _btn.setAttribute('id', mainID);
-        _btn.setAttribute('class', 'a-button a-button-normal a-button-toggle');
-        _btn.addEventListener('click', onclick);
-
-        const _btnInner = document.createElement('span');
-        _btnInner.classList.add('a-button-inner');
-        _btnInner.style.backgroundColor = color;
-        _btn.append(_btnInner);
-
-        const _btnInnerText = document.createElement('span');
-        _btnInnerText.setAttribute('id', textID);
-        _btnInnerText.classList.add('a-button-text');
-        _btnInnerText.innerText = text;
-        _btnInner.append(_btnInnerText);
-
-        if (badgeId) {
-            const _btnInnerBadge = document.createElement('span');
-            _btnInnerBadge.setAttribute('id', badgeId)
-            _btnInnerBadge.style.backgroundColor = 'red';
-            _btnInnerBadge.style.color = 'white';
-            _btnInnerBadge.style.minWidth = '20px';
-            _btnInnerBadge.style.width =  '40px';
-            _btnInnerBadge.style.display = 'inline-block';
-            _btnInnerBadge.style.textAlign = 'center';
-            _btnInnerBadge.style.borderRadius = '10px';
-            // _btnInnerBadge.style.transform = 'translate(-75%, -100%)';
-            _btnInnerBadge.style.zIndex = '50';
-            _btnInnerBadge.style.position = 'relativ';
-            // _btnInnerBadge.style.padding = '5px';
-            _btnInnerBadge.style.marginLeft = '5px';
-
-            _btnInnerBadge.innerText = badgeValue;
-            _btnInnerText.append(_btnInnerBadge);
+        if (_prodArrLength > 0) {
+            _btnBadge.style.display = 'inline-block';
+            _btnBadge.innerText = _prodArrLength;
+        } else {
+            _btnBadge.style.display = 'none';
+            _btnBadge.innerText = '';
         }
 
-        return _btn;
+        if (SETTINGS.EnableDesktopNotifikation && _prodArrLength > oldCountOfNewItems){ 
+            oldCountOfNewItems = _prodArrLength;
+            desktopNotifikation(`Es wurden ${_prodArrLength} neue Vine Produkte gefunden`, 'Irgendein text', '');
+        }
+    })
+}
+
+/**
+ * Send a Desktop Notifikation
+ * @param {string} title 
+ * @param {string} message 
+ * @param {string} icon 
+ * 
+ */
+function desktopNotifikation(title, message, icon, onClick = () => {}) {
+
+    if (Notification.permission === 'granted') {
+        const _notification = new Notification(title, {
+            body: message,
+            icon: icon
+        });
+
+        notification.onclick = onClick;
+
+    } else {
+        Notification.requestPermission().then(function(permission) {
+            if (permission === 'granted') {
+                console.log('Berechtigung für Benachrichtigungen erhalten!');
+                desktopNotifikation(title, message, icon, onclick);
+            }
+        });
     }
+}
+
+
+
+function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeValue) {
+    const _btn = document.createElement('span');
+    _btn.setAttribute('id', mainID);
+    _btn.setAttribute('class', 'a-button a-button-normal a-button-toggle');
+    _btn.addEventListener('click', onclick);
+
+    const _btnInner = document.createElement('span');
+    _btnInner.classList.add('a-button-inner');
+    _btnInner.style.backgroundColor = color;
+    _btn.append(_btnInner);
+
+    const _btnInnerText = document.createElement('span');
+    _btnInnerText.setAttribute('id', textID);
+    _btnInnerText.classList.add('a-button-text');
+    _btnInnerText.innerText = text;
+    _btnInner.append(_btnInnerText);
+
+    if (badgeId) {
+        const _btnInnerBadge = document.createElement('span');
+        _btnInnerBadge.setAttribute('id', badgeId)
+        _btnInnerBadge.style.backgroundColor = 'red';
+        _btnInnerBadge.style.color = 'white';
+        _btnInnerBadge.style.minWidth = '20px';
+        _btnInnerBadge.style.width =  '40px';
+        _btnInnerBadge.style.display = 'inline-block';
+        _btnInnerBadge.style.textAlign = 'center';
+        _btnInnerBadge.style.borderRadius = '10px';
+        // _btnInnerBadge.style.transform = 'translate(-75%, -100%)';
+        _btnInnerBadge.style.zIndex = '50';
+        _btnInnerBadge.style.position = 'relativ';
+        // _btnInnerBadge.style.padding = '5px';
+        _btnInnerBadge.style.marginLeft = '5px';
+
+        _btnInnerBadge.innerText = badgeValue;
+        _btnInnerText.append(_btnInnerBadge);
+    }
+
+    return _btn;
+}
 
 
 function init(hasTiles) {
