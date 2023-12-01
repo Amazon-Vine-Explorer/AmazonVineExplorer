@@ -4,9 +4,8 @@
 // @version      9.9.9
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
 // @author       MarkusSR1984
-// @match        *://www.amazon.de/vine/*
-// @match        *://amazon.de/vine/*
-// @match        *://www.amazon.de/-/en/vine/*
+// @match        *://www.amazon.de/*
+// @match        *://www.amazon.com/*
 // @license      MIT
 // @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
 // @run-at       document-start
