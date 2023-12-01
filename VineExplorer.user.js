@@ -116,11 +116,23 @@ unsafeWindow.vve.database = database;
 
 let oldCountOfNewItems = 0;
 
+let showDbUpdateLogoTimeout = null;
+let showDbUpdateLogoIcon = null;
+
 vve_eventhandler.on('vve-database-changed', () => {
     console.warn('EVENT - Database has new Data for us! we should look what has changed');
-
     updateNewProductsBtn();
-    
+
+    if (showDbUpdateLogoTimeout) clearTimeout(showDbUpdateLogoTimeout);
+    if (!showDbUpdateLogoIcon) showDbUpdateLogoIcon = addDBLoadingSymbol();
+
+    showDbUpdateLogoTimeout = setTimeout(() => {
+        if (showDbUpdateLogoIcon) showDbUpdateLogoIcon.remove();
+        showDbUpdateLogoTimeout = null;
+        showDbUpdateLogoIcon = null;
+    }, 5000);
+        
+
 })
 
 
@@ -613,7 +625,8 @@ function addDBCleaningSymbol(){
     const _cleaningDiv = document.createElement('div');
     _cleaningDiv.style.width = "25px";
     _cleaningDiv.style.height = "25px";
-    _cleaningDiv.style.position = 'absolute';
+    // _cleaningDiv.style.position = 'absolute';
+    _cleaningDiv.style.position = 'fixed';
     _cleaningDiv.style.zIndex = '9999';
     _cleaningDiv.style.left = '10px';
     _cleaningDiv.style.bottom = '35px';
@@ -647,13 +660,15 @@ function addDBCleaningSymbol(){
     //Vector DB: https://www.svgrepo.com/svg/525311/database
     //Vector Lupe: https://www.svgrepo.com/svg/532552/search-alt-2
     document.body.appendChild(_cleaningDiv);
+    return _cleaningDiv;
 }
 
 function addDBLoadingSymbol(){
     const _loadingDiv = document.createElement('div');
     _loadingDiv.style.width = "25px";
     _loadingDiv.style.height = "25px";
-    _loadingDiv.style.position = 'absolute';
+    // _loadingDiv.style.position = 'absolute';
+    _loadingDiv.style.position = 'fixed';
     _loadingDiv.style.zIndex = '9999';
     _loadingDiv.style.left = '10px';
     _loadingDiv.style.bottom = '35px';
@@ -684,6 +699,7 @@ function addDBLoadingSymbol(){
     //Vector DB: https://www.svgrepo.com/svg/525311/database
     //Vector Loading: https://www.svgrepo.com/svg/448500/loading
     document.body.appendChild(_loadingDiv);
+    return _loadingDiv;
 }
 
 function getPageinationData(localDocument = document) {
@@ -710,6 +726,7 @@ function getPageinationData(localDocument = document) {
 // CleanUp and Fix Database Entrys
 async function cleanUpDatabase(cb = () => {}) {
     if (SETTINGS.DebugLevel > 0) console.log('Called cleanUpDatabase()');
+    const _dbCleanIcon = addDBCleaningSymbol();
     database.getAll((prodArr) => {
         const _prodArrLength = prodArr.length;
         if (SETTINGS.DebugLevel > 0) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
@@ -722,6 +739,7 @@ async function cleanUpDatabase(cb = () => {}) {
             _returned++
             if (_returned == _prodArrLength) {
                 if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_returned} Updated:${_updated} Deleted:${_deleted}`);
+                _dbCleanIcon.remove();
                 cb(true);
             }
         }
@@ -975,6 +993,7 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
     }
 }
 
+let lastDesktopNotifikationTimestamp = 0;
 
 function updateNewProductsBtn() {
     if (SETTINGS.DebugLevel > 0) console.log('Called updateNewProductsBtn()');
@@ -992,8 +1011,11 @@ function updateNewProductsBtn() {
         }
 
         if (SETTINGS.EnableDesktopNotifikation && _prodArrLength > oldCountOfNewItems){ 
-            oldCountOfNewItems = _prodArrLength;
-            desktopNotifikation(`Es wurden ${_prodArrLength} neue Vine Produkte gefunden`, 'Irgendein text', '');
+            if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
+                oldCountOfNewItems = _prodArrLength;
+                lastDesktopNotifikationTimestamp = unixTimeStamp();
+                desktopNotifikation('Amazon Vine Explorer', `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
+            }
         }
     })
 }
@@ -1005,7 +1027,7 @@ function updateNewProductsBtn() {
  * @param {string} icon 
  * 
  */
-function desktopNotifikation(title, message, icon, onClick = () => {}) {
+function desktopNotifikation(title, message, icon = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png', onClick = () => {}) {
 
     if (Notification.permission === 'granted') {
         const _notification = new Notification(title, {
