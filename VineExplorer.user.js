@@ -1205,12 +1205,13 @@ function updateNewProductsBtn() {
 function desktopNotifikation(title, message, image = null, requireInteraction = null, onClick = () => {}) {
     const _vineLogo = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png';
     const _vineLogoImp = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/vine_logo_important.png'
-    
+    const _defaultImage = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/vine_logo_notification_image.png'
+
     if (Notification.permission === 'granted') {
         const _notification = new Notification(title, {
             body: message,
             icon: (!requireInteraction) ? _vineLogo : _vineLogoImp,
-            image: image || 'https://m.media-amazon.com/images/G/01/vine/website/vine_logo_title._CB1556578328_.png',
+            image: image || _defaultImage,
             tag: `vve-notify-${Math.round(Math.random()* 10000000)}`,
             requireInteraction: requireInteraction,
         });
