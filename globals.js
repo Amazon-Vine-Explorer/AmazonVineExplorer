@@ -55,8 +55,12 @@ class SETTINGS_DEFAULT {
     DisableSuggestions = true;
     DisableFooterShopping = false;
     DisableSuggestionsShopping = false;
+    DisableBtnPotLuck = false;
+    DisableBtnLastChance = false;
+    DisableBtnSeller = false;
     EnableBackgroundScan = true;
     EnableDesktopNotifikation = false;
+    EnableBtnAll = true;
     FavBtnColor = 'rgb(255, 255, 102)';
     FavStarColorDefault = 'white';
     FavStarColorChecked = '#ffe143';
@@ -205,6 +209,28 @@ async function fastStyleChanges() {
                 elem.style.visibility = 'hidden';
             });
         }
+
+        if (SETTINGS.DisableBtnPotLuck) {
+            waitForHtmlElmement('#vvp-items-button--recommended', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+        }
+    
+        if (SETTINGS.DisableBtnLastChance) {
+            waitForHtmlElmement('#vvp-items-button--all', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+        }
+
+        if (SETTINGS.DisableBtnSeller) {
+            waitForHtmlElmement('#vvp-items-button--seller', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+        }
+
     } else if (SITE_IS_SHOPPING) {
 
         if (SETTINGS.DisableSuggestionsShopping) {
