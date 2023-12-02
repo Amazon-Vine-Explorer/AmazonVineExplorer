@@ -56,7 +56,7 @@ class DB_HANDLER {
             const _db = _req.result;
 
             if (!_db.objectStoreNames.contains(_storeName)) {
-                if (SETTINGS.DebugLevel > 0) console.log('Database needs to be created...');
+                if (SETTINGS.DebugLevel > 10) console.log('Database needs to be created...');
                 const _storeOS = _db.createObjectStore(_storeName, { keyPath: 'id' });
                 // _storeOS.createIndex('isNew', 'isNew', { unique: false });
                 // _storeOS.createIndex('isFav', 'isFav', { unique: false });

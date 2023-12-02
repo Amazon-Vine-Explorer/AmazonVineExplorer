@@ -58,6 +58,10 @@
 'use strict';
 console.log(`Init Vine Voices Explorer ${VVE_VERSION}`);
 
+/**
+ * On witch page are we atm ? PAGETYPE
+ */
+let currentMainPage;
 
 loadSettings();
 fastStyleChanges();
@@ -65,6 +69,7 @@ fastStyleChanges();
 let productDBIds = [];
 let searchInputTimeout;
 let backGroundScanInterval;
+
 
 
 // Make some things accessable from console
@@ -83,7 +88,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
         return;
     } else {
         database.getAllKeys((keys) => {
-            if (SETTINGS.DebugLevel > 0) console.log('All keys:', keys);
+            if (SETTINGS.DebugLevel > 10) console.log('All keys:', keys);
             productDBIds = keys;
             
             let _execLock = false;
@@ -94,6 +99,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                     if (_execLock) return;
                     _execLock = true;
                     addBranding();
+                    detectCurrentPageType();
                     init(true);
                 });
                 waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
@@ -101,6 +107,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                     _execLock = true;
                     addBranding();
                     init(false);
+                    
                 });
 
             } else if (SITE_IS_SHOPPING) {
@@ -136,6 +143,22 @@ vve_eventhandler.on('vve-database-changed', () => {
 })
 
 
+window.onscroll = () => { // ONSCROLL Event handler
+    stickElementToTopScrollEVhandler('vve-btn-allseen', 5);
+
+    if (currentMainPage = PAGETYPE.ALL) handleInfiniteScroll();
+
+
+};
+
+function handleInfiniteScroll() {
+    
+
+
+}
+
+
+
 
 function getUrlParameter(name) {
     const _queryString = window.location.search;
@@ -143,17 +166,33 @@ function getUrlParameter(name) {
     return _urlParams.get(name);
 }
 
+function detectCurrentPageType(){
+    if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items$/.test(window.location.href)) {
+        currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
+    } else if (getUrlParameter('queue') == 'last_chance') {
+        currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
+    } else if (getUrlParameter('queue') == 'potluck') {
+        currentMainPage = PAGETYPE.OROGINAL_POTLUCK;
+    } else if (getUrlParameter('queue') == 'encore') {
+        currentMainPage = PAGETYPE.ORIGINAL_SELLER;
+    }
+    
+    // alert(`currentMainPage is: ${currentMainPage}`);
+    
+    // getUrlParameter('vve-subpage');
+
+}
 
 
 // Check if Product exists in our Database or if it is a new one
 function existsProduct(id) { 
-    if (SETTINGS.DebugLevel > 0) console.log(`Called existsProduct(${id})`);
+    if (SETTINGS.DebugLevel > 10) console.log(`Called existsProduct(${id})`);
     return (productDBIds.lastIndexOf(id) != -1);
 }
 
 
 async function parseTileData(tile, cb) {
-    if (SETTINGS.DebugLevel > 0) console.log(`Called parseTileData(${tile})`);
+    if (SETTINGS.DebugLevel > 10) console.log(`Called parseTileData(${tile})`);
 
     const _id = tile.getAttribute('data-recommendation-id');
 
@@ -219,7 +258,7 @@ async function parseTileData(tile, cb) {
             cb(_newProduct);
         }
         
-    // if (SETTINGS.DebugLevel > 0) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+    // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
 }
 
 
@@ -242,7 +281,7 @@ function addLeftSideButtons(forceClean) {
 
     const _setAllSeenBtn = createButton('Alle als gesehen markieren','vve-btn-allseen',  'background-color: lime;', () => {
         
-        if (SETTINGS.DebugLevel > 0) console.log('Clicked All Seen Button');
+        if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
     
@@ -250,7 +289,7 @@ function addLeftSideButtons(forceClean) {
     _nodesContainer.appendChild(_setAllSeenBtn);
 
     // const _clearDBBtn = createButton('Datenbank Bereinigen', 'background-color: orange;', () => {
-    //     if (SETTINGS.DebugLevel > 0) console.log('Clicked clear DB Button');
+    //     if (SETTINGS.DebugLevel > 10) console.log('Clicked clear DB Button');
     //     cleanUpDatabase();
     // });
 
@@ -277,11 +316,11 @@ function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
 }
 
 function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
-    if (SETTINGS.DebugLevel > 0) console.log('Called markAllCurrentDatabaseProductsAsSeen()');
+    if (SETTINGS.DebugLevel > 10) console.log('Called markAllCurrentDatabaseProductsAsSeen()');
     database.getNewEntries((prods) => {
         const _prodsLength = prods.length;
         let _returned = 0;
-        if (SETTINGS.DebugLevel > 0) console.log(`markAllCurrentDatabaseProductsAsSeen() - Got ${_prodsLength} Products with Tag isNew`);
+        if (SETTINGS.DebugLevel > 10) console.log(`markAllCurrentDatabaseProductsAsSeen() - Got ${_prodsLength} Products with Tag isNew`);
         if (_prodsLength == 0) {
             cb(true);
             return;
@@ -290,7 +329,7 @@ function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
             const _currProd = prods[i];
             _currProd.isNew = false;
             database.update(_currProd, ()=> {
-                if (SETTINGS.DebugLevel > 0) console.log(`markAllCurrentDatabaseProductsAsSeen() - Updated ${_currProd.id}`);
+                if (SETTINGS.DebugLevel > 10) console.log(`markAllCurrentDatabaseProductsAsSeen() - Updated ${_currProd.id}`);
                 _returned++
                 if (_returned == _prodsLength) cb(true);
             })
@@ -319,7 +358,7 @@ function createButton(text, id, style, clickHandler){
 }
 
 async function createTileFromProduct(product, btnID, cb) {
-    if (!product && SETTINGS.DebugLevel > 0) console.error(`createTileFromProduct got no valid product element`);
+    if (!product && SETTINGS.DebugLevel > 10) console.error(`createTileFromProduct got no valid product element`);
     const _btnAutoID = btnID || Math.round(Math.random() * 10000);
     
     const _tile = document.createElement('div');
@@ -366,7 +405,7 @@ async function createProductSite(siteType, productArray, cb) {
     
     const _productArrayLength = productArray.length;
     const _fastCount = Math.min(_productArrayLength, SETTINGS.MaxItemsPerPage);
-    if (SETTINGS.DebugLevel > 0) console.log(`Create Overview for ${_productArrayLength} Products`);
+    if (SETTINGS.DebugLevel > 10) console.log(`Create Overview for ${_productArrayLength} Products`);
 
     
     // Remove Pagination
@@ -398,28 +437,23 @@ async function createProductSite(siteType, productArray, cb) {
         createTileFromProduct(productArray[_index], _index, (tile) => {
             _tilesGrid.append(tile);
             _returned++;
-            if (SETTINGS.DebugLevel > 0) console.log(`Created Tile (${_returned}/${_fastCount})`);
+            if (SETTINGS.DebugLevel > 10) console.log(`Created Tile (${_returned}/${_fastCount})`);
             if (_returned == _fastCount) cb(true);
         });
     }
 
     addLeftSideButtons(true);
-    // if (_productArrayLength >= _fastCount) {
-    //     setTimeout(() => {
-    //         for (; _index < _productArrayLength; _index++) {
-    //             createTileFromProduct(productArray[_index], _index, (tile) => {
-    //                 _tilesGrid.append(tile);
-    //             });
-    //         }
-    //     }, 1000);
-    // }
-}
+ }
 
 const PAGETYPE = {
     NEW_ITEMS: 0,
     FAVORITES: 1,
-    
-    SEARCH_RESULT: 99,
+    ALL: 2,
+    SEARCH_RESULT: 9,
+
+    OROGINAL_POTLUCK: 100,
+    ORIGINAL_LAST_CHANCE: 101,
+    ORIGINAL_SELLER: 102
 }
 
 function createNewSite(type, data) {
@@ -436,6 +470,7 @@ function createNewSite(type, data) {
     
     switch(type) {
         case PAGETYPE.NEW_ITEMS:{
+            currentMainPage = PAGETYPE.NEW_ITEMS;
             database.getNewEntries((_prodArr) => {
                 createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
@@ -447,6 +482,7 @@ function createNewSite(type, data) {
             break;
         }
         case PAGETYPE.FAVORITES:{
+            currentMainPage = PAGETYPE.FAVORITES;
             database.getFavEntries((_prodArr) => {
                 createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
@@ -457,20 +493,26 @@ function createNewSite(type, data) {
             })
             break;
         }
+        case PAGETYPE.ALL:{
+            currentMainPage = PAGETYPE.ALL;
+            // createProductSite(type, data, () => {
+            //     initTileEventHandlers();
+            // });
+            break;
+        }
         case PAGETYPE.SEARCH_RESULT:{
+            currentMainPage = PAGETYPE.SEARCH_RESULT;
             createProductSite(type, data, () => {
                 initTileEventHandlers();
             });
             break;
         }
     }
-
-
 }
 
 
 function btnEventhandlerClick(event, data) {
-    if (SETTINGS.DebugLevel > 0) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
+    if (SETTINGS.DebugLevel > 10) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
         database.get(data.recommendation_id, (prod) => {
             if (prod) {
@@ -484,7 +526,7 @@ function btnEventhandlerClick(event, data) {
 }
 
 function favStarEventhandlerClick(event, data) {
-    if (SETTINGS.DebugLevel > 0) console.log(`called favStarEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
+    if (SETTINGS.DebugLevel > 10) console.log(`called favStarEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
         database.get(data.recommendation_id, (prod) => {
             if (prod) {
@@ -499,17 +541,17 @@ function favStarEventhandlerClick(event, data) {
 
 
 function updateTileStyle(prod) {
-    if (SETTINGS.DebugLevel > 0) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
+    if (SETTINGS.DebugLevel > 10) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
     const _tiles = document.getElementsByClassName('vvp-item-tile');
     const _tilesLength = _tiles.length;
 
-    if (SETTINGS.DebugLevel > 0) console.log(`Searching for tile with id ${prod.id}`);
+    if (SETTINGS.DebugLevel > 10) console.log(`Searching for tile with id ${prod.id}`);
     for (let i = 0; i < _tilesLength; i++) {
         const _tile = _tiles[i];
         const _id = _tile.getAttribute('data-recommendation-id');
         
         if (_id == prod.data_recommendation_id) {
-            if (SETTINGS.DebugLevel > 0) console.log(`Found Tile with id: ${prod.id}`);
+            if (SETTINGS.DebugLevel > 10) console.log(`Found Tile with id: ${prod.id}`);
             _tile.setAttribute('style', (prod.isFav) ? SETTINGS.CssProductFavTag : (prod.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
             const _favStar = _tile.querySelector('.vve-favorite-star');
             _favStar.style.color = (prod.isFav) ? SETTINGS.FavStarColorChecked : 'white'; // SETTINGS.FavStarColorChecked = Gelb;
@@ -520,7 +562,7 @@ function updateTileStyle(prod) {
 
 // Adds Eventhandler to Product Buttons
 function initTileEventHandlers() {
-    if (SETTINGS.DebugLevel > 0) console.log('Called inttTileEventHandlers() >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+    if (SETTINGS.DebugLevel > 10) console.log('Called inttTileEventHandlers() >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
     const _tiles = document.getElementsByClassName('vvp-item-tile');
     const _tileLength = _tiles.length;
 
@@ -529,7 +571,7 @@ function initTileEventHandlers() {
     
     // Thats Fucking Messy, but i don´t have an better solution for this atm. :'((((((
     for(let i = 0; i < _tileLength; i++) {
-        if (SETTINGS.DebugLevel > 0) console.log(`Adding Eventhandler to Tile ${i}`);
+        if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Tile ${i}`);
         const _currTile = _tiles[i];
         
         const _favStar = _currTile.querySelector('.vve-favorite-star');
@@ -544,7 +586,7 @@ function initTileEventHandlers() {
         _btn.addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
     
         for(let j = 0; j < _childs.length; j++) {
-            if (SETTINGS.DebugLevel > 0) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
+            if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
             _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
         }
         
@@ -741,7 +783,7 @@ function addLoadingSymbol(){
 }
 
 function getPageinationData(localDocument = document) {
-    if (SETTINGS.DebugLevel > 0) console.log('Called getPageinationData()');
+    if (SETTINGS.DebugLevel > 10) console.log('Called getPageinationData()');
     const _ret = new Object();
     const _paginationContainer = localDocument.querySelector('.a-pagination');
     if (!_paginationContainer) return;
@@ -763,11 +805,11 @@ function getPageinationData(localDocument = document) {
 
 // CleanUp and Fix Database Entrys
 async function cleanUpDatabase(cb = () => {}) {
-    if (SETTINGS.DebugLevel > 0) console.log('Called cleanUpDatabase()');
+    if (SETTINGS.DebugLevel > 10) console.log('Called cleanUpDatabase()');
     const _dbCleanIcon = addDBCleaningSymbol();
     database.getAll((prodArr) => {
         const _prodArrLength = prodArr.length;
-        if (SETTINGS.DebugLevel > 0) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
+        if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
 
         let _returned = 0;
         let _updated = 0;
@@ -776,7 +818,7 @@ async function cleanUpDatabase(cb = () => {}) {
         const _localReturn = () => { // Dirty, I'm so fucking dirty, but its needed to speed things up
             _returned++
             if (_returned == _prodArrLength) {
-                if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_returned} Updated:${_updated} Deleted:${_deleted}`);
+                if (SETTINGS.DebugLevel > 10) console.log(`Databasecleanup Finished: Entrys:${_returned} Updated:${_updated} Deleted:${_deleted}`);
                 _dbCleanIcon.remove();
                 cb(true);
             }
@@ -785,7 +827,7 @@ async function cleanUpDatabase(cb = () => {}) {
         for (let i = 0; i < _prodArrLength; i++) {
             const _currEntry = prodArr[i];
             let _needUpdate = false;
-            if (SETTINGS.DebugLevel > 0) console.log(`cleanUpDatabase() - Checking Entry ${_currEntry.id} `);
+            if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking Entry ${_currEntry.id} `);
             
             // Checking Product Vars
             if (!_currEntry.ts_firstSeen){
@@ -806,7 +848,7 @@ async function cleanUpDatabase(cb = () => {}) {
             }
 
             if (_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount && !_currEntry.isFav) {
-                if (SETTINGS.DebugLevel > 0) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
+                if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
                 
                 database.removeID(_currEntry.id, (ret) => {
                     if (ret) productDBIds.splice(productDBIds.indexOf(_currEntry.id), 1) // Remove it also from our array
@@ -824,12 +866,12 @@ async function cleanUpDatabase(cb = () => {}) {
 }
 
 function initBackgroundScan() {
-    if (SETTINGS.DebugLevel > 0) console.log('Called initBackgroundScan()');
+    if (SETTINGS.DebugLevel > 10) console.log('Called initBackgroundScan()');
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
     
      // Create iFrame if not exists
     if (!document.querySelector('#vve-iframe-backgroundloader')) {
-        if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): create iFrame');
+        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): create iFrame');
         const iframe = document.createElement('iframe');
             iframe.src = encodeURI(`${_baseUrl}?queue=encore&pn=&cn=&page=1`);
             iframe.id = 'vve-iframe-backgroundloader';
@@ -847,10 +889,10 @@ function initBackgroundScan() {
         const _pageinationData = getPageinationData(document.querySelector('#vve-iframe-backgroundloader').contentWindow.document);
         if (_pageinationData) {
             clearInterval(_paginatinWaitLoop);
-            if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): pagination WaitLoop');
+            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): pagination WaitLoop');
 
             if (!localStorage.getItem('BACKGROUND_SCAN_IS_RUNNING') || true) {
-                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): init localStorage Variables');
+                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): init localStorage Variables');
                 localStorage.setItem('BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
                 localStorage.setItem('BACKGROUND_SCAN_IS_RUNNING', true);
                 localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', 1);
@@ -866,17 +908,17 @@ function initBackgroundScan() {
                 _loopIsWorking = true;
 
                 let _backGroundScanStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_STAGE')) || 0;
-                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
+                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
                 
                 switch (_backGroundScanStage) {
                     case 0:{    // potluck, last_chance
-                            if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
+                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
                             if (_stageZeroSites[_subStage]) {
-                                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
+                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
                                 backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
                                 _subStage++
                             } else {
-                                if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
+                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
                                 _subStage = 0;
                                 _backGroundScanStage++;
                                 _scanFinished();
@@ -885,7 +927,7 @@ function initBackgroundScan() {
                         }
                         case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
                             _subStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_CURRENT'));
-                            if (SETTINGS.DebugLevel > 0) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
+                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
                             if (_subStage < (parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
                                 backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
                                 _subStage++
@@ -912,7 +954,7 @@ function initBackgroundScan() {
                         }
                 }
                 function _scanFinished() {
-                    if (SETTINGS.DebugLevel > 0) console.log(`initBackgroundScan()._scanFinished()`);
+                    if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
                     localStorage.setItem('BACKGROUND_SCAN_STAGE', _backGroundScanStage);
                     localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                     _loopIsWorking = false;
@@ -923,18 +965,18 @@ function initBackgroundScan() {
 }
 
 function backGroundTileScanner(url, cb) {
-    if (SETTINGS.DebugLevel > 0) console.log(`Called backgroundTileScanner(${url})`);
+    if (SETTINGS.DebugLevel > 10) console.log(`Called backgroundTileScanner(${url})`);
     const _iconLoading = addLoadingSymbol();
     const _iframeDoc = document.querySelector('#vve-iframe-backgroundloader').contentWindow.document;
     vve.backGroundIFrame = _iframeDoc;
     _iframeDoc.location.href = url;
     const _loopDelay = setInterval(() => {
-        if (SETTINGS.DebugLevel > 0) console.log(`backgroundTileScanner(): check if we have tiles to read...`);
+        if (SETTINGS.DebugLevel > 10) console.log(`backgroundTileScanner(): check if we have tiles to read...`);
         const _tiles =_iframeDoc.querySelectorAll('.vvp-item-tile');
         if (_tiles) {
-            if (SETTINGS.DebugLevel > 0) console.log(`backgroundTileScanner(): Found first Tile`);
+            if (SETTINGS.DebugLevel > 10) console.log(`backgroundTileScanner(): Found first Tile`);
             const _tilesLength = _tiles.length;
-            if (SETTINGS.DebugLevel > 0) console.log(`BackgroundsScan Querryd: ${url} and got ${_tilesLength} Tiles`);
+            if (SETTINGS.DebugLevel > 10) console.log(`BackgroundsScan Querryd: ${url} and got ${_tilesLength} Tiles`);
             clearInterval(_loopDelay);
             if (_tilesLength > 0) {
             let _returned = 0;
@@ -942,12 +984,12 @@ function backGroundTileScanner(url, cb) {
                     parseTileData(_tiles[i], (prod) => {
                         _returned++;
                         if (!prod.gotFromDB) database.add(prod);
-                        if (SETTINGS.DebugLevel > 0) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
+                        if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
                         if (_returned == _tilesLength) {cb(true); _iconLoading.remove()};
                     })
                 }
             } else {
-                if (SETTINGS.DebugLevel > 0) console.log(`BACKGROUNDSCAN => We dont have to do here anything => resume autoscan`);
+                if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => We dont have to do here anything => resume autoscan`);
                 cb(true); // We dont have to do here anything
                 _iconLoading.remove();
             }
@@ -956,10 +998,10 @@ function backGroundTileScanner(url, cb) {
 }
 
 function startAutoScan() {
-    if (SETTINGS.DebugLevel > 0) console.log('Called startAutoScan()');
+    if (SETTINGS.DebugLevel > 10) console.log('Called startAutoScan()');
     showAutoScanScreen('Init Autoscan, please wait...');
     markAllCurrentDatabaseProductsAsSeen(() => {
-        if (SETTINGS.DebugLevel > 0) console.log('startAutoScan() - Got Callback from markAllCurrentDatabaseProductsAsSeen()');
+        if (SETTINGS.DebugLevel > 10) console.log('startAutoScan() - Got Callback from markAllCurrentDatabaseProductsAsSeen()');
         const _pageiDat = getPageinationData();
         localStorage.setItem('INIT_AUTO_SCAN', false);
         localStorage.setItem('AUTO_SCAN_IS_RUNNING', true);
@@ -967,7 +1009,7 @@ function startAutoScan() {
         localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', 1);
         setTimeout(() => {
             const _url = `${_pageiDat.href}1`;
-            if (SETTINGS.DebugLevel > 0) console.log(`Loding new Page ${_url}`)
+            if (SETTINGS.DebugLevel > 10) console.log(`Loding new Page ${_url}`)
             window.location.href = _url;
         }, 5000);
     })
@@ -978,7 +1020,7 @@ function startAutoScan() {
 function handleAutoScan() {
     let _href;
     const _delay = Math.max(SETTINGS.PageLoadMinDelay - (Date.now() - PAGE_LOAD_TIMESTAMP), 0) + 500;
-    if (SETTINGS.DebugLevel > 0) console.log(`handleAutoScan() - _delay: ${_delay}`);
+    if (SETTINGS.DebugLevel > 10) console.log(`handleAutoScan() - _delay: ${_delay}`);
     if (AUTO_SCAN_PAGE_CURRENT < AUTO_SCAN_PAGE_MAX) {
         const _nextPage = AUTO_SCAN_PAGE_CURRENT + 1;
         localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', _nextPage);
@@ -1001,9 +1043,7 @@ function handleAutoScan() {
     }
 }
 
-window.onscroll = () => { // ONSCROLL Event handler
-    stickElementToTopScrollEVhandler('vve-btn-allseen', 5);
-};
+
 
 function stickElementToTopScrollEVhandler(elemID, dist) {
     const _elem = document.getElementById(elemID);
@@ -1048,11 +1088,40 @@ function updateNewProductsBtn() {
             _btnBadge.innerText = '';
         }
 
-        if (SETTINGS.EnableDesktopNotifikation && _prodArrLength > oldCountOfNewItems){ 
-            if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
-                oldCountOfNewItems = _prodArrLength;
-                lastDesktopNotifikationTimestamp = unixTimeStamp();
-                desktopNotifikation('Amazon Vine Explorer', `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
+        if (SETTINGS.EnableDesktopNotifikation) {
+
+            if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Insige IF`);
+
+            let _notifyed = false;
+            const _configKeyWords = SETTINGS.DesktopNotifikationKeywords;
+            
+
+            for (let i = 0; i < _prodArrLength; i++) {
+                const _prod = prodArr[i];
+                const _descFull = _prod.description_full.toLowerCase();
+
+                if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Deescription: ${_descFull} for keys: `, _configKeyWords);
+                const _configkeyWordsLength = _configKeyWords.length;
+
+                for (let j = 0; j < _configkeyWordsLength; j++) {
+                    const _currKey = _configKeyWords[j].toLowerCase(); 
+                    if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Deescription for Keyword: ${_currKey}`);
+                    if (_descFull.includes(_currKey)) {
+                        desktopNotifikation(`Amazon Vine Explorer - ${VVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
+                        _notifyed = true;
+                    }                    
+                        break;
+                }        
+            }
+        
+
+            if (!_notifyed && _prodArrLength > oldCountOfNewItems){ 
+                if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
+                    oldCountOfNewItems = _prodArrLength;
+                    lastDesktopNotifikationTimestamp = unixTimeStamp();
+
+                    desktopNotifikation(`Amazon Vine Explorer - ${VVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
+                } 
             }
         }
     })
@@ -1065,16 +1134,20 @@ function updateNewProductsBtn() {
  * @param {string} icon 
  * 
  */
-function desktopNotifikation(title, message, icon = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png', onClick = () => {}) {
-
+function desktopNotifikation(title, message, image = null, requireInteraction = null, onClick = () => {}) {
+    const _vineLogo = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png';
+    const _vineLogoImp = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/vine_logo_important.png'
+    
     if (Notification.permission === 'granted') {
         const _notification = new Notification(title, {
             body: message,
-            icon: icon
+            icon: (!requireInteraction) ? _vineLogo : _vineLogoImp,
+            image: image || 'https://m.media-amazon.com/images/G/01/vine/website/vine_logo_title._CB1556578328_.png',
+            tag: `vve-notify-${Math.round(Math.random()* 10000000)}`,
+            requireInteraction: requireInteraction,
         });
 
-        notification.onclick = onClick;
-
+        _notification.onclick = onClick;
     } else {
         Notification.requestPermission().then(function(permission) {
             if (permission === 'granted') {
@@ -1085,7 +1158,7 @@ function desktopNotifikation(title, message, icon = 'https://raw.githubuserconte
     }
 }
 
-
+unsafeWindow.vve.DN = desktopNotifikation;
 
 function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeValue) {
     const _btn = document.createElement('span');
@@ -1134,7 +1207,7 @@ function init(hasTiles) {
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
     
     const _vveSubpageRequest = getUrlParameter('vve-subpage');
-    if (SETTINGS.DebugLevel > 0) console.log(`Got Subpage Parameter`, _vveSubpageRequest)
+    if (SETTINGS.DebugLevel > 10) console.log(`Got Subpage Parameter`, _vveSubpageRequest)
     
     if (_vveSubpageRequest) createNewSite(parseInt(_vveSubpageRequest));
 
@@ -1147,12 +1220,12 @@ function init(hasTiles) {
             const _currTile = _tiles[i];
             _currTile.style.cssText = "background-color: yellow;";
             parseTileData(_currTile, (_product) => {
-                console.log(`Got TileData Back: `, _product);
+                if (SETTINGS.DebugLevel > 10) console.log(`Got TileData Back: `, _product);
                 
                 _countdown++;
                 const _tilesToDoCount = _tilesLength - _countdown;
-                if (SETTINGS.DebugLevel > 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
-                if (SETTINGS.DebugLevel > 0 && _tilesToDoCount == 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Parsing ${_tilesLength} has taken ${Date.now() - _parseStartTime} ms`);
+                if (SETTINGS.DebugLevel > 10) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
+                if (SETTINGS.DebugLevel > 10 && _tilesToDoCount == 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Parsing ${_tilesLength} has taken ${Date.now() - _parseStartTime} ms`);
 
                 if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
                     database.add(_product);
@@ -1186,7 +1259,7 @@ function init(hasTiles) {
             });
         }
     } else {
-        if (SETTINGS.DebugLevel > 0) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
+        if (SETTINGS.DebugLevel > 10) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
     }
 
     
@@ -1194,8 +1267,10 @@ function init(hasTiles) {
     
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
 
+    _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Alle', '', '', () => {createNewSite(PAGETYPE.ALL);}));
     _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
     _searchbarContainer.appendChild(createNavButton('vve-btn-list-new', 'Neue Einträge', 'vve-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'vve-new-items-btn-badge', '-'));
+
     updateNewProductsBtn();
 
 
@@ -1212,12 +1287,12 @@ function init(hasTiles) {
     _searchBarInput.style.cssText = `width: 30em;`;
     _searchBarInput.addEventListener('keyup', (ev) => {
         const _input = _searchBarInput.value
-        if (SETTINGS.DebugLevel > 0) console.log(`Updated Input: ${_input}`);
+        if (SETTINGS.DebugLevel > 10) console.log(`Updated Input: ${_input}`);
         if (_input.length >= 3) {
             if (searchInputTimeout) clearTimeout(searchInputTimeout);
             searchInputTimeout = setTimeout(() => {
                 database.query(_input, (_objArr) => {
-                    if (SETTINGS.DebugLevel > 0) console.log(`Found ${_objArr.length} Items with this Search`);
+                    if (SETTINGS.DebugLevel > 10) console.log(`Found ${_objArr.length} Items with this Search`);
                     createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
                     searchInputTimeout = null;
                 }) 
@@ -1240,7 +1315,7 @@ function init(hasTiles) {
     // Modify Pageination if exists
     const _pageinationContainer = document.getElementsByClassName('a-pagination')[0];
     if (_pageinationContainer) {
-        if (SETTINGS.DebugLevel > 0) console.log('Manipulating Pageination');
+        if (SETTINGS.DebugLevel > 10) console.log('Manipulating Pageination');
         
         const _nextBtn = _pageinationContainer.lastChild;
         const _isNextBtnDisabled = (_nextBtn.getAttribute('class') != 'a-last');
