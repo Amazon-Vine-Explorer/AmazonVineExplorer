@@ -206,7 +206,7 @@ class DB_HANDLER {
     * @param {object} obj Object to update
     * @param {function} [cb] Callback function executes when object update is done
     */ 
-    async update(obj, cb){
+    async update(obj, cb = () => {}){
         console.log('Called DB_HANDLER:update()');
         if (typeof(obj) != 'object') throw new Error('DB_HANDLER.update(): obj is not defined or is not type of object');
         console.log('Called DB_HANDLER:update() Stage 2');

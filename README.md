@@ -14,7 +14,8 @@ Bla bla, here u will fing a few Informations about this Script. How to Install e
 
 * Added Desktop Notifications
 * Added the All Products Button for infinite scroll thru all the vine products
-* The New Products Button shows the amount of new products.
+* The New Products Button shows the amount of new products
+* Added new Button to left Side to set ALL Products to !isNew
 * Added Indicators (left bottom corner) who shows Database aktivity, Database cleanup and Backgroundscan aktivity
 * a few little bugfixes
 

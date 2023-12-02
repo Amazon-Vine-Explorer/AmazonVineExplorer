@@ -146,8 +146,8 @@ vve_eventhandler.on('vve-database-changed', () => {
 
 
 window.onscroll = () => { // ONSCROLL Event handler
-    stickElementToTopScrollEVhandler('vve-btn-allseen', 5);
-    
+    stickElementToTopScrollEVhandler('vve-btn-allseen', '5px');
+    stickElementToTopScrollEVhandler('vve-btn-db-allseen', '35px');
 
     if (currentMainPage == PAGETYPE.ALL) handleInfiniteScroll();
 
@@ -313,14 +313,30 @@ function addLeftSideButtons(forceClean) {
     
     _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
-    const _setAllSeenBtn = createButton('Alle als gesehen markieren','vve-btn-allseen',  'background-color: lime;', () => {
+    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','vve-btn-allseen',  'width: 240px; background-color: lime;', () => {
         
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
     
+    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','vve-btn-db-allseen', 'left: 0; width: 240px; background-color: rgb(255, 162, 142);', () => {
+        
+        if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
+        setTimeout(() => {
+            database.getAll((prodsArr) => {
+                const _prodsArryLength = prodsArr.length;
+                for (let i = 0; i < _prodsArryLength; i++) {
+                    const _currProd = prodsArr[i];
+                    _currProd.isNew = false;
+                    database.update(_currProd);
+                }
+            })
+        }, 30);
+    });
+
 
     _nodesContainer.appendChild(_setAllSeenBtn);
+    _nodesContainer.appendChild(_setAllSeenDBBtn);
 
     // const _clearDBBtn = createButton('Datenbank Bereinigen', 'background-color: orange;', () => {
     //     if (SETTINGS.DebugLevel > 10) console.log('Clicked clear DB Button');
@@ -1265,9 +1281,9 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
 
             if (SETTINGS.DebugLevel > 10) console.log(`### scrollY:${window.scrollY} maxScrollHeigt ${maxScrollHeight} initialTop: ${_elemInitialTop}`);
 
-            if (window.scrollY >= (_elemInitialTop - dist)) {
+            if (window.scrollY >= (_elemInitialTop - parseInt(dist))) {
                 _elem.style.position = "fixed";
-                _elem.style.top = '5px';
+                _elem.style.top = dist;
             } else {
                 _elem.style.position = "static";
             }
