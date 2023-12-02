@@ -621,6 +621,71 @@ function addBranding() {
     document.body.appendChild(_text);
 }
 
+
+function addOverlays() {
+    const _overlayBackground = document.createElement('div');
+    _overlayBackground.style.position = 'fixed';
+    _overlayBackground.style.backgroundColor = '#000000b0';
+    _overlayBackground.style.zIndex = '1750';
+    _overlayBackground.style.width = '100%';
+    _overlayBackground.style.height = '100%';
+    _overlayBackground.style.top = '0';
+
+    document.body.appendChild(_overlayBackground);
+
+    const _settingsDiv = document.createElement('div');
+    _settingsDiv.style.position = 'fixed';
+    _settingsDiv.style.zIndex = '1750';
+    _settingsDiv.style.width = '100%';
+    _settingsDiv.style.height = '100%';
+    _settingsDiv.style.top = '0';
+    _settingsDiv.style.display = 'flex';
+    _settingsDiv.style.justifyContent = 'center';
+    _settingsDiv.style.alignItems = 'center';
+
+    _settingsDiv.innerHTML = `
+    <style>
+    .ave-setting {
+    padding: 0 0 7px;
+    }
+    </style>
+    <div style="background-color: white;border-radius: 8px;width: 50%;min-width: 250px;height: 75%;overflow: hidden;">
+      <div id="settingsInner"width: 100%; height: 100%;"> <!--- Inner Start -->
+        <div id="settingsNav" style="background-color: #F0F2F2;border-bottom: 1px solid #D5D9D9;display: flex;height: 50px;align-items: center;padding: 0 24px;"> <!--- Nav Start -->
+         <div style="color: #444;font-size: 16px;font-weight: 700;">Amazon Vine Explorer Einstellungen</div>
+         <div style="color: #444;margin-left: auto;width: 50px;height: 50px;display: flex;justify-content: center;align-items: center;font-weight: 600;font-size: larger;cursor: pointer;transform: translate(50%, 0);">
+           <i class="a-icon a-icon-close"></i>
+         </div>
+        </div> <!--- Nav End -->
+        <div style="padding: 16px 24px;color: #0F111"> <!--- Content Start -->
+        <div class="ave-setting">
+          <input type="number" value="${SETTINGS.DebugLevel}" onchange="console.log('Setting Changed')"> - Debug Level
+        </div>
+        <div class="ave-setting">
+        <input type="checkbox" checked="${SETTINGS.EnableFullWidth}" onchange="console.log('Setting Changed')"> - Full Width
+        </div>
+        <div class="ave-setting">
+        <input type="checkbox" checked="${SETTINGS.DisableFooter}" onchange="console.log('Setting Changed')"> - Disable Footer
+        </div>
+        <div class="ave-setting">
+        <input type="checkbox" checked="${SETTINGS.DisableSuggestions}" onchange="console.log('Setting Changed')"> - Disable Suggestions
+        </div>
+        <div class="ave-setting">
+        <input type="checkbox" checked="${SETTINGS.DisableFooterShopping}" onchange="console.log('Setting Changed')"> - Disable Footer Shopping
+        </div>
+        <div class="ave-setting">
+        <input type="checkbox" checked="${SETTINGS.DisableSuggestionsShopping}" onchange="console.log('Setting Changed')"> - Disable Suggestions Shopping
+        </div>
+        </div> <!--- Content End -->
+        <div> <!--- Footer Start -->
+        </div> <!--- Footer End -->
+      </div> <!--- Inner End -->
+    </div>
+`
+
+    document.body.appendChild(_settingsDiv);
+}
+
 function addDBCleaningSymbol(){
     const _cleaningDiv = document.createElement('div');
     _cleaningDiv.style.width = "25px";
