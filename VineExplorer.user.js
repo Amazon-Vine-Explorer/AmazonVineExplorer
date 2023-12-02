@@ -1142,15 +1142,18 @@ function updateNewProductsBtn() {
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
     database.getNewEntries((prodArr) => { 
         const _btnBadge = document.getElementById('vve-new-items-btn-badge');
+        const _pageTitle = document.title.replace(/^[0-9]+/, '').trim();
         const _prodArrLength = prodArr.length;
         if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
 
         if (_prodArrLength > 0) {
             _btnBadge.style.display = 'inline-block';
             _btnBadge.innerText = _prodArrLength;
+            document.title = `${_prodArrLength} ${_pageTitle}`;
         } else {
             _btnBadge.style.display = 'none';
             _btnBadge.innerText = '';
+            document.title = `${_pageTitle}`;
         }
 
         if (SETTINGS.EnableDesktopNotifikation) {
