@@ -70,7 +70,7 @@ let productDBIds = [];
 let searchInputTimeout;
 let backGroundScanInterval;
 
-
+let infiniteScrollTilesBufferArray = [];
 
 // Make some things accessable from console
 unsafeWindow.vve = {
@@ -143,17 +143,51 @@ vve_eventhandler.on('vve-database-changed', () => {
 })
 
 
+
+
 window.onscroll = () => { // ONSCROLL Event handler
     stickElementToTopScrollEVhandler('vve-btn-allseen', 5);
+    
 
-    if (currentMainPage = PAGETYPE.ALL) handleInfiniteScroll();
+    if (currentMainPage == PAGETYPE.ALL) handleInfiniteScroll();
 
 
 };
 
-function handleInfiniteScroll() {
-    
+let blockHandleInfiniteScroll = false;
+let infiniteScrollLastPreloadedPage = 1;
+let infiniteScrollMaxPreloadPage = 125; // Hardcoded for scrolltest, must lated get extracted from Pagination
+let inifiniteScrollBlockAppend = false;
 
+function handleInfiniteScroll() {
+        console.log('Called handleInfiniteScroll()');
+        if (!inifiniteScrollBlockAppend) {
+            inifiniteScrollBlockAppend = true;
+            setTimeout(()=> {appendInfiniteScrollTiles(()=>{inifiniteScrollBlockAppend = false;})},10);
+        }
+
+        if (blockHandleInfiniteScroll) return;
+        blockHandleInfiniteScroll = true;
+        
+        const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
+        
+        console.log(`handleInfiniteScroll(): _maxScrollHeight: ${_maxScrollHeight} window.scrollY+inner: ${window.scrollY + window.innerHeight}`);
+        
+        if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))){
+            blockHandleInfiniteScroll = false;  
+            return;
+        } else if (infiniteScrollTilesBufferArray.length < 1000 && infiniteScrollLastPreloadedPage < infiniteScrollMaxPreloadPage) {
+            const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+            infiniteScrollLastPreloadedPage++;
+            getTilesFromURL(`${_baseUrl}?queue=encore&pn=&cn=&page=${infiniteScrollLastPreloadedPage}`, (tiles) =>{
+                infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles);
+
+                blockHandleInfiniteScroll = false;  
+                if (infiniteScrollTilesBufferArray.length < 500) handleInfiniteScroll();
+            });
+        } else {
+            blockHandleInfiniteScroll = false;  
+        }
 
 }
 
@@ -389,7 +423,7 @@ async function createTileFromProduct(product, btnID, cb) {
     cb(_tile);
 }
 
-function createFavStarElement(prod, index) {
+function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
     const _favElement = document.createElement('div');
     _favElement.setAttribute("id", `p-fav-${index || Math.round(Math.random() * 5000)}`);
     _favElement.classList.add('vve-favorite-star');
@@ -445,6 +479,63 @@ async function createProductSite(siteType, productArray, cb) {
     addLeftSideButtons(true);
  }
 
+async function createInfiniteScrollSite(cb) {
+    if (SETTINGS.DebugLevel > 10) console.log(`Called createInfiniteScrollSite()`);
+
+    // Remove Pagination
+    const _pagination = document.querySelector('.a-pagination')
+    if (_pagination) _pagination.remove();
+
+    // Cear Left Nodes Container
+    const _nodesContainer = document.getElementById('vvp-browse-nodes-container');
+    if (_nodesContainer) _nodesContainer.innerHTML = '';
+
+    // Items Grid Container
+    const _tilesContainer = document.getElementById('vvp-items-grid-container');
+    if (!_tilesContainer) reloadPageWithSubpageTarget(siteType);
+
+    // Edit Top Line
+    if (_tilesContainer) {
+        const _topLine = _tilesContainer.getElementsByTagName('p')[0];
+        _topLine.innerHTML = ''
+    }
+                                                
+    const _tilesGrid = document.getElementById('vvp-items-grid');
+    if (!_tilesGrid) reloadPageWithSubpageTarget(siteType);
+    _tilesGrid.innerHTML = '';
+
+    addLeftSideButtons(true);
+
+    cb(_tilesGrid);
+ }
+
+async function appendInfiniteScrollTiles(cb = ()=>{}){
+    // So lange tiles hinzufügen bis wir wieder über dem sichtbaren bereich sind
+    console.log('appendInfiniteScrollTiles(): ', infiniteScrollTilesBufferArray);
+    const _tilesContainer = document.getElementById('vvp-items-grid');
+
+    setTimeout(() => {
+        let _stopCreation = false;
+        while (infiniteScrollTilesBufferArray.length > 0 && !_stopCreation) {
+            const _tile = infiniteScrollTilesBufferArray.shift();
+            _tilesContainer.appendChild(_tile);
+            parseTileData(_tile, (_product) => {
+                addStyleToTile(_tile, _product);
+            });
+
+            const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
+            if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))) _stopCreation = true;
+            
+            console.log(`appendInfiniteScrollTiles(): Inside WHILE: _maxScrollHeigt: ${_maxScrollHeight} currPosition ${window.scrollY}`);
+        }
+
+        console.log(`appendInfiniteScrollTiles(): After WHILE: left tile to create: ${infiniteScrollTilesBufferArray.length}`);
+        cb(true);
+
+    },10);
+}
+
+
 const PAGETYPE = {
     NEW_ITEMS: 0,
     FAVORITES: 1,
@@ -495,9 +586,29 @@ function createNewSite(type, data) {
         }
         case PAGETYPE.ALL:{
             currentMainPage = PAGETYPE.ALL;
-            // createProductSite(type, data, () => {
-            //     initTileEventHandlers();
-            // });
+            createInfiniteScrollSite((tilesContainer) => {
+                const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+                const _preloadPages = ['potluck', 'last_chance', 'encore']
+                infiniteScrollLastPreloadedPage = 1;
+                infiniteScrollMaxPreloadPage = 100;
+                infiniteScrollTilesBufferArray = [];
+
+                getTilesFromURL(`${_baseUrl}?queue=${_preloadPages[0]}`, (tiles1) =>{
+                    infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles1);
+                    appendInfiniteScrollTiles();
+                    getTilesFromURL(`${_baseUrl}?queue=${_preloadPages[1]}`, (tiles2) =>{
+                        infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles2);
+                        appendInfiniteScrollTiles();
+                        getTilesFromURL(`${_baseUrl}?queue=${_preloadPages[2]}`, (tiles3) =>{
+                            infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles3);
+                            appendInfiniteScrollTiles();
+                            setTimeout(()=> {
+                                handleInfiniteScroll(); // Just to trigger first preloads
+                            }, 500);
+                        })
+                    })
+                })
+            });
             break;
         }
         case PAGETYPE.SEARCH_RESULT:{
@@ -510,6 +621,38 @@ function createNewSite(type, data) {
     }
 }
 
+
+let lastGetTilesFromURLQuerry = 0;
+function getTilesFromURL(url, cb = (tilesArray) => {}) {
+    if (lastGetTilesFromURLQuerry + SETTINGS.PageLoadMinDelay > Date.now()) {
+        const _delay =  Math.max(1, lastGetTilesFromURLQuerry + SETTINGS.PageLoadMinDelay - Date.now());
+        console.warn(`getTilesFromURL() DELAYED for ${_delay}ms`)
+        setTimeout(() => {getTilesFromURL(url, cb)}, _delay);
+        return;
+    }
+    GM.xmlHttpRequest({
+        method: "GET",
+        url: url,
+        onload: function(response) {
+            const _parser = new DOMParser();   
+            const _doc = _parser.parseFromString(response.responseText, "text/html");
+            lastGetTilesFromURLQuerry = Date.now();
+            waitForHtmlElmement('#vvp-items-grid', (itemsContainer) => {
+                console.log('getTileFromURL(): itemsContainer:', itemsContainer);
+                // cb(itemsContainer.getElementsByClassName('vvp-item-tile'));
+                const _retArr = [];
+                const _elemArr = itemsContainer.querySelectorAll('.vvp-item-tile');
+                for (let i = 0; i < _elemArr.length; i++){
+                    _retArr.push(_elemArr[i].cloneNode(true));
+                }
+                cb(_retArr);
+                
+                const _paginationData = getPageinationData();
+                if (_paginationData) infiniteScrollMaxPreloadPage = _pageinationData.maxPage;
+            }, _doc);
+        }
+    })
+}
 
 function btnEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
@@ -566,14 +709,14 @@ function initTileEventHandlers() {
     const _tiles = document.getElementsByClassName('vvp-item-tile');
     const _tileLength = _tiles.length;
 
-    const _btns = document.querySelectorAll('.vvp-details-btn input');
-    const _btnsLength = _btns.length;
-    
-    // Thats Fucking Messy, but i don´t have an better solution for this atm. :'((((((
     for(let i = 0; i < _tileLength; i++) {
         if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Tile ${i}`);
         const _currTile = _tiles[i];
-        
+        addTileEventhandlers(_currTile);
+    }        
+}
+
+function addTileEventhandlers(_currTile) {
         const _favStar = _currTile.querySelector('.vve-favorite-star');
         const _btn = _currTile.querySelector('.vvp-details-btn input');
 
@@ -593,11 +736,7 @@ function initTileEventHandlers() {
         waitForHtmlElmement('.vve-favorite-star', (elem) => {
             _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
         }, _currTile);
-        
-        
-    }        
 }
-
 
 function completeDelayedInit() {
     initTileEventHandlers();
@@ -1270,6 +1409,30 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
 }
 
 
+function addStyleToTile(_currTile, _product) {
+           
+                if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
+                    database.add(_product);
+                    _currTile.style.cssText = SETTINGS.CssProductSaved;
+                    _currTile.classList.add('vve-element-saved');
+                } else {
+                    let _style = SETTINGS.CssProductDefault;
+                    if(_product.isNew) {
+                        _style = SETTINGS.CssProductNewTag;
+                        _currTile.classList.add('vve-element-new');
+                    }
+                    if(_product.isFav) {
+                        _style = SETTINGS.CssProductFavTag;
+                        _currTile.classList.add('vve-element-fav');
+                    }
+                    _currTile.style.cssText = _style;
+                    
+                    // Update Timestamps
+                }
+                _currTile.prepend(createFavStarElement(_product));
+}
+
+
 function init(hasTiles) {
     // Get all Products on this page ;)
     
@@ -1296,25 +1459,7 @@ function init(hasTiles) {
                 if (SETTINGS.DebugLevel > 10) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
                 if (SETTINGS.DebugLevel > 10 && _tilesToDoCount == 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Parsing ${_tilesLength} has taken ${Date.now() - _parseStartTime} ms`);
 
-                if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
-                    database.add(_product);
-                    _currTile.style.cssText = SETTINGS.CssProductSaved;
-                    _currTile.classList.add('vve-element-saved');
-                } else {
-                    let _style = SETTINGS.CssProductDefault;
-                    if(_product.isNew) {
-                        _style = SETTINGS.CssProductNewTag;
-                        _currTile.classList.add('vve-element-new');
-                    }
-                    if(_product.isFav) {
-                        _style = SETTINGS.CssProductFavTag;
-                        _currTile.classList.add('vve-element-fav');
-                    }
-                    _currTile.style.cssText = _style;
-                    
-                    // Update Timestamps
-                }
-                _currTile.prepend(createFavStarElement(_product, i));
+                addStyleToTile(_currTile, _product);
 
             if (_tilesToDoCount == 0) {
                     if(INIT_AUTO_SCAN) {
