@@ -835,7 +835,7 @@ function initBackgroundScan() {
             iframe.id = 'vve-iframe-backgroundloader';
             iframe.style.position = 'fixed';
             iframe.style.top = '0';
-            iframe.style.left = '-5000';
+            iframe.style.left = '-10000';
             iframe.style.width = '100%';
             iframe.style.height = '100%';
             iframe.style.display = 'none';
