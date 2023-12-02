@@ -67,7 +67,9 @@ class SETTINGS_DEFAULT {
     FetchRetryTime = 50;
     FetchRetryMaxTime = 5000;
     BackGroundScanDelayPerPage = 4000;
+    BackGroundScannerRandomness = 4000;
     DesktopNotifikationDelay = 60;
+    DesktopNotifikationKeywords = [];
 
     CssProductNewTag = "border: 2mm ridge rgba(218, 247, 166, .6); background-color: rgba(218, 247, 166, .2)";
     CssProductSaved = "border: 2mm ridge rgba(105, 163, 0, .6); background-color: rgba(105, 163, 0, .2)";

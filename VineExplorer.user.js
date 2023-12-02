@@ -1034,11 +1034,11 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
 let lastDesktopNotifikationTimestamp = 0;
 
 function updateNewProductsBtn() {
-    if (SETTINGS.DebugLevel > 0) console.log('Called updateNewProductsBtn()');
+    if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
     database.getNewEntries((prodArr) => { 
         const _btnBadge = document.getElementById('vve-new-items-btn-badge');
         const _prodArrLength = prodArr.length;
-        if (SETTINGS.DebugLevel > 0) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
+        if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
 
         if (_prodArrLength > 0) {
             _btnBadge.style.display = 'inline-block';
