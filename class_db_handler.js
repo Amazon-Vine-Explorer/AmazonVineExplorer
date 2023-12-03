@@ -330,28 +330,17 @@ class DB_HANDLER {
         _request.onerror = (event) => {cb([]); throw new Error(`DB_HANDLER.getNewEntrys(): ${event.target.error.name}`);};
     };
     
-   /**
-    * Get all the Objects stored in our DB
-    * @async
-    * @param {function} cb Callback function executes when database query is done
-    */     
-    async getAll(cb){
-        if (typeof(cb) != 'function') throw new Error('DB_HANDLER.getAll(): cb is not defined or is not typeof function');
-        const _result = [];
-        const _request = this.#getStore().openCursor();
-
-        _request.onsuccess = (event) => {
-            const _cursor = event.target.result;
-            if (_cursor) {
-                _result.push(_cursor.value);
-                _cursor.continue();
-            } else { // No more entries
-                cb(_result);
-            }
-        };
-
+    /**
+     * Get all the Objects stored in our DB
+     * @param {function} cb Callback function executes when the database query is done
+     */
+    getAll(cb) {
+        if (typeof (cb) !== 'function') throw new Error('DB_HANDLER.getAll(): cb is not defined or is not typeof function');
+        
+        const _request = this.#getStore().getAll();
+        _request.onsuccess = (event) => {cb(event.target.result);};
         _request.onerror = (event) => {cb([]); throw new Error(`DB_HANDLER.getAll(): ${event.target.error.name}`);};
-    };
+    }
 
     /**
     * Removes Object with given ID from Database
