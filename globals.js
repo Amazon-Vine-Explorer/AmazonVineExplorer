@@ -183,6 +183,22 @@ async function waitForHtmlElmement(selector, cb, altDocument = document) {
     });
 }
 
+/**
+ *  Wait for given amount of milliseconds
+ *  USE ONLY IN ASYNC FUNCTIONS
+ *  await delay(1000); for wait one second
+ * @param {number} milliseconds
+ * @returns 
+ */
+async function delay(milliseconds) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, milliseconds);
+    });
+}
+
+
 
 /**
     * This Function will Monitor and fire Style Changes asap

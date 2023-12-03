@@ -9,8 +9,16 @@ class Product {
     data_img_url;
     data_img_alt;
     data_asin;
+    data_asin_is_parent;
+    data_childs;
     data_estimated_tax;
-    prize;
+    data_estimated_tax_prize;
+    data_tax_currency;
+    data_contributors;
+    data_feature_bullets;
+    data_limited_quantity;
+    data_catalogSize;
+    real_prize;
     isFav = false;
     isNew = true;
     gotRemoved = false;

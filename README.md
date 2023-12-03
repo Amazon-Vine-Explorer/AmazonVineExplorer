@@ -19,6 +19,8 @@ Bla bla, here u will fing a few Informations about this Script. How to Install e
 * Added Indicators (left bottom corner) who shows Database aktivity, Database cleanup and Backgroundscan aktivity
 * Added more Randomness for Backgroundscanner. Default Delay (4S) + 0-4S Per Dataquerry from Amazon
 * Changed Database function for querry all entrys to increse the performance of this function
+* Added "controlled delay" (Observer) to be safe for querry product tile elements (sometimes the parser was to fast and tryed to read not existing elements)
+* Added function to querry product details from amazon and merge it with product database element
 * a few little bugfixes
 
 ##### [01.12.2023] - Version 0.7.1

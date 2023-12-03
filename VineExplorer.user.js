@@ -238,59 +238,68 @@ async function parseTileData(tile, cb) {
         return;
     } // Fast exit if Product is in our DB
 
-    const _div_vpp_item_tile_content                    = tile.getElementsByClassName('vvp-item-tile-content')[0];
-    const _div_vpp_item_tile_content_img                = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
-    const _div_vvp_item_product_title_container         = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
-    const _div_vvp_item_product_title_container_a       = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
-    const _div_vpp_item_tile_content_button_inner       = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
-    const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
+    //We have to wait for a lot of Stuff
+    waitForHtmlElmement('.vvp-item-tile-content',async () => {
+        const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
+        waitForHtmlElmement('img', async () => {
+            const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
+                waitForHtmlElmement('.vvp-item-product-title-container', async () => {
+                    const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
+                        waitForHtmlElmement('a', async () => {
+                            const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
+                                waitForHtmlElmement('.a-button-inner', async () => {
+                                    const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
+                                        waitForHtmlElmement('input', async () => {
+                                            const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
+                                            const _newProduct = new Product(_id);
+                                            _newProduct.data_recommendation_id = _id;
+                                            _newProduct.data_img_url = tile.getAttribute('data-img-url');
+                                            _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
+                                            _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
+                                            _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
+                                            
+                                            _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
+                                            _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
+                                            _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
 
-    const _newProduct = new Product(_id);
-    // _newProduct.id = _id;
-    
-    
-    // while(!_div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent) {}
+                                            _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+                                            
+                                            
+                                            if (_newProduct.description_short == '') {
+                                                let _timeLoopCounter = 0;
+                                                const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
+                                                const _halfdelay = (SETTINGS.FetchRetryTime / 2)
+                                                function timeLoop() {
+                                                    if (_timeLoopCounter++ < _maxLoops){
+                                                            setTimeout(() => {
+                                                                const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+                                                                if (_short != ""){ 
+                                                                    _newProduct.description_short = _short;
+                                                                    cb(_newProduct);
+                                                                } else {
+                                                                    timeLoop();
+                                                                }
+                                                            }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
+                                                        } else {
+                                                            _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
+                                                            _newProduct.generated_short = true;
+                                                            cb(_newProduct);
+                                                        }
+                                                    }
+                                                timeLoop();
+                                                } else {
+                                                    cb(_newProduct);
+                                                }
+                                                
+                                            // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
 
-    _newProduct.data_recommendation_id = _id;
-    _newProduct.data_img_url = tile.getAttribute('data-img-url');
-    _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
-    _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
-    _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
-    
-    _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
-    _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-    _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-    
-    
-    if (_newProduct.description_short == '') {
-        let _timeLoopCounter = 0;
-        const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
-        const _halfdelay = (SETTINGS.FetchRetryTime / 2)
-        function timeLoop() {
-            if (_timeLoopCounter++ < _maxLoops){
-                    setTimeout(() => {
-                        const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                        if (_short != ""){ 
-                            _newProduct.description_short = _short;
-                            cb(_newProduct);
-                        } else {
-                            timeLoop();
-                        }
-                    }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
-                } else {
-                    _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
-                    _newProduct.generated_short = true;
-                    cb(_newProduct);
-                }
-            }
-        timeLoop();
-        } else {
-            cb(_newProduct);
-        }
-        
-    // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+                                        }, _div_vpp_item_tile_content_button_inner)
+                                }, _div_vpp_item_tile_content)
+                        }, _div_vvp_item_product_title_container)
+                }, _div_vpp_item_tile_content);
+        }, _div_vpp_item_tile_content);
+    }, tile)
 }
-
 
 
 function reloadPageWithSubpageTarget(target) {
@@ -426,7 +435,7 @@ async function createTileFromProduct(product, btnID, cb) {
                 </div>
                 <span class="a-button a-button-primary vvp-details-btn" id="a-autoid-${_btnAutoID}">
                     <span class="a-button-inner">
-                        <input data-asin="${product.data_asin}" data-is-parent-asin="false" data-recommendation-id="${product.data_recommendation_id}" data-recommendation-type="${product.data_recommendation_type}" class="a-button-input" type="submit" aria-labelledby="a-autoid-${_btnAutoID}-announce">
+                        <input data-asin="${product.data_asin}" data-is-parent-asin="${product.data_asin_is_parent}" data-recommendation-id="${product.data_recommendation_id}" data-recommendation-type="${product.data_recommendation_type}" class="a-button-input" type="submit" aria-labelledby="a-autoid-${_btnAutoID}-announce">
                         <span class="a-button-text" aria-hidden="true" id="a-autoid-${_btnAutoID}-announce">Weitere Details</span>
                     </span>
                 </span>
@@ -1310,6 +1319,7 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
 let lastDesktopNotifikationTimestamp = 0;
 
 function updateNewProductsBtn() {
+    if (AUTO_SCAN_IS_RUNNING) return;
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
     database.getNewEntries((prodArr) => { 
         const _btnBadge = document.getElementById('vve-new-items-btn-badge');
@@ -1383,7 +1393,7 @@ function desktopNotifikation(title, message, image = null, requireInteraction = 
             body: message,
             icon: (!requireInteraction) ? _vineLogo : _vineLogoImp,
             image: image || _defaultImage,
-            tag: `vve-notify-${Math.round(Math.random()* 10000000)}`,
+            tag: (requireInteraction) ? `vve-notify-${Math.round(Math.random()* 10000000)}`: 'vve-notify',
             requireInteraction: requireInteraction,
         });
 
@@ -1465,6 +1475,60 @@ function addStyleToTile(_currTile, _product) {
 }
 
 
+async function requestProductDetails(prod, cb = (result) => {}) {
+    return new Promise(async (resolve, reject) => {
+        if (prod.data_asin_is_parent) {// Lets get the Childs first
+            fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}`.replace(/#/g, '%23')).then(r => r.json()).then(async (res) => {
+                if (res.error) reject(res.error);
+                const _data = res.result;
+                console.log('DATA:', _data)
+                prod.data_childs = _data.variations || [];
+                const _promArray = new Array();
+                prod.data_estimated_tax_prize = prod.data_estimated_tax_prize || 0;
+                for (_child of prod.data_childs) {
+                   _promArray.push(fetch(`${window.location.origin}/vine/api/recommendations/${(prod.id).replace(/#/g, '%23')}/item/${_child.asin}`.replace(/#/g, '%23')).then(r => r.json()).then((childData) => {
+                        console.log('CHILD_DATA:', childData);
+                        if (!childData.error) {
+
+                            // Copy over all returned datapoints od child asin
+                            for (_datapoint of Object.keys(childData.result)) {
+                                _child[_datapoint] = childData.result[_datapoint];
+                            }
+
+                            if (prod.data_estimated_tax_prize < _child.taxValue) {
+                                prod.data_estimated_tax_prize = _child.taxValue;
+                                prod.data_tax_currency = _child.taxCurrency;
+                            }
+                        }
+                    }))
+                }
+                Promise.all(_promArray).then((values) => {
+                    console.log('All fetches returned: ', values);
+                    resolve(prod);
+                });
+            })
+        } else {
+            fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}/item/${prod.data_asin}`.replace(/#/g, '%23')).then(r => r.json()).then(ret => {
+                console.log('RETURN:', ret);
+               if (ret.error) {
+                    reject(ret.error.exceptionType) // => "ITEM_NOT_IN_ENROLLMENT"
+               } else {
+                    const data = ret.result;
+                    prod.data_feature_bullets = data.featureBullets;
+                    prod.data_contributors = data.byLineContributors;
+                    prod.data_catalogSize = data.catalogSize;
+                    prod.data_tax_currency = data.taxCurrency;
+                    prod.data_estimated_tax_prize = data.taxValue;
+                    prod.data_limited_quantity = data.limitedQuantity;
+                    resolve(prod);
+               }
+            })
+        }
+    })
+}
+
+
+
 function init(hasTiles) {
     // Get all Products on this page ;)
     
@@ -1513,7 +1577,7 @@ function init(hasTiles) {
     
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
 
-    _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Alle', '', '', () => {createNewSite(PAGETYPE.ALL);}));
+    _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Alle Produkte', '', '', () => {createNewSite(PAGETYPE.ALL);}));
     _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
     _searchbarContainer.appendChild(createNavButton('vve-btn-list-new', 'Neue Einträge', 'vve-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'vve-new-items-btn-badge', '-'));
 
