@@ -142,9 +142,6 @@ vve_eventhandler.on('vve-database-changed', () => {
 
 })
 
-
-
-
 window.onscroll = () => { // ONSCROLL Event handler
     stickElementToTopScrollEVhandler('vve-btn-allseen', '5px');
     stickElementToTopScrollEVhandler('vve-btn-db-allseen', '35px');
@@ -160,12 +157,14 @@ let infiniteScrollMaxPreloadPage = 125; // Hardcoded for scrolltest, must lated 
 let inifiniteScrollBlockAppend = false;
 
 function handleInfiniteScroll() {
-        console.log('Called handleInfiniteScroll()');
-        if (!inifiniteScrollBlockAppend) {
-            inifiniteScrollBlockAppend = true;
-            setTimeout(()=> {appendInfiniteScrollTiles(()=>{inifiniteScrollBlockAppend = false;})},10);
-        }
+    console.log('Called handleInfiniteScroll()');
+    if (!inifiniteScrollBlockAppend) {
+        inifiniteScrollBlockAppend = true;
+        // setTimeout(async ()=> {},10);
+        appendInfiniteScrollTiles(()=>{inifiniteScrollBlockAppend = false;})
+    }
 
+    if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
         if (blockHandleInfiniteScroll) return;
         blockHandleInfiniteScroll = true;
         
@@ -188,11 +187,8 @@ function handleInfiniteScroll() {
         } else {
             blockHandleInfiniteScroll = false;  
         }
-
+    }
 }
-
-
-
 
 function getUrlParameter(name) {
     const _queryString = window.location.search;
@@ -409,34 +405,37 @@ function createButton(text, id, style, clickHandler){
 
 async function createTileFromProduct(product, btnID, cb) {
     if (!product && SETTINGS.DebugLevel > 10) console.error(`createTileFromProduct got no valid product element`);
-    const _btnAutoID = btnID || Math.round(Math.random() * 10000);
-    
-    const _tile = document.createElement('div');
-    _tile.setAttribute('class', 'vvp-item-tile');
-    _tile.setAttribute('data-recommendation-id', product.data_recommendation_id);
-    _tile.setAttribute('data-img-url', product.data_img_url);
-    _tile.setAttribute('style', (product.notSeenCounter > 0) ? SETTINGS.CssProductRemovalTag : (product.isFav) ? SETTINGS.CssProductNewTag : (product.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
-    _tile.innerHTML =`
-        <div class="vvp-item-tile-content">
-            <img alt="${product.data_img_alt}" src="${product.data_img_url}">
-            <div class="vvp-item-product-title-container">
-                <a class="a-link-normal" target="_blank" rel="noopener" href="${product.link}">
-                    <span class="a-truncate" data-a-word-break="normal" data-a-max-rows="2" data-a-overflow-marker="&amp;hellip;" style="line-height: 1.3em !important; max-height: 2.6em;" data-a-recalculate="false" data-a-updated="true">
-                        <span class="a-truncate-full a-offscreen">${product.description_full}</span>
-                        <span class="a-truncate-cut" aria-hidden="true" style="height: 2.6em;">${product.description_short}</span>
+    return new Promise((resolve, reject) => {
+        const _btnAutoID = btnID || Math.round(Math.random() * 10000);
+        
+        const _tile = document.createElement('div');
+        _tile.setAttribute('class', 'vvp-item-tile');
+        _tile.setAttribute('data-recommendation-id', product.data_recommendation_id);
+        _tile.setAttribute('data-img-url', product.data_img_url);
+        _tile.setAttribute('style', (product.notSeenCounter > 0) ? SETTINGS.CssProductRemovalTag : (product.isFav) ? SETTINGS.CssProductNewTag : (product.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
+        _tile.innerHTML =`
+            <div class="vvp-item-tile-content">
+                <img alt="${product.data_img_alt}" src="${product.data_img_url}">
+                <div class="vvp-item-product-title-container">
+                    <a class="a-link-normal" target="_blank" rel="noopener" href="${product.link}">
+                        <span class="a-truncate" data-a-word-break="normal" data-a-max-rows="2" data-a-overflow-marker="&amp;hellip;" style="line-height: 1.3em !important; max-height: 2.6em;" data-a-recalculate="false" data-a-updated="true">
+                            <span class="a-truncate-full a-offscreen">${product.description_full}</span>
+                            <span class="a-truncate-cut" aria-hidden="true" style="height: 2.6em;">${product.description_short}</span>
+                        </span>
+                    </a>
+                </div>
+                <span class="a-button a-button-primary vvp-details-btn" id="a-autoid-${_btnAutoID}">
+                    <span class="a-button-inner">
+                        <input data-asin="${product.data_asin}" data-is-parent-asin="false" data-recommendation-id="${product.data_recommendation_id}" data-recommendation-type="${product.data_recommendation_type}" class="a-button-input" type="submit" aria-labelledby="a-autoid-${_btnAutoID}-announce">
+                        <span class="a-button-text" aria-hidden="true" id="a-autoid-${_btnAutoID}-announce">Weitere Details</span>
                     </span>
-                </a>
-            </div>
-            <span class="a-button a-button-primary vvp-details-btn" id="a-autoid-${_btnAutoID}">
-                <span class="a-button-inner">
-                    <input data-asin="${product.data_asin}" data-is-parent-asin="false" data-recommendation-id="${product.data_recommendation_id}" data-recommendation-type="${product.data_recommendation_type}" class="a-button-input" type="submit" aria-labelledby="a-autoid-${_btnAutoID}-announce">
-                    <span class="a-button-text" aria-hidden="true" id="a-autoid-${_btnAutoID}-announce">Weitere Details</span>
                 </span>
-            </span>
-        </div>
-    `;
-    _tile.prepend(createFavStarElement(product, btnID));
-    cb(_tile);
+            </div>
+        `;
+        _tile.prepend(createFavStarElement(product, btnID));
+        if (cb) cb(_tile);
+        resolve(_tile);
+    })
 }
 
 function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
@@ -448,7 +447,6 @@ function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
     if (prod.isFav) _favElement.style.color = SETTINGS.FavStarColorChecked; // SETTINGS.FavStarColorChecked = Gelb;
     return _favElement;
 }
-
 
 async function createProductSite(siteType, productArray, cb) {
     if (!productArray) return;
@@ -530,14 +528,23 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
     console.log('appendInfiniteScrollTiles(): ', infiniteScrollTilesBufferArray);
     const _tilesContainer = document.getElementById('vvp-items-grid');
 
-    setTimeout(() => {
+    // setTimeout(async () => {
         let _stopCreation = false;
+        let _createdCount = 0;
         while (infiniteScrollTilesBufferArray.length > 0 && !_stopCreation) {
             const _tile = infiniteScrollTilesBufferArray.shift();
-            _tilesContainer.appendChild(_tile);
-            parseTileData(_tile, (_product) => {
-                addStyleToTile(_tile, _product);
-            });
+            if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
+                _tilesContainer.appendChild(_tile);
+                parseTileData(_tile, (_product) => {
+                    addStyleToTile(_tile, _product);
+                });
+            } else {
+                createTileFromProduct(_tile).then((_elem) => {
+                    _tilesContainer.appendChild(_elem);
+                })
+            }
+            
+            if (_createdCount++ >= 100) _stopCreation = true;
 
             const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
             if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))) _stopCreation = true;
@@ -548,7 +555,7 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
         console.log(`appendInfiniteScrollTiles(): After WHILE: left tile to create: ${infiniteScrollTilesBufferArray.length}`);
         cb(true);
 
-    },10);
+    // },100);
 }
 
 
@@ -609,21 +616,28 @@ function createNewSite(type, data) {
                 infiniteScrollMaxPreloadPage = 100;
                 infiniteScrollTilesBufferArray = [];
 
-                getTilesFromURL(`${_baseUrl}?queue=${_preloadPages[0]}`, (tiles1) =>{
-                    infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles1);
-                    appendInfiniteScrollTiles();
-                    getTilesFromURL(`${_baseUrl}?queue=${_preloadPages[1]}`, (tiles2) =>{
-                        infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles2);
+                if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
+                    getTilesFromURL(`${_baseUrl}?queue=${_preloadPages[0]}`, (tiles1) =>{
+                        infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles1);
                         appendInfiniteScrollTiles();
-                        getTilesFromURL(`${_baseUrl}?queue=${_preloadPages[2]}`, (tiles3) =>{
-                            infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles3);
+                        getTilesFromURL(`${_baseUrl}?queue=${_preloadPages[1]}`, (tiles2) =>{
+                            infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles2);
                             appendInfiniteScrollTiles();
-                            setTimeout(()=> {
-                                handleInfiniteScroll(); // Just to trigger first preloads
-                            }, 500);
+                            getTilesFromURL(`${_baseUrl}?queue=${_preloadPages[2]}`, (tiles3) =>{
+                                infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles3);
+                                appendInfiniteScrollTiles();
+                                setTimeout(()=> {
+                                    handleInfiniteScroll(); // Just to trigger first preloads
+                                }, 500);
+                            })
                         })
                     })
-                })
+                } else {
+                    database.getAll((prodArr) => {
+                        infiniteScrollTilesBufferArray = prodArr;
+                        appendInfiniteScrollTiles();
+                    });
+                }
             });
             break;
         }

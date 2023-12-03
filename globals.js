@@ -59,6 +59,7 @@ class SETTINGS_DEFAULT {
     DisableBtnLastChance = false;
     DisableBtnSeller = false;
     EnableBackgroundScan = true;
+    EnableInfiniteScrollLiveQuerry = false;
     EnableDesktopNotifikation = false;
     EnableBtnAll = true;
     FavBtnColor = 'rgb(255, 255, 102)';
