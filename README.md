@@ -17,6 +17,7 @@ Bla bla, here u will fing a few Informations about this Script. How to Install e
 * The New Products Button shows the amount of new products
 * Added new Button to left Side to set ALL Products to !isNew
 * Added Indicators (left bottom corner) who shows Database aktivity, Database cleanup and Backgroundscan aktivity
+* Added more Randomness for Backgroundscanner. Default Delay (4S) + 0-4S Per Dataquerry from Amazon
 * a few little bugfixes
 
 ##### [01.12.2023] - Version 0.7.1

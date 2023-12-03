@@ -68,9 +68,9 @@ fastStyleChanges();
 
 let productDBIds = [];
 let searchInputTimeout;
-let backGroundScanInterval;
+let backGroundScanTimeout;
 
-let infiniteScrollTilesBufferArray = [];
+letTimeouteScrollTilesBufferArray = [];
 
 // Make some things accessable from console
 unsafeWindow.vve = {
@@ -1123,66 +1123,68 @@ function initBackgroundScan() {
             let _subStage = 0;
             const _stageZeroSites = ['queue=potluck', 'queue=last_chance']
             
-            backGroundScanInterval = setInterval(() => {
-                if (_loopIsWorking) return;
-                _loopIsWorking = true;
+        backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage);
+          function initBackgroundScanSubFunctionScannerLoop(){                
+            if (_loopIsWorking) return;
+                    _loopIsWorking = true;
 
-                let _backGroundScanStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_STAGE')) || 0;
-                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
-                
-                switch (_backGroundScanStage) {
-                    case 0:{    // potluck, last_chance
-                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
-                            if (_stageZeroSites[_subStage]) {
-                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
-                                backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
-                                _subStage++
-                            } else {
-                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
-                                _subStage = 0;
-                                _backGroundScanStage++;
-                                _scanFinished();
+                    let _backGroundScanStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_STAGE')) || 0;
+                    if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
+                    
+                    switch (_backGroundScanStage) {
+                        case 0:{    // potluck, last_chance
+                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
+                                if (_stageZeroSites[_subStage]) {
+                                    if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
+                                    backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
+                                    _subStage++
+                                } else {
+                                    if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
+                                    _subStage = 0;
+                                    _backGroundScanStage++;
+                                    _scanFinished();
+                                }
+                                break;
                             }
-                            break;
-                        }
-                        case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
-                            _subStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_CURRENT'));
-                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
-                            if (_subStage < (parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
-                                backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
-                                _subStage++
-                                localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
-                            } else {
-                                _subStage = 0;
-                                _backGroundScanStage++;
-                                _scanFinished();
-                            }
-                        break;            }
-                        case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
-                                _subStage = 0;
-                                _backGroundScanStage++;
-                                _scanFinished();
-                            break;
-                        }   
-                        default: {
-                            cleanUpDatabase(() => {
-                                _backGroundScanStage = 0;
-                                _subStage = 0;
-                                _scanFinished();
-                            })
-                            //clearInterval(backGroundScanInterval);
-                        }
-                }
-                function _scanFinished() {
-                    if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
-                    localStorage.setItem('BACKGROUND_SCAN_STAGE', _backGroundScanStage);
-                    localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
-                    _loopIsWorking = false;
-                }
-            }, SETTINGS.BackGroundScanDelayPerPage);
+                            case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
+                                _subStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_CURRENT'));
+                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
+                                if (_subStage < (parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
+                                    backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
+                                    _subStage++
+                                    localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                                } else {
+                                    _subStage = 0;
+                                    _backGroundScanStage++;
+                                    _scanFinished();
+                                }
+                            break;            }
+                            case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
+                                    _subStage = 0;
+                                    _backGroundScanStage++;
+                                    _scanFinished();
+                                break;
+                            }   
+                            default: {
+                                cleanUpDatabase(() => {
+                                    _backGroundScanStage = 0;
+                                    _subStage = 0;
+                                    _scanFinished();
+                                })
+                                //clearInterval(backGroundScanTimeout);
+                   }
+                    }
+                    function _scanFinished() {
+                        if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
+                        localStorage.setItem('BACKGROUND_SCAN_STAGE', _backGroundScanStage);
+                        localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                        _loopIsWorking = false;
+                        backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness));
+                    }
+            }            
         }
     }, 250);
-}
+}   
 
 function backGroundTileScanner(url, cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called backgroundTileScanner(${url})`);
