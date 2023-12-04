@@ -55,7 +55,13 @@ class SETTINGS_DEFAULT {
     DisableSuggestions = true;
     DisableFooterShopping = false;
     DisableSuggestionsShopping = false;
+    DisableBtnPotLuck = false;
+    DisableBtnLastChance = false;
+    DisableBtnSeller = false;
     EnableBackgroundScan = true;
+    EnableInfiniteScrollLiveQuerry = false;
+    EnableDesktopNotifikation = false;
+    EnableBtnAll = true;
     FavBtnColor = 'rgb(255, 255, 102)';
     FavStarColorDefault = 'white';
     FavStarColorChecked = '#ffe143';
@@ -66,6 +72,9 @@ class SETTINGS_DEFAULT {
     FetchRetryTime = 50;
     FetchRetryMaxTime = 5000;
     BackGroundScanDelayPerPage = 4000;
+    BackGroundScannerRandomness = 4000;
+    DesktopNotifikationDelay = 60;
+    DesktopNotifikationKeywords = [];
 
     CssProductNewTag = "border: 2mm ridge rgba(218, 247, 166, .6); background-color: rgba(218, 247, 166, .2)";
     CssProductSaved = "border: 2mm ridge rgba(105, 163, 0, .6); background-color: rgba(105, 163, 0, .2)";
@@ -174,6 +183,22 @@ async function waitForHtmlElmement(selector, cb, altDocument = document) {
     });
 }
 
+/**
+ *  Wait for given amount of milliseconds
+ *  USE ONLY IN ASYNC FUNCTIONS
+ *  await delay(1000); for wait one second
+ * @param {number} milliseconds
+ * @returns 
+ */
+async function delay(milliseconds) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, milliseconds);
+    });
+}
+
+
 
 /**
     * This Function will Monitor and fire Style Changes asap
@@ -201,6 +226,28 @@ async function fastStyleChanges() {
                 elem.style.visibility = 'hidden';
             });
         }
+
+        if (SETTINGS.DisableBtnPotLuck) {
+            waitForHtmlElmement('#vvp-items-button--recommended', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+        }
+    
+        if (SETTINGS.DisableBtnLastChance) {
+            waitForHtmlElmement('#vvp-items-button--all', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+        }
+
+        if (SETTINGS.DisableBtnSeller) {
+            waitForHtmlElmement('#vvp-items-button--seller', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+        }
+
     } else if (SITE_IS_SHOPPING) {
 
         if (SETTINGS.DisableSuggestionsShopping) {

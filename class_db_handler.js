@@ -56,7 +56,7 @@ class DB_HANDLER {
             const _db = _req.result;
 
             if (!_db.objectStoreNames.contains(_storeName)) {
-                if (SETTINGS.DebugLevel > 0) console.log('Database needs to be created...');
+                if (SETTINGS.DebugLevel > 10) console.log('Database needs to be created...');
                 const _storeOS = _db.createObjectStore(_storeName, { keyPath: 'id' });
                 // _storeOS.createIndex('isNew', 'isNew', { unique: false });
                 // _storeOS.createIndex('isFav', 'isFav', { unique: false });
@@ -206,7 +206,7 @@ class DB_HANDLER {
     * @param {object} obj Object to update
     * @param {function} [cb] Callback function executes when object update is done
     */ 
-    async update(obj, cb){
+    async update(obj, cb = () => {}){
         console.log('Called DB_HANDLER:update()');
         if (typeof(obj) != 'object') throw new Error('DB_HANDLER.update(): obj is not defined or is not type of object');
         console.log('Called DB_HANDLER:update() Stage 2');
@@ -330,28 +330,17 @@ class DB_HANDLER {
         _request.onerror = (event) => {cb([]); throw new Error(`DB_HANDLER.getNewEntrys(): ${event.target.error.name}`);};
     };
     
-   /**
-    * Get all the Objects stored in our DB
-    * @async
-    * @param {function} cb Callback function executes when database query is done
-    */     
-    async getAll(cb){
-        if (typeof(cb) != 'function') throw new Error('DB_HANDLER.getAll(): cb is not defined or is not typeof function');
-        const _result = [];
-        const _request = this.#getStore().openCursor();
-
-        _request.onsuccess = (event) => {
-            const _cursor = event.target.result;
-            if (_cursor) {
-                _result.push(_cursor.value);
-                _cursor.continue();
-            } else { // No more entries
-                cb(_result);
-            }
-        };
-
+    /**
+     * Get all the Objects stored in our DB
+     * @param {function} cb Callback function executes when the database query is done
+     */
+    getAll(cb) {
+        if (typeof (cb) !== 'function') throw new Error('DB_HANDLER.getAll(): cb is not defined or is not typeof function');
+        
+        const _request = this.#getStore().getAll();
+        _request.onsuccess = (event) => {cb(event.target.result);};
         _request.onerror = (event) => {cb([]); throw new Error(`DB_HANDLER.getAll(): ${event.target.error.name}`);};
-    };
+    }
 
     /**
     * Removes Object with given ID from Database
