@@ -210,17 +210,17 @@ class DB_HANDLER {
         return new Promise((resolve, reject) => {
             console.log('Called DB_HANDLER:update()');
             if (typeof(obj) != 'object') throw new Error('DB_HANDLER.update(): obj is not defined or is not type of object');
-            console.log('Called DB_HANDLER:update() Stage 2');
+            // console.log('Called DB_HANDLER:update() Stage 2');
 
             const _request = this.#getStore(true).put(obj);
-            console.log('Called DB_HANDLER:update() Stage 3');
+            // console.log('Called DB_HANDLER:update() Stage 3');
 
             _request.onerror = (event) => {
-                console.log('DB_HANDLER:update() --> had an Error');
+                // console.log('DB_HANDLER:update() --> had an Error');
                 reject(event.target.error.name);};
 
             _request.onsuccess = (event) => {
-                console.log('Called DB_HANDLER:update() --> success');
+                // console.log('Called DB_HANDLER:update() --> success');
                 this.#fireDataChangedEvent();
                 resolve(event);
             }
