@@ -1183,9 +1183,26 @@ function initBackgroundScan() {
                                 }
                             break;            }
                             case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
+                                if (SETTINGS.DebugLevel > 2) console.log('Backgroundscanner: Updating Product Data');
+                                database.getAll((products) => {
+                                    const _needUpdate = [];
+                                    for (_prod of products) {
+                                        if (_needUpdate.length < 5) {
+                                            if (!_prod.data_estimated_tax_prize) _needUpdate.push(_prod);
+                                        }
+                                    }
+
+                                    for (_prod of _needUpdate) {
+                                        requestProductDetails(_prod).then((_newProd) => {database.update(_newProd)});
+                                    }
+                                });
+                            
+                                if (_subStage++ >= 10)
+                                {
                                     _subStage = 0;
                                     _backGroundScanStage++;
                                     _scanFinished();
+                                }
                                 break;
                             }   
                             default: {
@@ -1475,11 +1492,11 @@ function addStyleToTile(_currTile, _product) {
 }
 
 
-async function requestProductDetails(prod, cb = (result) => {}) {
+async function requestProductDetails(prod) {
     return new Promise(async (resolve, reject) => {
         if (prod.data_asin_is_parent) {// Lets get the Childs first
             fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}`.replace(/#/g, '%23')).then(r => r.json()).then(async (res) => {
-                if (res.error) reject(res.error);
+                if (res.error) reject(ret.error.exceptionType);
                 const _data = res.result;
                 console.log('DATA:', _data)
                 prod.data_childs = _data.variations || [];
