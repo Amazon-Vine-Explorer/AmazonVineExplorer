@@ -1134,12 +1134,12 @@ function initBackgroundScan() {
             clearInterval(_paginatinWaitLoop);
             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): pagination WaitLoop');
 
-            if (!localStorage.getItem('BACKGROUND_SCAN_IS_RUNNING') || true) {
+            if (!localStorage.getItem('AVE_BACKGROUND_SCAN_IS_RUNNING') || true) {
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): init localStorage Variables');
-                localStorage.setItem('BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
-                localStorage.setItem('BACKGROUND_SCAN_IS_RUNNING', true);
-                localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', 1);
-                localStorage.setItem('BACKGROUND_SCAN_STAGE', 0);
+                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
+                localStorage.setItem('AVE_BACKGROUND_SCAN_IS_RUNNING', true);
+                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 1);
+                localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
             } 
             
             let _loopIsWorking = false;
@@ -1151,7 +1151,7 @@ function initBackgroundScan() {
             if (_loopIsWorking) return;
                     _loopIsWorking = true;
 
-                    let _backGroundScanStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_STAGE')) || 0;
+                    let _backGroundScanStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE')) || 0;
                     if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
                     
                     switch (_backGroundScanStage) {
@@ -1170,12 +1170,12 @@ function initBackgroundScan() {
                                 break;
                             }
                             case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
-                                _subStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_CURRENT'));
+                                _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
                                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
-                                if (_subStage < (parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
+                                if (_subStage < (parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
                                     backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
                                     _subStage++
-                                    localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                                 } else {
                                     _subStage = 0;
                                     _backGroundScanStage++;
@@ -1216,8 +1216,8 @@ function initBackgroundScan() {
                     }
                     function _scanFinished() {
                         if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
-                        localStorage.setItem('BACKGROUND_SCAN_STAGE', _backGroundScanStage);
-                        localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                         _loopIsWorking = false;
                         backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness));
                     }
@@ -1265,10 +1265,10 @@ function startAutoScan() {
     markAllCurrentDatabaseProductsAsSeen(() => {
         if (SETTINGS.DebugLevel > 10) console.log('startAutoScan() - Got Callback from markAllCurrentDatabaseProductsAsSeen()');
         const _pageiDat = getPageinationData();
-        localStorage.setItem('INIT_AUTO_SCAN', false);
-        localStorage.setItem('AUTO_SCAN_IS_RUNNING', true);
-        localStorage.setItem('AUTO_SCAN_PAGE_MAX',_pageiDat.maxPage);
-        localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', 1);
+        localStorage.setItem('AVE_INIT_AUTO_SCAN', false);
+        localStorage.setItem('AVE_AUTO_SCAN_IS_RUNNING', true);
+        localStorage.setItem('AVE_AUTO_SCAN_PAGE_MAX',_pageiDat.maxPage);
+        localStorage.setItem('AVE_AUTO_SCAN_PAGE_CURRENT', 1);
         setTimeout(() => {
             const _url = `${_pageiDat.href}1`;
             if (SETTINGS.DebugLevel > 10) console.log(`Loding new Page ${_url}`)
@@ -1285,16 +1285,16 @@ function handleAutoScan() {
     if (SETTINGS.DebugLevel > 10) console.log(`handleAutoScan() - _delay: ${_delay}`);
     if (AUTO_SCAN_PAGE_CURRENT < AUTO_SCAN_PAGE_MAX) {
         const _nextPage = AUTO_SCAN_PAGE_CURRENT + 1;
-        localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', _nextPage);
+        localStorage.setItem('AVE_AUTO_SCAN_PAGE_CURRENT', _nextPage);
         setTimeout(() => {
             window.location.href = window.location.href.replace(/=[0-9]+/, `=${_nextPage}`);
         }, _delay);
     } else { // We are done ;)
         updateAutoScanScreenText('Success, cleaning up Database...');
         cleanUpDatabase(()=> {
-            localStorage.setItem('AUTO_SCAN_IS_RUNNING', false);
-            localStorage.setItem('AUTO_SCAN_PAGE_MAX', -1);
-            localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', -1);
+            localStorage.setItem('AVE_AUTO_SCAN_IS_RUNNING', false);
+            localStorage.setItem('AVE_AUTO_SCAN_PAGE_MAX', -1);
+            localStorage.setItem('AVE_AUTO_SCAN_PAGE_CURRENT', -1);
             setTimeout(() => {
                 updateAutoScanScreenText('Finished Database\nupdate and cleanup\n\nPage reloading incoming... please wait');
                 setTimeout(()=> {
@@ -1633,7 +1633,7 @@ function init(hasTiles) {
 
 
     // Manual Autoscan and Backgroundscan can not run together, so don´t create the button
-    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('vve-btn-updateDB', 'Update Database', 'vve-btn-updateDB-text','lime', () => {localStorage.setItem('INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
+    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('vve-btn-updateDB', 'Update Database', 'vve-btn-updateDB-text','lime', () => {localStorage.setItem('AVE_INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
 
     if (hasTiles) addLeftSideButtons();
 
