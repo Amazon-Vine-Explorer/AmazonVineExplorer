@@ -50,6 +50,38 @@ class AVE_EVENTHANDLER {
 }
 const ave_eventhandler = new AVE_EVENTHANDLER();
 
+// All Config Options that should shown to the User
+const SETTINGS_USERCONFIG_DEFINES = [];
+SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Vine', description: 'Tooltip Description of this Setting'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableFullWidth', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooter', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestions', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnPotLuck', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnLastChance', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnSeller', type: 'bool', name: 'Enable Full With', description: ''});
+
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikations', type: 'bool', name: 'Enable Full With', description: ''});
+
+SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Shopping', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooterShopping', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestionsShopping', type: 'bool', name: 'Enable Full With', description: ''});
+
+
+SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'General', description: ''});
+
+SETTINGS_USERCONFIG_DEFINES.push({key: 'FavBtnColor', type: 'color', name: 'Button Color Favorites', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorDefault', type: 'color', name: 'Color Favorite Star unchecked', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', name: 'Color Favorite Star checked', description: ''});
+
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationsKeywords', type: 'keywords', name: 'Desktop Notifikation Highlight Keywords', description: ''});
+
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', name: 'Debuglevel', description: ''});
+
+
+
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;
     DisableFooter = true;
