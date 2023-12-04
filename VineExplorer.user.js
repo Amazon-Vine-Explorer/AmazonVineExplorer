@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.8.0.1
+// @version      0.8.0.2
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
@@ -155,6 +155,7 @@ let blockHandleInfiniteScroll = false;
 let infiniteScrollLastPreloadedPage = 1;
 let infiniteScrollMaxPreloadPage = 125; // Hardcoded for scrolltest, must lated get extracted from Pagination
 let inifiniteScrollBlockAppend = false;
+let infiniteScrollTilesBufferArray = [];
 
 function handleInfiniteScroll() {
     console.log('Called handleInfiniteScroll()');
