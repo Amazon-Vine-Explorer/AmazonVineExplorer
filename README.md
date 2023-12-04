@@ -10,7 +10,7 @@ Bla bla, here u will fing a few Informations about this Script. How to Install e
 
 ### Changelog:
 
-##### [xx.12.2023] - Version 0.x
+##### [04.12.2023] - Version 0.8.0
 
 * Added Desktop Notifications
 * Added the All Products Button for infinite scroll thru all the vine products
@@ -21,6 +21,7 @@ Bla bla, here u will fing a few Informations about this Script. How to Install e
 * Changed Database function for querry all entrys to increse the performance of this function
 * Added "controlled delay" (Observer) to be safe for querry product tile elements (sometimes the parser was to fast and tryed to read not existing elements)
 * Added function to querry product details from amazon and merge it with product database element
+* Added Product Details Fetch to Backgroundscan
 * a few little bugfixes
 
 ##### [01.12.2023] - Version 0.7.1
