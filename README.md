@@ -4,11 +4,22 @@ Makes the Amazon Vine Website even a bit better
 
 ![](vine_logo_notification_image.png)
 
-### Description:
+## Description:
 
-Bla bla, here u will fing a few Informations about this Script. How to Install etc.
+This script enhances the experience on the Amazon Vine website. However, it does not provide you with unfair and unintended advantages over other Vine Voices. For example, there will be no automated ordering based on keywords or price! We aim to operate 100% in compliance with the terms and conditions of Amazon Vine using this script.
 
-### Changelog:
+## How to install:
+
+* Install Tampermonkex: [https://www.tampermonkey.net/](https://www.tampermonkey.net/)
+* Install Amazon Vine Explorer: [https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js](https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js)
+
+
+
+## Changelog:
+
+##### [XX.12.2023] - Version 0.8.X
+
+* Improved Search function to allow multiple keywords
 
 ##### [04.12.2023] - Version 0.8.0
 
@@ -31,6 +42,4 @@ Bla bla, here u will fing a few Informations about this Script. How to Install e
 ##### [24.11.2023] - Version 0.1
 
 * Start of this Project
-
-
 

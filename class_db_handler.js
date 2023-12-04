@@ -229,24 +229,26 @@ class DB_HANDLER {
     /**
     * Query Database for Searchstring
     * @async
-    * @param {string} queryText String to find
+    * @param {(string|array)} query String to find
     * @param {function} cb Callback function executes when database query is done
     */ 
-    async query(queryTxt, cb){
-        if (typeof(queryTxt) != 'string') throw new Error('DB_HANDLER.query(): queryText is not defined or is not typeof string');
+    async query(query, cb){
+        if (typeof(query) != 'string' && !Array.isArray(query)) throw new Error('DB_HANDLER.query(): query is not defined or is not typeof string or array');
         if (typeof(cb) != 'function') throw new Error('DB_HANDLER.query(): cb is not defined or is not typeof function');
 
         const _request = this.#getStore().openCursor();
         const _result = [];
 
+        // Use a Array of words for search
+        const _keys = (typeof(query) == 'string') ? [query] : query;
+        for (let _key of _keys) {_key = _key.toLowerCase();}
+
         _request.onsuccess = (event) => {
             const _cursor = event.target.result;
-
             if (_cursor) {
                 const _descriptionFull = (_cursor.value.description_full || '').toLowerCase();
-                const _queryLower = queryTxt.toLowerCase();
 
-                if (_descriptionFull.includes(_queryLower)) {
+                if (_keys.every((_key) => _descriptionFull.includes(_key))) {
                     _result.push(_cursor.value);
                 }
 

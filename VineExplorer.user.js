@@ -1618,7 +1618,7 @@ function init(hasTiles) {
         if (_input.length >= 3) {
             if (searchInputTimeout) clearTimeout(searchInputTimeout);
             searchInputTimeout = setTimeout(() => {
-                database.query(_input, (_objArr) => {
+                database.query(_input.split(' '), (_objArr) => {
                     if (SETTINGS.DebugLevel > 10) console.log(`Found ${_objArr.length} Items with this Search`);
                     createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
                     searchInputTimeout = null;
