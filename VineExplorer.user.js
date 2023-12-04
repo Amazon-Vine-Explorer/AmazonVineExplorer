@@ -66,7 +66,6 @@ let currentMainPage;
 loadSettings();
 fastStyleChanges();
 
-let productDBIds = [];
 let searchInputTimeout;
 let backGroundScanTimeout;
 
@@ -87,35 +86,28 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
         console.error(`Somithing was going wrong while init database :'(`);
         return;
     } else {
-        database.getAllKeys((keys) => {
-            if (SETTINGS.DebugLevel > 10) console.log('All keys:', keys);
-            productDBIds = keys;
-            
-            let _execLock = false;
-            console.log('Lets Check where we are....');
-            if (SITE_IS_VINE){
-                 console.log('We are on Amazon Vine'); // We are on the amazon vine site
-                waitForHtmlElmement('.vvp-details-btn', () => {
-                    if (_execLock) return;
-                    _execLock = true;
-                    addBranding();
-                    detectCurrentPageType();
-                    init(true);
-                });
-                waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
-                    if (_execLock) return;
-                    _execLock = true;
-                    addBranding();
-                    init(false);
-                    
-                });
-
-            } else if (SITE_IS_SHOPPING) {
-                console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
+        let _execLock = false;
+        console.log('Lets Check where we are....');
+        if (SITE_IS_VINE){
+                console.log('We are on Amazon Vine'); // We are on the amazon vine site
+            waitForHtmlElmement('.vvp-details-btn', () => {
+                if (_execLock) return;
                 _execLock = true;
-                addBranding(); // For now, olny show that the script is active
-            }
-    	});
+                addBranding();
+                detectCurrentPageType();
+                init(true);
+            });
+            waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
+                if (_execLock) return;
+                _execLock = true;
+                addBranding();
+                init(false);
+            });
+        } else if (SITE_IS_SHOPPING) {
+            console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
+            _execLock = true;
+            addBranding(); // For now, olny show that the script is active
+        }
     }
 });
 
@@ -213,92 +205,80 @@ function detectCurrentPageType(){
 
 }
 
-
-// Check if Product exists in our Database or if it is a new one
-function existsProduct(id) { 
-    if (SETTINGS.DebugLevel > 10) console.log(`Called existsProduct(${id})`);
-    return (productDBIds.lastIndexOf(id) != -1);
-}
-
-
 async function parseTileData(tile, cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called parseTileData(${tile})`);
 
     const _id = tile.getAttribute('data-recommendation-id');
-
     
-    if (existsProduct(_id)) {
-        database.get(_id, (_ret) => {
+    database.get(_id, (_ret) => {
+        if (_ret) {
             _ret.gotFromDB = true;
             _ret.ts_lastSeen = unixTimeStamp();
             cb(_ret);
-        });
+        } else {
+            //We have to wait for a lot of Stuff
+            waitForHtmlElmement('.vvp-item-tile-content',async () => {
+                const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
+                waitForHtmlElmement('img', async () => {
+                    const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
+                        waitForHtmlElmement('.vvp-item-product-title-container', async () => {
+                            const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
+                                waitForHtmlElmement('a', async () => {
+                                    const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
+                                        waitForHtmlElmement('.a-button-inner', async () => {
+                                            const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
+                                                waitForHtmlElmement('input', async () => {
+                                                    const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
+                                                    const _newProduct = new Product(_id);
+                                                    _newProduct.data_recommendation_id = _id;
+                                                    _newProduct.data_img_url = tile.getAttribute('data-img-url');
+                                                    _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
+                                                    _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
+                                                    _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
+                                                    
+                                                    _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
+                                                    _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
+                                                    _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
 
-
-        return;
-    } // Fast exit if Product is in our DB
-
-    //We have to wait for a lot of Stuff
-    waitForHtmlElmement('.vvp-item-tile-content',async () => {
-        const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
-        waitForHtmlElmement('img', async () => {
-            const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
-                waitForHtmlElmement('.vvp-item-product-title-container', async () => {
-                    const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
-                        waitForHtmlElmement('a', async () => {
-                            const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
-                                waitForHtmlElmement('.a-button-inner', async () => {
-                                    const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
-                                        waitForHtmlElmement('input', async () => {
-                                            const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
-                                            const _newProduct = new Product(_id);
-                                            _newProduct.data_recommendation_id = _id;
-                                            _newProduct.data_img_url = tile.getAttribute('data-img-url');
-                                            _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
-                                            _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
-                                            _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
-                                            
-                                            _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
-                                            _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-                                            _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
-
-                                            _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                                            
-                                            
-                                            if (_newProduct.description_short == '') {
-                                                let _timeLoopCounter = 0;
-                                                const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
-                                                const _halfdelay = (SETTINGS.FetchRetryTime / 2)
-                                                function timeLoop() {
-                                                    if (_timeLoopCounter++ < _maxLoops){
-                                                            setTimeout(() => {
-                                                                const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                                                                if (_short != ""){ 
-                                                                    _newProduct.description_short = _short;
-                                                                    cb(_newProduct);
+                                                    _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+                                                    
+                                                    
+                                                    if (_newProduct.description_short == '') {
+                                                        let _timeLoopCounter = 0;
+                                                        const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
+                                                        const _halfdelay = (SETTINGS.FetchRetryTime / 2)
+                                                        function timeLoop() {
+                                                            if (_timeLoopCounter++ < _maxLoops){
+                                                                    setTimeout(() => {
+                                                                        const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+                                                                        if (_short != ""){ 
+                                                                            _newProduct.description_short = _short;
+                                                                            cb(_newProduct);
+                                                                        } else {
+                                                                            timeLoop();
+                                                                        }
+                                                                    }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
                                                                 } else {
-                                                                    timeLoop();
+                                                                    _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
+                                                                    _newProduct.generated_short = true;
+                                                                    cb(_newProduct);
                                                                 }
-                                                            }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
+                                                            }
+                                                        timeLoop();
                                                         } else {
-                                                            _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
-                                                            _newProduct.generated_short = true;
                                                             cb(_newProduct);
                                                         }
-                                                    }
-                                                timeLoop();
-                                                } else {
-                                                    cb(_newProduct);
-                                                }
-                                                
-                                            // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+                                                        
+                                                    // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
 
-                                        }, _div_vpp_item_tile_content_button_inner)
-                                }, _div_vpp_item_tile_content)
-                        }, _div_vvp_item_product_title_container)
+                                                }, _div_vpp_item_tile_content_button_inner)
+                                        }, _div_vpp_item_tile_content)
+                                }, _div_vvp_item_product_title_container)
+                        }, _div_vpp_item_tile_content);
                 }, _div_vpp_item_tile_content);
-        }, _div_vpp_item_tile_content);
-    }, tile)
+            }, tile)
+        }
+    });
 }
 
 
@@ -1094,7 +1074,6 @@ async function cleanUpDatabase(cb = () => {}) {
                 if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
                 
                 database.removeID(_currEntry.id, (ret) => {
-                    if (ret) productDBIds.splice(productDBIds.indexOf(_currEntry.id), 1) // Remove it also from our array
                     _deleted++;
                     _localReturn();
                 });
@@ -1169,7 +1148,7 @@ function initBackgroundScan() {
                                 }
                                 break;
                             }
-                            case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
+                        case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
                                 _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
                                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
                                 if (_subStage < (parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
@@ -1181,9 +1160,10 @@ function initBackgroundScan() {
                                     _backGroundScanStage++;
                                     _scanFinished();
                                 }
-                            break;            }
-                            case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
-                                if (SETTINGS.DebugLevel > 2) console.log('Backgroundscanner: Updating Product Data');
+                            break; 
+                        }
+                        case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
+                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                                 database.getAll((products) => {
                                     const _needUpdate = [];
                                     for (_prod of products) {
@@ -1192,9 +1172,22 @@ function initBackgroundScan() {
                                         }
                                     }
 
+                                    const _promises = [];
+
                                     for (_prod of _needUpdate) {
-                                        requestProductDetails(_prod).then((_newProd) => {database.update(_newProd)});
+                                        requestProductDetails(_prod).then((_newProd) => {
+                                            _promises.push(database.update(_newProd));
+                                        });
                                     }
+
+                                    Promise.all(_promises).then(() => {
+                                        _scanFinished();
+                                        _subStage++;
+                                    }).finally(() => {
+                                        console.error('There was an error while updating an product in database');
+                                        _scanFinished();
+                                        _subStage++;
+                                    });
                                 });
                             
                                 if (_subStage++ >= 10)
@@ -1204,7 +1197,7 @@ function initBackgroundScan() {
                                     _scanFinished();
                                 }
                                 break;
-                            }   
+                        }   
                             default: {
                                 cleanUpDatabase(() => {
                                     _backGroundScanStage = 0;
@@ -1245,13 +1238,13 @@ function backGroundTileScanner(url, cb) {
                 for (let i = 0; i < _tilesLength; i++) {
                     parseTileData(_tiles[i], (prod) => {
                         _returned++;
-                        if (!prod.gotFromDB) database.add(prod);
                         if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
+                        if (!prod.gotFromDB) database.add(prod);
                         if (_returned == _tilesLength) {cb(true); _iconLoading.remove()};
                     })
                 }
             } else {
-                if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => We dont have to do here anything => resume autoscan`);
+                if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => We dont have anything to do here anything => resume autoscan`);
                 cb(true); // We dont have to do here anything
                 _iconLoading.remove();
             }
