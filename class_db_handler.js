@@ -126,12 +126,12 @@ class DB_HANDLER {
     };
 
     /**
-     * Fires the Event vve-database-changed when any writeaccess has happend
+     * Fires the Event ave-database-changed when any writeaccess has happend
      */
     #fireDataChangedEvent() {
         if (this.#eventDelayTimeout) clearTimeout(this.#eventDelayTimeout);
         this.#eventDelayTimeout = setTimeout(() => {
-            vve_eventhandler.emit('vve-database-changed');
+            ave_eventhandler.emit('ave-database-changed');
             this.#eventDelayTimeout = null;
         }, 250);
     }

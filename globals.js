@@ -2,8 +2,8 @@
 if (window.top != window.self) return; //don't run on frames or iframes
 
 // Constants Needed for some things
-const VVE_VERSION = (/@version\s+([0-9+.]+)/.exec(GM_info.scriptMetaStr)[1]) || 'ERR';
-const VVE_TITLE = (GM_info?.script?.name);
+const AVE_VERSION = (GM_info?.script?.version)
+const AVE_TITLE = (GM_info?.script?.name);
 const SECONDS_PER_WEEK = 604800 / 2;
 const SECONDS_PER_DAY = 86400;
 const SITE_IS_VINE = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\//.test(window.location.href);
@@ -21,13 +21,13 @@ const DATABASE_NAME = 'VineVoiceExplorer';
 const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
 const DATABASE_VERSION = 2;
 
-class VVE_EVENTHANDLER {
+class AVE_EVENTHANDLER {
     
      /**
-    * VVE Eventhandler
+    * AVE Eventhandler
     * A very basic and simple eventhandler/wrapper
     * @constructor
-    * @return {VVE_EVENTHANDLER} VVE_EVENTHANDLER Object
+    * @return {AVE_EVENTHANDLER} AVE_EVENTHANDLER Object
     */ 
     constructor(){}
     
@@ -48,7 +48,7 @@ class VVE_EVENTHANDLER {
         unsafeWindow.addEventListener(eventName, cb);
     }
 }
-const vve_eventhandler = new VVE_EVENTHANDLER();
+const ave_eventhandler = new AVE_EVENTHANDLER();
 
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;
@@ -84,7 +84,7 @@ class SETTINGS_DEFAULT {
     CssProductDefault = "border: 2mm ridge rgba(173,216,230, .6); background-color: rgba(173,216,230, .2)";
 
     constructor() {
-        vve_eventhandler.on('vve-save-cofig', () => {
+        ave_eventhandler.on('ave-save-cofig', () => {
             console.log('Got Save Event');
             this.save(true);
         })
@@ -97,9 +97,9 @@ class SETTINGS_DEFAULT {
     save(local) {
         if (local) {
             console.warn('Saving Config:', this);
-            return GM_setValue('VVE_SETTINGS', this);
+            return GM_setValue('AVE_SETTINGS', this);
         } else {
-            vve_eventhandler.emit('vve-save-cofig'); // A little trick to beat the Namespace Problem ;)
+            ave_eventhandler.emit('ave-save-cofig'); // A little trick to beat the Namespace Problem ;)
         }
     }
 }
@@ -110,7 +110,7 @@ const SETTINGS = new SETTINGS_DEFAULT();
   * Load Settings from GM Storage
   */ 
 function loadSettings() {
-    const _settingsStore = GM_getValue('VVE_SETTINGS', {});
+    const _settingsStore = GM_getValue('AVE_SETTINGS', {});
     console.log('Got Settings from GM:', _settingsStore);
     const _keys = Object.keys(_settingsStore);
     const _keysLength = _keys.length;
@@ -169,12 +169,14 @@ async function waitForHtmlElmement(selector, cb, altDocument = document) {
 
     if (altDocument.querySelector(selector)) {
         cb(altDocument.querySelector(selector));
+        return;
     }
 
     const _observer = new MutationObserver(mutations => {
         if (altDocument.querySelector(selector)) {
             _observer.disconnect();
             cb(altDocument.querySelector(selector));
+            return;
         }
     });
 
@@ -265,6 +267,11 @@ async function fastStyleChanges() {
                 elem.style.visibility = 'hidden';
             });
         }
+
+
+        
+
+
     }
 
 

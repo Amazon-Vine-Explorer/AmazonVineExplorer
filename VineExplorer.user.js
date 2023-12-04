@@ -56,7 +56,7 @@
 */
 
 'use strict';
-console.log(`Init Vine Voices Explorer ${VVE_VERSION}`);
+console.log(`Init Vine Voices Explorer ${AVE_VERSION}`);
 
 /**
  * On witch page are we atm ? PAGETYPE
@@ -72,12 +72,12 @@ let backGroundScanTimeout;
 letTimeouteScrollTilesBufferArray = [];
 
 // Make some things accessable from console
-unsafeWindow.vve = {
+unsafeWindow.ave = {
     classes: [
         DB_HANDLER = DB_HANDLER
     ],
     config: SETTINGS,
-    event: vve_eventhandler,
+    event: ave_eventhandler,
 };
 
 
@@ -89,12 +89,14 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
         let _execLock = false;
         console.log('Lets Check where we are....');
         if (SITE_IS_VINE){
-                console.log('We are on Amazon Vine'); // We are on the amazon vine site
+            console.log('We are on Amazon Vine'); // We are on the amazon vine site
+            addAveSettingsTab();
             waitForHtmlElmement('.vvp-details-btn', () => {
                 if (_execLock) return;
                 _execLock = true;
                 addBranding();
                 detectCurrentPageType();
+                
                 init(true);
             });
             waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
@@ -111,14 +113,14 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
     }
 });
 
-unsafeWindow.vve.database = database;
+unsafeWindow.ave.database = database;
 
 let oldCountOfNewItems = 0;
 
 let showDbUpdateLogoTimeout = null;
 let showDbUpdateLogoIcon = null;
 
-vve_eventhandler.on('vve-database-changed', () => {
+ave_eventhandler.on('ave-database-changed', () => {
     console.warn('EVENT - Database has new Data for us! we should look what has changed');
     updateNewProductsBtn();
 
@@ -135,8 +137,8 @@ vve_eventhandler.on('vve-database-changed', () => {
 })
 
 window.onscroll = () => { // ONSCROLL Event handler
-    stickElementToTopScrollEVhandler('vve-btn-allseen', '5px');
-    stickElementToTopScrollEVhandler('vve-btn-db-allseen', '35px');
+    stickElementToTopScrollEVhandler('ave-btn-allseen', '5px');
+    stickElementToTopScrollEVhandler('ave-btn-db-allseen', '35px');
 
     if (currentMainPage == PAGETYPE.ALL) handleInfiniteScroll();
 
@@ -201,7 +203,7 @@ function detectCurrentPageType(){
     
     // alert(`currentMainPage is: ${currentMainPage}`);
     
-    // getUrlParameter('vve-subpage');
+    // getUrlParameter('ave-subpage');
 
 }
 
@@ -284,9 +286,9 @@ async function parseTileData(tile, cb) {
 
 function reloadPageWithSubpageTarget(target) {
     if (window.location.href.includes('?')) {
-        window.location.href = window.location.href + `&vve-subpage=${target}`;
+        window.location.href = window.location.href + `&ave-subpage=${target}`;
     } else {
-        window.location.href = window.location.href + `?vve-subpage=${target}`;
+        window.location.href = window.location.href + `?ave-subpage=${target}`;
     }
 }
 
@@ -298,13 +300,13 @@ function addLeftSideButtons(forceClean) {
     
     _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
-    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','vve-btn-allseen',  'width: 240px; background-color: lime;', () => {
+    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','ave-btn-allseen',  'width: 240px; background-color: lime;', () => {
         
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
     
-    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','vve-btn-db-allseen', 'left: 0; width: 240px; background-color: rgb(255, 162, 142);', () => {
+    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', 'left: 0; width: 240px; background-color: rgb(255, 162, 142);', () => {
         
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         setTimeout(() => {
@@ -430,7 +432,7 @@ async function createTileFromProduct(product, btnID, cb) {
 function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
     const _favElement = document.createElement('div');
     _favElement.setAttribute("id", `p-fav-${index || Math.round(Math.random() * 5000)}`);
-    _favElement.classList.add('vve-favorite-star');
+    _favElement.classList.add('ave-favorite-star');
     _favElement.style.cssText = SETTINGS.CssProductFavStar();
     _favElement.textContent = '★';
     if (prod.isFav) _favElement.style.color = SETTINGS.FavStarColorChecked; // SETTINGS.FavStarColorChecked = Gelb;
@@ -577,7 +579,7 @@ function createNewSite(type, data) {
             database.getNewEntries((_prodArr) => {
                 createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
-                    const _btn = document.getElementById('vve-btn-list-new');
+                    const _btn = document.getElementById('ave-btn-list-new');
                     _btn.classList.add('a-button-selected');
                     _btn.setAttribute('aria-checked', true);
                 });
@@ -589,7 +591,7 @@ function createNewSite(type, data) {
             database.getFavEntries((_prodArr) => {
                 createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
-                    const _btn = document.getElementById('vve-btn-favorites');
+                    const _btn = document.getElementById('ave-btn-favorites');
                     _btn.classList.add('a-button-selected');
                     _btn.setAttribute('aria-checked', true);
                 });
@@ -715,7 +717,7 @@ function updateTileStyle(prod) {
         if (_id == prod.data_recommendation_id) {
             if (SETTINGS.DebugLevel > 10) console.log(`Found Tile with id: ${prod.id}`);
             _tile.setAttribute('style', (prod.isFav) ? SETTINGS.CssProductFavTag : (prod.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
-            const _favStar = _tile.querySelector('.vve-favorite-star');
+            const _favStar = _tile.querySelector('.ave-favorite-star');
             _favStar.style.color = (prod.isFav) ? SETTINGS.FavStarColorChecked : 'white'; // SETTINGS.FavStarColorChecked = Gelb;
             return;
         }
@@ -736,7 +738,7 @@ function initTileEventHandlers() {
 }
 
 function addTileEventhandlers(_currTile) {
-        const _favStar = _currTile.querySelector('.vve-favorite-star');
+        const _favStar = _currTile.querySelector('.ave-favorite-star');
         const _btn = _currTile.querySelector('.vvp-details-btn input');
 
         const _data = new Object()
@@ -752,7 +754,7 @@ function addTileEventhandlers(_currTile) {
             _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
         }
         
-        waitForHtmlElmement('.vve-favorite-star', (elem) => {
+        waitForHtmlElmement('.ave-favorite-star', (elem) => {
             _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
         }, _currTile);
 }
@@ -782,14 +784,14 @@ function showAutoScanScreen(text) {
     _text.style.fontSize = '50px'; // Ändere die Schriftgröße hier
     _text.style.lineHeight = "1";
     _text.style.zIndex = '1001';
-    _text.innerHTML = `<p id="vve-autoscan-text">${text}</p>`;
+    _text.innerHTML = `<p id="ave-autoscan-text">${text}</p>`;
 
     document.body.appendChild(_overlay);
     document.body.appendChild(_text);
 }
 
 function updateAutoScanScreenText(text = '') {
-    const _elem = document.getElementById('vve-autoscan-text');
+    const _elem = document.getElementById('ave-autoscan-text');
     _elem.textContent = text;
 }
 
@@ -815,26 +817,26 @@ function addBranding() {
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
     _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
-    _text.innerHTML = `<p id="vve-brandig-text">VineExplorer - ${VVE_VERSION}</p>`;
+    _text.innerHTML = `<p id="ave-brandig-text">${AVE_TITLE} - ${AVE_VERSION}</p>`;
 
     
     document.body.appendChild(_text);
 }
 
-function addUpperButtons(){
-    let _upperButtonsContainer = document.body.querySelector('.vvp-tab-set-container > ul');
+function addAveSettingsTab(){
+    waitForHtmlElmement('.vvp-tab-set-container > ul', (_upperButtonsContainer) => {
+        let _upperSettingsButton = document.createElement('li');
+        _upperSettingsButton.id = 'vvp-ave-settings-tab';
+        _upperSettingsButton.class = 'a-tab-heading';
+        _upperSettingsButton.role = 'presentation';
+        _upperSettingsButton.innerHTML += `<a role="tab" aria-selected="false" tabindex="-1">AVE Einstellungen</a>`;
 
-    let _upperSettingsButton = document.createElement('li');
-    _upperSettingsButton.id = 'vvp-ave-settings-tab';
-    _upperSettingsButton.class = 'a-tab-heading';
-    _upperSettingsButton.role = 'presentation';
-    _upperSettingsButton.innerHTML += `<a role="tab" aria-selected="false" tabindex="-1">AVE Einstellungen</a>`;
+        _upperSettingsButton.addEventListener('click',function(){
+        addSettingsMenu();
+        });
 
-    _upperSettingsButton.addEventListener('click',function(){
-    addSettingsMenu();
-    });
-
-    _upperButtonsContainer.appendChild(_upperSettingsButton);
+        _upperButtonsContainer.appendChild(_upperSettingsButton);
+    })
 }
 
 function addSettingsMenu(){
@@ -998,7 +1000,7 @@ font-weight: bold;
 }
     </style>
 
-    <div id="ave-settings-header" style="margin-bottom: 10px"><h3>Einstellungen ${VVE_TITLE} - Version ${VVE_VERSION}</h3></div>
+    <div id="ave-settings-header" style="margin-bottom: 10px"><h3>Einstellungen ${AVE_TITLE} - Version ${AVE_VERSION}</h3></div>
     <div id="ave-settings-container" class="ave-settings-container">
 
         <!--- Checkbox/Toggle Element-->
@@ -1346,11 +1348,11 @@ function initBackgroundScan() {
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
     
      // Create iFrame if not exists
-    if (!document.querySelector('#vve-iframe-backgroundloader')) {
+    if (!document.querySelector('#ave-iframe-backgroundloader')) {
         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): create iFrame');
         const iframe = document.createElement('iframe');
             iframe.src = encodeURI(`${_baseUrl}?queue=encore&pn=&cn=&page=1`);
-            iframe.id = 'vve-iframe-backgroundloader';
+            iframe.id = 'ave-iframe-backgroundloader';
             iframe.style.position = 'fixed';
             iframe.style.top = '0';
             iframe.style.left = '-10000';
@@ -1362,7 +1364,7 @@ function initBackgroundScan() {
     } 
     
     const _paginatinWaitLoop = setInterval(() => {
-        const _pageinationData = getPageinationData(document.querySelector('#vve-iframe-backgroundloader').contentWindow.document);
+        const _pageinationData = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
         if (_pageinationData) {
             clearInterval(_paginatinWaitLoop);
             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): pagination WaitLoop');
@@ -1420,9 +1422,12 @@ function initBackgroundScan() {
                                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                                 database.getAll((products) => {
                                     const _needUpdate = [];
+                                    const _randCount = Math.round(Math.random() * 3);
                                     for (_prod of products) {
-                                        if (_needUpdate.length < 5) {
+                                        if (_needUpdate.length < 3) {
                                             if (!_prod.data_estimated_tax_prize) _needUpdate.push(_prod);
+                                        } else {
+                                            break;
                                         }
                                     }
 
@@ -1476,8 +1481,8 @@ function initBackgroundScan() {
 function backGroundTileScanner(url, cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called backgroundTileScanner(${url})`);
     const _iconLoading = addLoadingSymbol();
-    const _iframeDoc = document.querySelector('#vve-iframe-backgroundloader').contentWindow.document;
-    vve.backGroundIFrame = _iframeDoc;
+    const _iframeDoc = document.querySelector('#ave-iframe-backgroundloader').contentWindow.document;
+    ave.backGroundIFrame = _iframeDoc;
     _iframeDoc.location.href = url;
     const _loopDelay = setInterval(() => {
         if (SETTINGS.DebugLevel > 10) console.log(`backgroundTileScanner(): check if we have tiles to read...`);
@@ -1565,8 +1570,8 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
         requestAnimationFrame(() => { 
             const _elemRect = _elem.getBoundingClientRect();
 
-            const _elemInitialTop = parseInt(_elem.getAttribute('vve-data-default-top'));
-            if (!_elemInitialTop) {_elem.setAttribute('vve-data-default-top', (window.scrollY + _elemRect.top)); return;}
+            const _elemInitialTop = parseInt(_elem.getAttribute('ave-data-default-top'));
+            if (!_elemInitialTop) {_elem.setAttribute('ave-data-default-top', (window.scrollY + _elemRect.top)); return;}
 
             if (SETTINGS.DebugLevel > 10) console.log(`### scrollY:${window.scrollY} maxScrollHeigt ${maxScrollHeight} initialTop: ${_elemInitialTop}`);
 
@@ -1586,7 +1591,7 @@ function updateNewProductsBtn() {
     if (AUTO_SCAN_IS_RUNNING) return;
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
     database.getNewEntries((prodArr) => { 
-        const _btnBadge = document.getElementById('vve-new-items-btn-badge');
+        const _btnBadge = document.getElementById('ave-new-items-btn-badge');
         const _pageTitle = document.title.replace(/^[0-9]+/, '').trim();
         const _prodArrLength = prodArr.length;
         if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
@@ -1620,7 +1625,7 @@ function updateNewProductsBtn() {
                     const _currKey = _configKeyWords[j].toLowerCase(); 
                     if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Deescription for Keyword: ${_currKey}`);
                     if (_descFull.includes(_currKey)) {
-                        desktopNotifikation(`Amazon Vine Explorer - ${VVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
+                        desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
                         _notifyed = true;
                     }                    
                         break;
@@ -1633,7 +1638,7 @@ function updateNewProductsBtn() {
                     oldCountOfNewItems = _prodArrLength;
                     lastDesktopNotifikationTimestamp = unixTimeStamp();
 
-                    desktopNotifikation(`Amazon Vine Explorer - ${VVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
+                    desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
                 } 
             }
         }
@@ -1657,7 +1662,7 @@ function desktopNotifikation(title, message, image = null, requireInteraction = 
             body: message,
             icon: (!requireInteraction) ? _vineLogo : _vineLogoImp,
             image: image || _defaultImage,
-            tag: (requireInteraction) ? `vve-notify-${Math.round(Math.random()* 10000000)}`: 'vve-notify',
+            tag: (requireInteraction) ? `ave-notify-${Math.round(Math.random()* 10000000)}`: 'ave-notify',
             requireInteraction: requireInteraction,
         });
 
@@ -1671,8 +1676,6 @@ function desktopNotifikation(title, message, image = null, requireInteraction = 
         });
     }
 }
-
-unsafeWindow.vve.DN = desktopNotifikation;
 
 function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeValue) {
     const _btn = document.createElement('span');
@@ -1720,16 +1723,16 @@ function addStyleToTile(_currTile, _product) {
                 if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
                     database.add(_product);
                     _currTile.style.cssText = SETTINGS.CssProductSaved;
-                    _currTile.classList.add('vve-element-saved');
+                    _currTile.classList.add('ave-element-saved');
                 } else {
                     let _style = SETTINGS.CssProductDefault;
                     if(_product.isNew) {
                         _style = SETTINGS.CssProductNewTag;
-                        _currTile.classList.add('vve-element-new');
+                        _currTile.classList.add('ave-element-new');
                     }
                     if(_product.isFav) {
                         _style = SETTINGS.CssProductFavTag;
-                        _currTile.classList.add('vve-element-fav');
+                        _currTile.classList.add('ave-element-fav');
                     }
                     _currTile.style.cssText = _style;
                     
@@ -1796,12 +1799,13 @@ async function requestProductDetails(prod) {
 function init(hasTiles) {
     // Get all Products on this page ;)
     
+
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
     
-    const _vveSubpageRequest = getUrlParameter('vve-subpage');
-    if (SETTINGS.DebugLevel > 10) console.log(`Got Subpage Parameter`, _vveSubpageRequest)
+    const _aveSubpageRequest = getUrlParameter('ave-subpage');
+    if (SETTINGS.DebugLevel > 10) console.log(`Got Subpage Parameter`, _aveSubpageRequest)
     
-    if (_vveSubpageRequest) createNewSite(parseInt(_vveSubpageRequest));
+    if (_aveSubpageRequest) createNewSite(parseInt(_aveSubpageRequest));
 
     if (hasTiles) {
         const _tiles = document.getElementsByClassName('vvp-item-tile');
@@ -1839,25 +1843,27 @@ function init(hasTiles) {
     
     if (AUTO_SCAN_IS_RUNNING) return;
     
+    
+    
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
 
-    _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Alle Produkte', '', '', () => {createNewSite(PAGETYPE.ALL);}));
-    _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
-    _searchbarContainer.appendChild(createNavButton('vve-btn-list-new', 'Neue Einträge', 'vve-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'vve-new-items-btn-badge', '-'));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Alle Produkte', '', '', () => {createNewSite(PAGETYPE.ALL);}));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
 
     updateNewProductsBtn();
 
 
     // Searchbar
     const _searchBarSpan = document.createElement('span');
-    _searchBarSpan.setAttribute('class', 'vve-search-container');
+    _searchBarSpan.setAttribute('class', 'ave-search-container');
     _searchBarSpan.style.cssText = `margin: 0.5em;`;
-    // _searchBarSpan.innerHTML = `<input type="text" style="width: 30em;" placeholder="Suche Vine Produkte" name="vve-search">`;
+    // _searchBarSpan.innerHTML = `<input type="text" style="width: 30em;" placeholder="Suche Vine Produkte" name="ave-search">`;
 
     const _searchBarInput = document.createElement('input');
     _searchBarInput.setAttribute('type', 'text');
     _searchBarInput.setAttribute('placeholder', 'Suche Vine Produkte');
-    _searchBarInput.setAttribute('name', 'vve-search');
+    _searchBarInput.setAttribute('name', 'ave-search');
     _searchBarInput.style.cssText = `width: 30em;`;
     _searchBarInput.addEventListener('keyup', (ev) => {
         const _input = _searchBarInput.value
@@ -1880,7 +1886,7 @@ function init(hasTiles) {
 
 
     // Manual Autoscan and Backgroundscan can not run together, so don´t create the button
-    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('vve-btn-updateDB', 'Update Database', 'vve-btn-updateDB-text','lime', () => {localStorage.setItem('AVE_INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
+    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('ave-btn-updateDB', 'Update Database', 'ave-btn-updateDB-text','lime', () => {localStorage.setItem('AVE_INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
 
     if (hasTiles) addLeftSideButtons();
 
