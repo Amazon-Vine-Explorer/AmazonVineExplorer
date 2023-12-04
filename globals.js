@@ -3,6 +3,7 @@ if (window.top != window.self) return; //don't run on frames or iframes
 
 // Constants Needed for some things
 const VVE_VERSION = (/@version\s+([0-9+.]+)/.exec(GM_info.scriptMetaStr)[1]) || 'ERR';
+const VVE_TITLE = (GM_info?.script?.name);
 const SECONDS_PER_WEEK = 604800 / 2;
 const SECONDS_PER_DAY = 86400;
 const SITE_IS_VINE = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\//.test(window.location.href);
