@@ -1134,7 +1134,7 @@ function initBackgroundScan() {
             clearInterval(_paginatinWaitLoop);
             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): pagination WaitLoop');
 
-            if (!localStorage.getItem('AVE_BACKGROUND_SCAN_IS_RUNNING') || true) {
+            if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_IS_RUNNING') == true)) {
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): init localStorage Variables');
                 localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_IS_RUNNING', true);
