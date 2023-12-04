@@ -324,7 +324,7 @@ function addLeftSideButtons(forceClean) {
         markAllCurrentSiteProductsAsSeen();
     });
     
-    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','vve-btn-db-allseen', 'left: 0; width: 240px; background-color: rgb(255, 162, 142);', () => {
+    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','vve-btn-db-allseen', 'width: 240px; background-color: rgb(255, 162, 142);', () => {
         
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         setTimeout(() => {
@@ -397,6 +397,8 @@ function createButton(text, id, style, clickHandler){
     _btnSpan.setAttribute('id', id);
     _btnSpan.setAttribute('class', 'a-button a-button-normal a-button-toggle');
     _btnSpan.setAttribute('aria-checked', 'true');
+    _btnSpan.style.marginLeft = '0';
+    _btnSpan.style.marginTop = '5px';
     _btnSpan.innerHTML = `
         <span class="a-button-inner" style="${style || ''}">
             <span class="a-button-text">${text}</span>
