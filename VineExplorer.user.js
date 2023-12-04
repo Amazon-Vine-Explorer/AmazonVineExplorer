@@ -841,8 +841,262 @@ function addBranding() {
     document.body.appendChild(_text);
 }
 
+function addUpperButtons(){
+    let _upperButtonsContainer = document.body.querySelector('.vvp-tab-set-container > ul');
 
-function addOverlays() {
+    let _upperSettingsButton = document.createElement('li');
+    _upperSettingsButton.id = 'vvp-ave-settings-tab';
+    _upperSettingsButton.class = 'a-tab-heading';
+    _upperSettingsButton.role = 'presentation';
+    _upperSettingsButton.innerHTML += `<a role="tab" aria-selected="false" tabindex="-1">AVE Einstellungen</a>`;
+
+    _upperSettingsButton.addEventListener('click',function(){
+    addSettingsMenu();
+    });
+
+    _upperButtonsContainer.appendChild(_upperSettingsButton);
+}
+
+function addSettingsMenu(){
+    let _contentContainer = document.body.querySelector('.a-tab-content > .a-box-inner');
+    _contentContainer.innerHTML = `
+    <style>
+    :root {
+  --toggleSliderSize: 1;
+  --numberBorder: 1px;
+  --numberPadding: 2px;
+  --itemHeight: 21px;
+}
+.ave-settings-container {
+  display: grid;
+}
+
+.ave-settings-container label {
+  padding: 0;
+}
+
+.ave-settings-container input[type="number"] {
+  width: 75%;
+  height: 21px;
+  border: var(--numberBorder) solid #888C8C;
+  padding: var(--numberPadding);
+}
+
+.ave-settings-container input[type="color"] {
+  /*width: calc(((var(--numberPadding) + var(--numberBorder)) * 2) + 75%);*/
+  width: 75%;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  height: var(--itemHeight);
+}
+
+.ave-settings-container input[type="text"] {
+
+}
+
+.ave-settings-item{
+  display: inline-flex;
+  align-items: center;
+  margin: 5px 0;
+  height: var(--itemHeight);
+}
+
+.ave-item-left {
+  width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ave-item-right {
+
+}
+
+.ave-item-right > label {
+
+}
+
+.ave-settings-item > * >.ave-settings-label-setting {
+  margin-left: 5px;
+}
+
+.ave-settings-label-switch{
+  position: relative;
+  display: inline-block;
+  width: calc(var(--toggleSliderSize) * 30px);
+  height: calc(var(--toggleSliderSize) * 17px);
+}
+
+.ave-settings-switch-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: calc(var(--toggleSliderSize) * 17px);
+}
+
+.ave-settings-switch-toggle-slider:before{
+  position: absolute;
+  content: "";
+  height: calc(var(--toggleSliderSize) * 13px);
+  width: calc(var(--toggleSliderSize) * 13px);
+  left: calc(var(--toggleSliderSize) * 2px);
+  bottom: calc(var(--toggleSliderSize) * 2px);
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .ave-settings-switch-toggle-slider {
+  background-color: #2196F3;
+}
+
+input:checked + .ave-settings-switch-toggle-slider:before {
+  transform: translateX(calc(var(--toggleSliderSize) * 13px));
+}
+
+.ave-settings-label-switch input{
+  display: none
+}
+
+.ave-keyword-input button {
+font-weight: bold;
+}
+
+.ave-keyword-list-wrapper {
+  margin-top: 10px;
+}
+
+.ave-keyword-list-wrapper > table {
+  border-collapse: collapse;
+  width: 500px;
+}
+
+.ave-keyword-list-wrapper > table td,.ave-keyword-list-wrapper > table th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+.ave-keyword-list-wrapper > table tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+.ave-keyword-list-wrapper #list-delete {
+  width: 75px;
+  text-align: center;
+}
+
+.ave-keyword-list-wrapper > table button {
+  display: flex;
+  margin: auto;
+  background-color: inherit;
+  border: none;
+}
+
+::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+::-webkit-color-swatch{
+  border: 0;
+  border-radius: 5px;
+}
+
+::-moz-color-swatch,
+::-moz-focus-inner{
+  border: 0;
+}
+
+::-moz-focus-inner{
+  padding: 0;
+}
+    </style>
+
+    <div id="ave-settings-header" style="margin-bottom: 10px"><h3>Einstellungen ${VVE_TITLE} - Version ${VVE_VERSION}</h3></div>
+    <div id="ave-settings-container" class="ave-settings-container">
+
+        <!--- Checkbox/Toggle Element-->
+        <div class="ave-settings-item">
+          <div class="ave-item-left">
+            <label class="ave-settings-label-switch">
+                <input type="checkbox" onclick="" checked="${SETTINGS.EnableFullWidth}">
+                <span class="ave-settings-switch-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="ave-item-right">
+            <label class="ave-settings-label-setting">Full Width</label>
+          </div>
+        </div>
+
+        <!--- Input Element Number-->
+        <div class="ave-settings-item">
+          <div class="ave-item-left">
+            <input type="number" onclick="" value="${SETTINGS.DebugLevel}">
+          </div>
+          <div class="ave-item-right">
+            <label class="ave-settings-label-setting">Debug Level</label>
+          </div>
+        </div>
+
+        <!--- Input Element Color-->
+        <div class="ave-settings-item">
+          <div class="ave-item-left">
+            <input type="color" onclick="" value="${SETTINGS.FavBtnColor}">
+          </div>
+          <div class="ave-item-right">
+            <label class="ave-settings-label-setting">Farbe Favoriten Button</label>
+          </div>
+        </div>
+</div>
+<br><br>
+########## Keyword Abschnitt ##########
+<br><br>
+
+<!--- Keyword Icon: <i class="a-icon a-icon-close"></i> -->
+
+<div class="ave-keyword-wrapper">
+<h4>Keywords</h4>
+  <div class="ave-keyword-input">
+    <span></span>
+    <button>+</button>
+    <input type="text" placeholder="Keyword"></input>
+  </div>
+  <div class="ave-keyword-list-wrapper">
+    <table>
+      <!--- Table Header -->
+      <tr>
+        <th id="list-delete">Löschen</th>
+        <th>Keyword</th>
+      </tr>
+      <!--- Keyword Element Start-->
+      <tr>
+        <td><button><i class="a-icon a-icon-close"></i></button></td>
+        <td>${SETTINGS.DesktopNotifikationKeywords[0]}</td>
+      </tr>
+      <!--- Keyword Element Ende-->
+      <tr>
+        <td><button><i class="a-icon a-icon-close"></i></button></td>
+        <td>${SETTINGS.DesktopNotifikationKeywords[1]}</td>
+      </tr>
+      <tr>
+        <td><button><i class="a-icon a-icon-close"></i></button></td>
+        <td>${SETTINGS.DesktopNotifikationKeywords[2]}</td>
+      </tr>
+    </table>
+  </div>
+  <br><br><br><br><br>
+Keywords: ${SETTINGS.DesktopNotifikationKeywords}
+</div>
+    `;
+}
+
+function addOverlays() { // Old Settings Code
     const _overlayBackground = document.createElement('div');
     _overlayBackground.style.position = 'fixed';
     _overlayBackground.style.backgroundColor = '#000000b0';
