@@ -695,13 +695,15 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
 function btnEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
-        database.get(data.recommendation_id, (prod) => {
+        database.get(data.recommendation_id, async (prod) => {
             if (SETTINGS.DebugLevel > 10) console.log(`btnEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isNew = false;
-                database.update(prod).then( () => {
-                    updateTileStyle(prod);
-                });
+                requestProductDetails(prod).then((_newProd) => {
+                    database.update(_newProd || prod).then( () => {
+                        updateTileStyle(prod);
+                    });
+                })
             }
         })
     }
