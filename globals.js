@@ -53,21 +53,21 @@ const ave_eventhandler = new AVE_EVENTHANDLER();
 // All Config Options that should shown to the User
 const SETTINGS_USERCONFIG_DEFINES = [];
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Vine', description: 'Tooltip Description of this Setting'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableFullWidth', type: 'bool', name: 'Enable Full With', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooter', type: 'bool', name: 'Enable Full With', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestions', type: 'bool', name: 'Enable Full With', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnPotLuck', type: 'bool', name: 'Enable Full With', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnLastChance', type: 'bool', name: 'Enable Full With', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnSeller', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableFullWidth', type: 'bool', name: 'Enable Full Width', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooter', type: 'bool', name: 'Disable Footer', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestions', type: 'bool', name: 'Disable Suggestions', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnPotLuck', type: 'bool', name: 'Disable Button Potluck', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnLastChance', type: 'bool', name: 'Disable Button Last Chance', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnSeller', type: 'bool', name: 'Disable Button Seller', description: ''});
 
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Full With', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Full With', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Full With', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikations', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Button All Products', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Background Scan', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Infiniti Scroll Live Querry', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikations', type: 'bool', name: 'Enable Desktop Notifikations', description: ''});
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Shopping', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooterShopping', type: 'bool', name: 'Enable Full With', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestionsShopping', type: 'bool', name: 'Enable Full With', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooterShopping', type: 'bool', name: 'Disable Footer Shopping', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestionsShopping', type: 'bool', name: 'Disable Suggestions Shopping', description: ''});
 
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'General', description: ''});
@@ -78,7 +78,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', nam
 
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationsKeywords', type: 'keywords', name: 'Desktop Notifikation Highlight Keywords', description: ''});
 
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', name: 'Debuglevel', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', min: 0, max: 15, name: 'Debuglevel', description: ''});
 
 
 
