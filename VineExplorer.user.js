@@ -139,7 +139,8 @@ ave_eventhandler.on('ave-database-changed', () => {
 
 window.onscroll = () => { // ONSCROLL Event handler
     stickElementToTopScrollEVhandler('ave-btn-allseen', '5px');
-    stickElementToTopScrollEVhandler('ave-btn-db-allseen', '35px');
+    stickElementToTopScrollEVhandler('ave-btn-db-allseen', '40px');
+    stickElementToTopScrollEVhandler('ave-btn-backtotop', '75px');
 
     if (currentMainPage == PAGETYPE.ALL) handleInfiniteScroll();
 
@@ -323,9 +324,18 @@ function addLeftSideButtons(forceClean) {
         }, 30);
     });
 
+    const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  'width: 240px; background-color: white;', () => {
+        
+        if (SETTINGS.DebugLevel > 10) console.log('Clicked back to Top Button');
+        window.scrollTo(0, 0);
+    });
+
+
+
 
     _nodesContainer.appendChild(_setAllSeenBtn);
     _nodesContainer.appendChild(_setAllSeenDBBtn);
+    _nodesContainer.appendChild(_backToTopBtn);
 
     // const _clearDBBtn = createButton('Datenbank Bereinigen', 'background-color: orange;', () => {
     //     if (SETTINGS.DebugLevel > 10) console.log('Clicked clear DB Button');
