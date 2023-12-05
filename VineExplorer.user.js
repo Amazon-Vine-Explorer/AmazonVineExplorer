@@ -210,7 +210,7 @@ function detectCurrentPageType(){
 }
 
 async function parseTileData(tile, cb) {
-    if (SETTINGS.DebugLevel > 10) console.log(`Called parseTileData(${tile})`);
+    if (SETTINGS.DebugLevel > 14) console.log(`Called parseTileData(`, tile, ')');
 
     const _id = tile.getAttribute('data-recommendation-id');
     
@@ -354,7 +354,7 @@ function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
             const _id = _tile.getAttribute('data-recommendation-id');
             database.get(_id, (prod) => {
                 prod.isNew = false;
-                database.update(prod, () => {
+                database.update(prod).then( () => {
                     updateTileStyle(prod);
                     _returned++;
                     if (_returned == _tilesLength) cb();
@@ -692,9 +692,10 @@ function btnEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
         database.get(data.recommendation_id, (prod) => {
+            if (SETTINGS.DebugLevel > 10) console.log(`btnEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isNew = false;
-                database.update(prod, () => {
+                database.update(prod).then( () => {
                     updateTileStyle(prod);
                 });
             }
@@ -706,9 +707,10 @@ function favStarEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called favStarEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
         database.get(data.recommendation_id, (prod) => {
+            if (SETTINGS.DebugLevel > 10) console.log(`favStarEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isFav = !prod.isFav;
-                database.update(prod, () => {
+                database.update(prod).then(() => {
                     updateTileStyle(prod);
                 });
             }
@@ -1739,7 +1741,7 @@ function backGroundTileScanner(url, cb) {
                 for (let i = 0; i < _tilesLength; i++) {
                     parseTileData(_tiles[i], (prod) => {
                         _returned++;
-                        if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
+                        if (SETTINGS.DebugLevel > 14) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
                         if (!prod.gotFromDB) database.add(prod);
                         if (_returned == _tilesLength) {cb(true); _iconLoading.remove()};
                     })

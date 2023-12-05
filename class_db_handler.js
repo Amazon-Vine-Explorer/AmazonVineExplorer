@@ -180,7 +180,7 @@ class DB_HANDLER {
         if (typeof(cb) != 'function') throw new Error('DB_HANDLER.get(): cb is not defined or is not typeof function');
         
         const _request = this.#getStore().get(id);
-        _request.onerror = (event) => {cb(); throw new Error(`DB_HANDLER.add(): ${event.target.error.name}`);};
+        _request.onerror = (event) => {cb(); throw new Error(`DB_HANDLER.add(): ${event.target.error}`);};
         _request.onsuccess = (event) => {cb(event.target.result);};
     };
 
