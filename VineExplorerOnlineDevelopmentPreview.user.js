@@ -1,0 +1,23 @@
+// ==UserScript==
+// @name         Amazon Vine Explorer - Online Development Preview
+// @namespace    http://tampermonkey.net/
+// @version      9.9.9
+// @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
+// @author       MarkusSR1984, Christof121
+// @match        *://www.amazon.de/*
+// @match        *://www.amazon.com/*
+// @license      MIT
+// @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
+// @run-at       document-start
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM.getValue
+// @grant        GM.setValue
+// @grant        GM.xmlHttpRequest
+// @grant        unsafeWindow
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/globals.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/class_db_handler.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/class_product.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/VineExplorer.user.js
+
+// ==/UserScript==
