@@ -149,6 +149,7 @@ let blockHandleInfiniteScroll = false;
 let infiniteScrollLastPreloadedPage = 1;
 let infiniteScrollMaxPreloadPage = 125; // Hardcoded for scrolltest, must lated get extracted from Pagination
 let inifiniteScrollBlockAppend = false;
+let infiniteScrollTilesBufferArray = [];
 
 function handleInfiniteScroll() {
     console.log('Called handleInfiniteScroll()');
@@ -798,16 +799,7 @@ function updateAutoScanScreenText(text = '') {
 }
 
 function addBranding() {
-    // const _overlay = document.createElement('div');
-    // _overlay.style.position = 'fixed';
-    // _overlay.style.top = '0';
-    // _overlay.style.left = '0';
-    // _overlay.style.width = '100%';
-    // _overlay.style.height = '100%';
-    // _overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // Grauer Hintergrund mit Transparenz
-    // _overlay.style.zIndex = '1000'; // Stelle sicher, dass das Overlay über anderen Elementen liegt
-    // document.body.appendChild(_overlay);
-
+   
     const _text = document.createElement('div');
     _text.style.position = 'fixed';
     _text.style.bottom = '10px';
@@ -827,22 +819,28 @@ function addBranding() {
 
 function addAveSettingsTab(){
     waitForHtmlElmement('.vvp-tab-set-container > ul', (_upperButtonsContainer) => {
-        let _upperSettingsButton = document.createElement('li');
+        const _upperSettingsButton = document.createElement('li');
         _upperSettingsButton.id = 'vvp-ave-settings-tab';
         _upperSettingsButton.class = 'a-tab-heading';
         _upperSettingsButton.role = 'presentation';
         _upperSettingsButton.innerHTML += `<a role="tab" aria-selected="false" tabindex="-1">AVE Einstellungen</a>`;
 
         _upperSettingsButton.addEventListener('click',function(){
-        addSettingsMenu();
+            addSettingsMenu();
+            const _settingsContainer = document.getElementById('ave-settings-container');
+            for (const elem of SETTINGS_USERCONFIG_DEFINES) {
+                _settingsContainer.appendChild(createSettingsMenuElement(elem));
+            }
+            
         });
 
         _upperButtonsContainer.appendChild(_upperSettingsButton);
+
     })
 }
 
 function addSettingsMenu(){
-    let _contentContainer = document.body.querySelector('.a-tab-content > .a-box-inner');
+    const _contentContainer = document.body.querySelector('.a-tab-content > .a-box-inner');
     _contentContainer.innerHTML = `
     <style>
     :root {
@@ -1004,39 +1002,8 @@ font-weight: bold;
 
     <div id="ave-settings-header" style="margin-bottom: 10px"><h3>Einstellungen ${AVE_TITLE} - Version ${AVE_VERSION}</h3></div>
     <div id="ave-settings-container" class="ave-settings-container">
+  
 
-        <!--- Checkbox/Toggle Element-->
-        <div class="ave-settings-item">
-          <div class="ave-item-left">
-            <label class="ave-settings-label-switch">
-                <input type="checkbox" onclick="" checked="${SETTINGS.EnableFullWidth}">
-                <span class="ave-settings-switch-toggle-slider"></span>
-            </label>
-          </div>
-          <div class="ave-item-right">
-            <label class="ave-settings-label-setting">Full Width</label>
-          </div>
-        </div>
-
-        <!--- Input Element Number-->
-        <div class="ave-settings-item">
-          <div class="ave-item-left">
-            <input type="number" onclick="" value="${SETTINGS.DebugLevel}">
-          </div>
-          <div class="ave-item-right">
-            <label class="ave-settings-label-setting">Debug Level</label>
-          </div>
-        </div>
-
-        <!--- Input Element Color-->
-        <div class="ave-settings-item">
-          <div class="ave-item-left">
-            <input type="color" onclick="" value="${SETTINGS.FavBtnColor}">
-          </div>
-          <div class="ave-item-right">
-            <label class="ave-settings-label-setting">Farbe Favoriten Button</label>
-          </div>
-        </div>
 </div>
 <br><br>
 ########## Keyword Abschnitt ##########
@@ -1078,6 +1045,86 @@ font-weight: bold;
 Keywords: ${SETTINGS.DesktopNotifikationKeywords}
 </div>
     `;
+}
+
+function createSettingsMenuElement(dat){
+    const _elem = document.createElement('div');
+    _elem.classList.add('ave-settings-item');
+
+    if (dat.type == 'bool') {// Boolean Value
+        
+        const _elem_item_left = document.createElement('div');
+        _elem_item_left.classList.add('ave-item-left');
+        const _elem_item_left_label = document.createElement('label');
+        _elem_item_left_label.classList.add('ave-settings-label-switch');
+        const _elem_item_left_label_input = document.createElement('input');
+        _elem_item_left_label_input.type = 'checkbox';
+        _elem_item_left_label_input.className = 'ave-input-binary';
+        _elem_item_left_label_input.setAttribute('ave-data-key', dat.key);
+        // _elem_item_left_label_input.setAttribute('checked', SETTINGS[dat.key])
+        // _elem_item_left_label_input.value = `${SETTINGS[dat.key]}`;
+        _elem_item_left_label_input.checked = SETTINGS[dat.key];
+        _elem_item_left_label_input.addEventListener('click', (event) => {console.log('This is a Boolean Value Input', event); SETTINGS[dat.key] = event.target.checked; SETTINGS.save();})
+        
+        const _elem_item_left_label_span = document.createElement('span');
+        _elem_item_left_label_span.classList.add('ave-settings-switch-toggle-slider');
+
+        _elem_item_left_label.appendChild(_elem_item_left_label_input);
+        _elem_item_left_label.appendChild(_elem_item_left_label_span);
+        _elem_item_left.appendChild(_elem_item_left_label);
+        _elem.appendChild(_elem_item_left);
+
+        const _elem_item_right = document.createElement('div');
+        _elem_item_right.classList.add('ave-item-right');
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting">${dat.name}</label>`
+        
+        _elem.appendChild(_elem_item_right);
+
+    } else if (dat.type == 'number') { // Number Value
+    
+        const _elem_item_left = document.createElement('div');
+        _elem_item_left.classList.add('ave-item-left');
+        const _elem_item_left_input = document.createElement('input');
+        _elem_item_left_input.type = 'number';
+        _elem_item_left_input.className = 'ave-input-number';
+        _elem_item_left_input.setAttribute('ave-data-key', dat.key);
+        _elem_item_left_input.setAttribute('value', SETTINGS[dat.key]);
+        if (!isNaN(dat.min)) _elem_item_left_input.setAttribute('min', dat.min);
+        if (!isNaN(dat.max)) _elem_item_left_input.setAttribute('max', dat.max);
+        _elem_item_left_input.addEventListener('change', (event) => {console.log('This is a Number Value Input', event); SETTINGS[dat.key] = parseInt(event.target.value); SETTINGS.save();})
+        _elem_item_left.appendChild(_elem_item_left_input);
+        _elem.appendChild(_elem_item_left);
+
+        const _elem_item_right = document.createElement('div');
+        _elem_item_right.classList.add('ave-item-right');
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting">${dat.name}</label>`
+        
+        _elem.appendChild(_elem_item_right);
+
+    } else if (dat.type == 'color') {
+
+        const _elem_item_left = document.createElement('div');
+        _elem_item_left.classList.add('ave-item-left');
+        const _elem_item_left_input = document.createElement('input');
+        _elem_item_left_input.type = 'color';
+        _elem_item_left_input.className = 'ave-input-color';
+        _elem_item_left_input.setAttribute('ave-data-key', dat.key);
+        _elem_item_left_input.setAttribute('value', colorToHex(SETTINGS[dat.key]));
+        // if (!isNaN(dat.min)) _elem_item_left_input.setAttribute('min', dat.min);
+        // if (!isNaN(dat.max)) _elem_item_left_input.setAttribute('max', dat.max);
+        _elem_item_left_input.addEventListener('change', (event) => {console.log('This is a Color Value Input', event); SETTINGS[dat.key] = event.target.value; SETTINGS.save();})
+        _elem_item_left.appendChild(_elem_item_left_input);
+        _elem.appendChild(_elem_item_left);
+
+        const _elem_item_right = document.createElement('div');
+        _elem_item_right.classList.add('ave-item-right');
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting">${dat.name}</label>`
+        
+        _elem.appendChild(_elem_item_right);
+
+    }
+
+    return _elem;
 }
 
 function addOverlays() { // Old Settings Code
@@ -1143,6 +1190,42 @@ function addOverlays() { // Old Settings Code
 
     document.body.appendChild(_settingsDiv);
 }
+
+
+function componentToHex(c) {
+  const _c = Math.min(c, 255)
+  const _hex = _c.toString(16);
+  return _hex.length == 1 ? "0" + _hex : _hex;
+}
+
+function rgbToHex(r, g, b){
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+function rgbaToHex(r, g, b, a){
+  return "#" + componentToHex(a) + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+function colorToHex(color) {
+    const _color = color.replace(/\s/g,''); // Remove all spaces
+    let _cache;
+
+    if (_color == 'white'){ 
+        return '#ffffff';
+    } else if (_color == 'black'){ 
+        return '#000000';
+    } else if (_cache = /rgb\(([\d]+),([\d]+),([\d]+)\)/.exec(_color)){ // rgb(0,0,0)
+        return rgbToHex(_cache[1], _cache[2], _cache[3]);
+    } else if (_cache = /rgba\(([\d]+),([\d]+),([\d]+),([\d]+|[\d]*.[\d]+)\)/.exec(_color)){ // rgba(0,0,0,0)
+        return rgbaToHex(_cache[1], _cache[2], _cache[3], _cache[4]);
+    } else if (/\#[0-9a-f]{6}|[0-9a-f]{8}$/.exec(_color)){ // #000000
+        return _color;
+    }
+
+}
+
+ave.colorToHex = colorToHex;
+
 
 function addDBCleaningSymbol(){
     const _cleaningDiv = document.createElement('div');
