@@ -818,6 +818,7 @@ function addBranding() {
     document.body.appendChild(_text);
 }
 
+
 function addAveSettingsTab(){
     waitForHtmlElmement('.vvp-tab-set-container > ul', (_upperButtonsContainer) => {
         const _upperSettingsButton = document.createElement('li');
@@ -926,6 +927,67 @@ function addAVESettingsMenu(){
 
 .ave-settings-item > * >.ave-settings-label-setting {
   margin-left: 5px;
+}
+
+.ave-settings-item > * >.ave-settings-label-setting:hover{
+  color: red;
+}
+
+/* Add this attribute to the element that needs a tooltip */
+[data-ave-tooltip] {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+
+/* Hide the tooltip content by default */
+[data-ave-tooltip]:before,
+[data-ave-tooltip]:after {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Position tooltip above the element */
+[data-ave-tooltip]:before {
+  position: absolute;
+  bottom: -50%;
+  /*left: calc(150% + 10px);*/
+  margin-bottom: 5px;
+  margin-left: calc(100% + 10px);
+  padding: 7px;
+  width: 160px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  background-color: hsla(0, 0%, 20%, 0.9);
+  color: #fff;
+  content: attr(data-ave-tooltip);
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* Triangle hack to make tooltip look like a speech bubble */
+[data-ave-tooltip]:after {
+  position: absolute;
+  bottom: 25%;
+  /*left: 50%;*/
+  margin-left: calc(0% + 5px);
+  width: 0;
+  border-right: 5px solid hsla(0, 0%, 20%, 0.9);
+  border-bottom: 5px solid transparent;
+  border-top: 5px solid transparent;
+  content: " ";
+  font-size: 0;
+  line-height: 0;
+}
+
+/* Show tooltip content on hover */
+[data-ave-tooltip]:hover:before,
+[data-ave-tooltip]:hover:after {
+  visibility: visible;
+  opacity: 1;
 }
 
 .ave-settings-label-switch{
@@ -1105,7 +1167,7 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting">${dat.name}</label>`
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
         
         _elem.appendChild(_elem_item_right);
 
@@ -1126,7 +1188,7 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting">${dat.name}</label>`
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
         
         _elem.appendChild(_elem_item_right);
 
@@ -1147,7 +1209,7 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting">${dat.name}</label>`
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
         
         _elem.appendChild(_elem_item_right);
 
@@ -1167,7 +1229,6 @@ function createSettingsMenuElement(dat){
 
     return _elem;
 }
-
 function addOverlays() { // Old Settings Code
     const _overlayBackground = document.createElement('div');
     _overlayBackground.style.position = 'fixed';
