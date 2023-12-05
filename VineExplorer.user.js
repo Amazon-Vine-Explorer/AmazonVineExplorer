@@ -541,13 +541,17 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
                 _tilesContainer.appendChild(_tile);
                 parseTileData(_tile, (_product) => {
                     addStyleToTile(_tile, _product);
+                    addTileEventhandlers(_tile);
                 });
             } else {
                 createTileFromProduct(_tile).then((_elem) => {
                     _tilesContainer.appendChild(_elem);
+                    addTileEventhandlers(_elem);
                 })
             }
             
+
+
             if (_createdCount++ >= 100) _stopCreation = true;
 
             const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
@@ -2105,7 +2109,7 @@ function init(hasTiles) {
     // _searchBarSpan.innerHTML = `<input type="text" style="width: 30em;" placeholder="Suche Vine Produkte" name="ave-search">`;
 
     const _searchBarInput = document.createElement('input');
-    _searchBarInput.setAttribute('type', 'text');
+    _searchBarInput.setAttribute('type', 'search');
     _searchBarInput.setAttribute('placeholder', 'Suche Vine Produkte');
     _searchBarInput.setAttribute('name', 'ave-search');
     _searchBarInput.style.cssText = `width: 30em;`;
