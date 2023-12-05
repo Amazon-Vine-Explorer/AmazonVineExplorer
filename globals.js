@@ -63,7 +63,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnSeller', type: 'bool', name: '
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Button All Products', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Background Scan', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Infiniti Scroll Live Querry', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikations', type: 'bool', name: 'Enable Desktop Notifikations', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikation', type: 'bool', name: 'Enable Desktop Notifikations', description: ''});
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Shopping', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooterShopping', type: 'bool', name: 'Disable Footer Shopping', description: ''});
@@ -76,9 +76,13 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'FavBtnColor', type: 'color', name: 'Butt
 SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorDefault', type: 'color', name: 'Color Favorite Star unchecked', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', name: 'Color Favorite Star checked', description: ''});
 
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationsKeywords', type: 'keywords', name: 'Desktop Notifikation Highlight Keywords', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notifikation Highlight Keywords', inputPlaceholder: 'Type in your highlight keyword and press [ENTER]', description: ''});
 
+SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Settings for Developers and Testers', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', min: 0, max: 15, name: 'Debuglevel', description: ''});
+
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'Do NOT click ME !!!', description: 'Dont do it', btnClick: () => {alert('I told u!!!'); window.location.href = 'https://neal.fun/space-elevator/'} });
+ 
 
 
 

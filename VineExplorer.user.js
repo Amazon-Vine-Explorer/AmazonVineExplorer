@@ -842,6 +842,7 @@ function addAveSettingsTab(){
             const _settingsContainer = _settingsContent.querySelector('#ave-settings-container');
             console.log(_settingsContainer);
             for (const elem of SETTINGS_USERCONFIG_DEFINES) {
+                console.log('Creating Settings Menu Element: ', elem);
                 _settingsContainer.appendChild(createSettingsMenuElement(elem));
             }
             
@@ -1092,54 +1093,13 @@ font-weight: bold;
   
 
 </div>
-
-### Ab hier nicht dynamisch
-
-<br><br>
-########## Keyword Abschnitt ##########
-<br><br>
-
-<!--- Keyword Icon: <i class="a-icon a-icon-close"></i> -->
-
-<div class="ave-keyword-wrapper">
-<h4>Keywords</h4>
-  <div class="ave-keyword-input">
-    <span></span>
-    <button>+</button>
-    <input type="text" placeholder="Keyword"></input>
-  </div>
-  <div class="ave-keyword-list-wrapper">
-    <table>
-      <!--- Table Header -->
-      <tr>
-        <th id="list-delete">Löschen</th>
-        <th>Keyword</th>
-      </tr>
-      <!--- Keyword Element Start-->
-      <tr>
-        <td><button><i class="a-icon a-icon-close"></i></button></td>
-        <td>${SETTINGS.DesktopNotifikationKeywords[0]}</td>
-      </tr>
-      <!--- Keyword Element Ende-->
-      <tr>
-        <td><button><i class="a-icon a-icon-close"></i></button></td>
-        <td>${SETTINGS.DesktopNotifikationKeywords[1]}</td>
-      </tr>
-      <tr>
-        <td><button><i class="a-icon a-icon-close"></i></button></td>
-        <td>${SETTINGS.DesktopNotifikationKeywords[2]}</td>
-      </tr>
-    </table>
-  </div>
-  <br><br><br><br><br>
-Keywords: ${SETTINGS.DesktopNotifikationKeywords}
-</div>
     `;
     })
 }
 
 function createSettingsMenuElement(dat){
     const _elem = document.createElement('div');
+    if (dat.key) _elem.setAttribute('ave-config-key', dat.key);
     _elem.classList.add('ave-settings-item');
 
     if (dat.type == 'bool') {// Boolean Value
@@ -1192,6 +1152,27 @@ function createSettingsMenuElement(dat){
         
         _elem.appendChild(_elem_item_right);
 
+    } else if (dat.type == 'button') { // Number Value
+    
+        const _elem_item_left = document.createElement('div');
+        _elem_item_left.classList.add('ave-item-left');
+        const _elem_item_left_input = document.createElement('button');
+        _elem_item_left_input.type = 'button';
+        _elem_item_left_input.className = 'ave-input-button';
+        // _elem_item_left_input.setAttribute('ave-data-key', dat.key);
+        _elem_item_left_input.innerText = dat.name;
+        _elem_item_left_input.setAttribute('data-ave-tooltip',dat.description);
+        _elem_item_left_input.addEventListener('click', (event) => {console.log('This is a button Input', event); if(dat.btnClick) dat.btnClick();})
+        _elem_item_left.appendChild(_elem_item_left_input);
+        _elem.appendChild(_elem_item_left);
+
+        // const _elem_item_right = document.createElement('div');
+        // _elem_item_right.classList.add('ave-item-right');
+        // _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
+        
+        // _elem.appendChild(_elem_item_right);
+
+
     } else if (dat.type == 'color') {
 
         const _elem_item_left = document.createElement('div');
@@ -1201,8 +1182,6 @@ function createSettingsMenuElement(dat){
         _elem_item_left_input.className = 'ave-input-color';
         _elem_item_left_input.setAttribute('ave-data-key', dat.key);
         _elem_item_left_input.setAttribute('value', colorToHex(SETTINGS[dat.key]));
-        // if (!isNaN(dat.min)) _elem_item_left_input.setAttribute('min', dat.min);
-        // if (!isNaN(dat.max)) _elem_item_left_input.setAttribute('max', dat.max);
         _elem_item_left_input.addEventListener('change', (event) => {console.log('This is a Color Value Input', event); SETTINGS[dat.key] = event.target.value; SETTINGS.save();})
         _elem_item_left.appendChild(_elem_item_left_input);
         _elem.appendChild(_elem_item_left);
@@ -1225,10 +1204,77 @@ function createSettingsMenuElement(dat){
         _elem.style.flexWrap = 'wrap';
         _elem.appendChild(_elem_spacer_horizontal);
         _elem.appendChild(_elem_spacer_title);
+    } else if (dat.type == 'keywords') {
+        _elem.classList.remove('ave-settings-item');
+        _elem.classList.add('ave-keyword-wrapper');
+        _elem.innerHTML = `<h4>${dat.name}</h4>`;
+        const _elem_keyword_input = document.createElement('div');
+        _elem_keyword_input.innerHTML = '<span></span>';
+        _elem_keyword_input.classList.add('ave-keyword-input');
+        const _elem_keyword_input_input = document.createElement('input');
+        _elem_keyword_input_input.setAttribute('type', 'text');
+        _elem_keyword_input_input.setAttribute('placeholder', dat.inputPlaceholder);
+        _elem_keyword_input_input.addEventListener('change', (elm, ev) => {
+            console.log('EVENTHANDLER CHANGE:', elm, 'event:', ev);
+            const _value = elm.target.value.trim();
+            if (_value && _value.length > 0 && !SETTINGS[dat.key].includes(_value)) SETTINGS[dat.key].push(_value);
+            SETTINGS.save();
+            elm.target.value = '';
+            const _table = document.getElementById(dat.key);
+            _table.innerHTML = '';
+            for (let i = 0; i < SETTINGS[dat.key].length; i++){
+                _table.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
+            }
+        })
+        // const _elem_keyword_input_button = document.createElement('button');
+        // _elem_keyword_input_button.innerText = '+';
+        _elem_keyword_input.appendChild(_elem_keyword_input_input);
+        // _elem_keyword_input.appendChild(_elem_keyword_input_button);
+        _elem.appendChild(_elem_keyword_input);
+
+        const _elem_keyword_list = document.createElement('div');
+        _elem_keyword_list.classList.add('ave-keyword-list-wrapper');
+        const _elem_keyword_list_table = document.createElement('table');
+        const _elem_keyword_list_table_tbody = document.createElement('tbody');
+        _elem_keyword_list_table_tbody.setAttribute('id', dat.key);
+        for (let i = 0; i < SETTINGS[dat.key].length; i++){
+            _elem_keyword_list_table_tbody.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
+        }
+        _elem_keyword_list_table.appendChild(_elem_keyword_list_table_tbody);
+        _elem_keyword_list.appendChild(_elem_keyword_list_table);
+        _elem.appendChild(_elem_keyword_list);
     }
 
     return _elem;
 }
+
+function createSettingsKeywordsTableElement(dat, index, entry){
+    const _tableRow = document.createElement('tr');
+    _tableRow.setAttribute('index', index);
+    const _tableRow_td1 = document.createElement('td');
+    const _tableRow_td1_button = document.createElement('button');
+    _tableRow_td1_button.innerHTML = `<i class="a-icon a-icon-close"></i>`;
+    _tableRow_td1_button.setAttribute('ave-data-keyword', entry);
+    _tableRow_td1_button.addEventListener('click', (elm, ev) =>{
+        // console.log('DELETE_BTN:: ', elm)
+        if (true) SETTINGS[dat.key].splice(index, 1);
+            SETTINGS.save();
+            const _table = document.getElementById(dat.key);
+            _table.innerHTML = '';
+            for (let i = 0; i < SETTINGS[dat.key].length; i++){
+                _table.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
+            }
+    });
+    _tableRow_td1.appendChild(_tableRow_td1_button);
+    _tableRow.appendChild(_tableRow_td1);
+    const _tableRow_td2 = document.createElement('td');
+    _tableRow_td2.innerText = entry;
+    _tableRow.appendChild(_tableRow_td2);
+    return _tableRow;
+}
+
+
+
 function addOverlays() { // Old Settings Code
     const _overlayBackground = document.createElement('div');
     _overlayBackground.style.position = 'fixed';
