@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.8.0.1
-// @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
-// @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
+// @version      0.8.1
+// @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/VineExplorer.user.js
+// @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/VineExplorer.user.js
 // @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
 // @author       MarkusSR1984
 // @match        *://www.amazon.de/*
 // @match        *://www.amazon.com/*
 // @license      MIT
-// @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
+// @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/vine_logo.png
 // @run-at       document-start
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -18,9 +18,9 @@
 // @grant        GM.xmlHttpRequest
 // @grant        GM.openInTab
 // @grant        unsafeWindow
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/globals.js
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_db_handler.js
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_product.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/globals.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/class_db_handler.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/class_product.js
 
 // ==/UserScript==
 
@@ -91,6 +91,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
         if (SITE_IS_VINE){
             console.log('We are on Amazon Vine'); // We are on the amazon vine site
             addAveSettingsTab();
+            addAVESettingsMenu();
             waitForHtmlElmement('.vvp-details-btn', () => {
                 if (_execLock) return;
                 _execLock = true;
@@ -821,13 +822,24 @@ function addAveSettingsTab(){
     waitForHtmlElmement('.vvp-tab-set-container > ul', (_upperButtonsContainer) => {
         const _upperSettingsButton = document.createElement('li');
         _upperSettingsButton.id = 'vvp-ave-settings-tab';
-        _upperSettingsButton.class = 'a-tab-heading';
+        _upperSettingsButton.classList = 'a-tab-heading';
         _upperSettingsButton.role = 'presentation';
         _upperSettingsButton.innerHTML += `<a role="tab" aria-selected="false" tabindex="-1">AVE Einstellungen</a>`;
 
         _upperSettingsButton.addEventListener('click',function(){
-            addSettingsMenu();
-            const _settingsContainer = document.getElementById('ave-settings-container');
+            const _upperButtons = document.body.querySelectorAll('.a-tab-container.vvp-tab-set-container > ul > li');
+            _upperButtons.forEach(element => element.classList.remove('a-active'));
+
+            const _contentContainer = document.body.querySelectorAll('.a-tab-container.vvp-tab-set-container > div');
+            _contentContainer.forEach(element => element.classList.add('a-hidden'));
+            console.log(_contentContainer);
+
+            _upperSettingsButton.classList.add('a-active');
+            const _settingsContent = document.body.querySelector('[data-a-name="ave-settings"]');
+            _settingsContent.classList.remove('a-hidden');
+
+            const _settingsContainer = _settingsContent.querySelector('#ave-settings-container');
+            console.log(_settingsContainer);
             for (const elem of SETTINGS_USERCONFIG_DEFINES) {
                 _settingsContainer.appendChild(createSettingsMenuElement(elem));
             }
@@ -839,8 +851,23 @@ function addAveSettingsTab(){
     })
 }
 
-function addSettingsMenu(){
-    const _contentContainer = document.body.querySelector('.a-tab-content > .a-box-inner');
+function addAVESettingsMenu(){
+    waitForHtmlElmement('.a-tab-container.vvp-tab-set-container', (_tabContainer) => {
+    //const _tabContainer = document.body.querySelector('.a-tab-container.vvp-tab-set-container');
+
+    const _boxContainer = document.createElement('div');
+    _boxContainer.setAttribute('data-a-name', 'ave-settings');
+    _boxContainer.classList = 'a-box a-box-tab a-tab-content a-hidden';
+    _boxContainer.role = 'tabpanel';
+    _boxContainer.tabindex = '0';
+
+    const _contentContainer = document.createElement('div');
+    _contentContainer.classList = 'a-box-inner'
+
+    _boxContainer.appendChild(_contentContainer);
+    _tabContainer.appendChild(_boxContainer);
+    console.log(_tabContainer);
+
     _contentContainer.innerHTML = `
     <style>
     :root {
@@ -858,17 +885,16 @@ function addSettingsMenu(){
 }
 
 .ave-settings-container input[type="number"] {
-  width: 75%;
+  width: 50px;
   height: 21px;
   border: var(--numberBorder) solid #888C8C;
   padding: var(--numberPadding);
 }
 
 .ave-settings-container input[type="color"] {
-  /*width: calc(((var(--numberPadding) + var(--numberBorder)) * 2) + 75%);*/
-  width: 75%;
+  width: 30px;
   padding: 0;
-  border: 0;
+  border: 1px solid darfgrey;
   cursor: pointer;
   height: var(--itemHeight);
 }
@@ -885,7 +911,6 @@ function addSettingsMenu(){
 }
 
 .ave-item-left {
-  width: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1005,6 +1030,9 @@ font-weight: bold;
   
 
 </div>
+
+### Ab hier nicht dynamisch
+
 <br><br>
 ########## Keyword Abschnitt ##########
 <br><br>
@@ -1045,6 +1073,7 @@ font-weight: bold;
 Keywords: ${SETTINGS.DesktopNotifikationKeywords}
 </div>
     `;
+    })
 }
 
 function createSettingsMenuElement(dat){
@@ -1122,6 +1151,18 @@ function createSettingsMenuElement(dat){
         
         _elem.appendChild(_elem_item_right);
 
+    } else if (dat.type == 'title'){
+        const _elem_spacer_horizontal = document.createElement('hr');
+        _elem_spacer_horizontal.style.width = '100%';
+
+        const _elem_spacer_title = document.createElement('h4');
+        _elem_spacer_title.textContent = dat.name;
+
+        _elem.style.height = 'fit-content';
+        _elem.style.display = 'flex';
+        _elem.style.flexWrap = 'wrap';
+        _elem.appendChild(_elem_spacer_horizontal);
+        _elem.appendChild(_elem_spacer_title);
     }
 
     return _elem;
