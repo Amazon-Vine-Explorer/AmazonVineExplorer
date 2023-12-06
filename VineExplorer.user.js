@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.9.0
+// @version      0.9.0.1
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -43,7 +43,7 @@
     - Automatisches Bestellen via Prioliste ?!?
 
     Todo:
-        
+
     - Zum Löschen markierten Produkten die Information hinzufügen wann sie gelöscht werden
 
     - Zu den TOP Buttons die Anzahl der Elemente in der jeweiligen Kategorie hinzufügen
@@ -96,7 +96,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 _execLock = true;
                 addBranding();
                 detectCurrentPageType();
-                
+
                 init(true);
             });
             waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
@@ -132,7 +132,7 @@ ave_eventhandler.on('ave-database-changed', () => {
         showDbUpdateLogoTimeout = null;
         showDbUpdateLogoIcon = null;
     }, 5000);
-        
+
 
 })
 
@@ -163,11 +163,11 @@ function handleInfiniteScroll() {
     if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
         if (blockHandleInfiniteScroll) return;
         blockHandleInfiniteScroll = true;
-        
+
         const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
-        
+
         console.log(`handleInfiniteScroll(): _maxScrollHeight: ${_maxScrollHeight} window.scrollY+inner: ${window.scrollY + window.innerHeight}`);
-        
+
         if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))){
             blockHandleInfiniteScroll = false;  
             return;
@@ -202,9 +202,9 @@ function detectCurrentPageType(){
     } else if (getUrlParameter('queue') == 'encore') {
         currentMainPage = PAGETYPE.ORIGINAL_SELLER;
     }
-    
+
     // alert(`currentMainPage is: ${currentMainPage}`);
-    
+
     // getUrlParameter('ave-subpage');
 
 }
@@ -213,7 +213,7 @@ async function parseTileData(tile, cb) {
     if (SETTINGS.DebugLevel > 14) console.log(`Called parseTileData(`, tile, ')');
 
     const _id = tile.getAttribute('data-recommendation-id');
-    
+
     database.get(_id, (_ret) => {
         if (_ret) {
             _ret.gotFromDB = true;
@@ -225,60 +225,60 @@ async function parseTileData(tile, cb) {
                 const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
                 waitForHtmlElmement('img', async () => {
                     const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
-                        waitForHtmlElmement('.vvp-item-product-title-container', async () => {
-                            const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
-                                waitForHtmlElmement('a', async () => {
-                                    const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
-                                        waitForHtmlElmement('.a-button-inner', async () => {
-                                            const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
-                                                waitForHtmlElmement('input', async () => {
-                                                    const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
-                                                    const _newProduct = new Product(_id);
-                                                    _newProduct.data_recommendation_id = _id;
-                                                    _newProduct.data_img_url = tile.getAttribute('data-img-url');
-                                                    _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
-                                                    _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
-                                                    _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
-                                                    
-                                                    _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
-                                                    _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-                                                    _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
+                    waitForHtmlElmement('.vvp-item-product-title-container', async () => {
+                        const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
+                        waitForHtmlElmement('a', async () => {
+                            const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
+                            waitForHtmlElmement('.a-button-inner', async () => {
+                                const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
+                                waitForHtmlElmement('input', async () => {
+                                    const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
+                                    const _newProduct = new Product(_id);
+                                    _newProduct.data_recommendation_id = _id;
+                                    _newProduct.data_img_url = tile.getAttribute('data-img-url');
+                                    _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
+                                    _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
+                                    _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
 
-                                                    _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                                                    
-                                                    
-                                                    if (_newProduct.description_short == '') {
-                                                        let _timeLoopCounter = 0;
-                                                        const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
-                                                        const _halfdelay = (SETTINGS.FetchRetryTime / 2)
-                                                        function timeLoop() {
-                                                            if (_timeLoopCounter++ < _maxLoops){
-                                                                    setTimeout(() => {
-                                                                        const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                                                                        if (_short != ""){ 
-                                                                            _newProduct.description_short = _short;
-                                                                            cb(_newProduct);
-                                                                        } else {
-                                                                            timeLoop();
-                                                                        }
-                                                                    }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
-                                                                } else {
-                                                                    _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
-                                                                    _newProduct.generated_short = true;
-                                                                    cb(_newProduct);
-                                                                }
-                                                            }
+                                    _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
+                                    _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
+                                    _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
+
+                                    _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+
+
+                                    if (_newProduct.description_short == '') {
+                                        let _timeLoopCounter = 0;
+                                        const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
+                                        const _halfdelay = (SETTINGS.FetchRetryTime / 2)
+                                        function timeLoop() {
+                                            if (_timeLoopCounter++ < _maxLoops){
+                                                setTimeout(() => {
+                                                    const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+                                                    if (_short != ""){
+                                                        _newProduct.description_short = _short;
+                                                        cb(_newProduct);
+                                                    } else {
                                                         timeLoop();
-                                                        } else {
-                                                            cb(_newProduct);
-                                                        }
-                                                        
-                                                    // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+                                                    }
+                                                }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
+                                            } else {
+                                                _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
+                                                _newProduct.generated_short = true;
+                                                cb(_newProduct);
+                                            }
+                                        }
+                                        timeLoop();
+                                    } else {
+                                        cb(_newProduct);
+                                    }
 
-                                                }, _div_vpp_item_tile_content_button_inner)
-                                        }, _div_vpp_item_tile_content)
-                                }, _div_vvp_item_product_title_container)
-                        }, _div_vpp_item_tile_content);
+                                    // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+
+                                }, _div_vpp_item_tile_content_button_inner)
+                            }, _div_vpp_item_tile_content)
+                        }, _div_vvp_item_product_title_container)
+                    }, _div_vpp_item_tile_content);
                 }, _div_vpp_item_tile_content);
             }, tile)
         }
@@ -296,20 +296,20 @@ function reloadPageWithSubpageTarget(target) {
 
 function addLeftSideButtons(forceClean) {
     const _nodesContainer = document.getElementById('vvp-browse-nodes-container');
-    
+
     if (forceClean) _nodesContainer.innerHTML = '';
-    
-    
+
+
     _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
     const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','ave-btn-allseen',  'width: 240px; background-color: lime;', () => {
-        
+
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
-    
+
     const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', 'left: 0; width: 240px; background-color: rgb(255, 162, 142);', () => {
-        
+
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         setTimeout(() => {
             database.getAll((prodsArr) => {
@@ -324,7 +324,7 @@ function addLeftSideButtons(forceClean) {
     });
 
     const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  'width: 240px; background-color: white;', () => {
-        
+
         if (SETTINGS.DebugLevel > 10) console.log('Clicked back to Top Button');
         window.scrollTo(0, 0);
     });
@@ -345,22 +345,22 @@ function addLeftSideButtons(forceClean) {
 }
 
 function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
-        const _tiles = document.getElementsByClassName('vvp-item-tile');
-        const _tilesLength = _tiles.length;
+    const _tiles = document.getElementsByClassName('vvp-item-tile');
+    const _tilesLength = _tiles.length;
 
-        let _returned = 0;
-        for (let i = 0; i < _tilesLength; i++) {
-            const _tile = _tiles[i];
-            const _id = _tile.getAttribute('data-recommendation-id');
-            database.get(_id, (prod) => {
-                prod.isNew = false;
-                database.update(prod).then( () => {
-                    updateTileStyle(prod);
-                    _returned++;
-                    if (_returned == _tilesLength) cb();
-                })
+    let _returned = 0;
+    for (let i = 0; i < _tilesLength; i++) {
+        const _tile = _tiles[i];
+        const _id = _tile.getAttribute('data-recommendation-id');
+        database.get(_id, (prod) => {
+            prod.isNew = false;
+            database.update(prod).then( () => {
+                updateTileStyle(prod);
+                _returned++;
+                if (_returned == _tilesLength) cb();
             })
-        }
+        })
+    }
 }
 
 function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
@@ -411,7 +411,7 @@ async function createTileFromProduct(product, btnID, cb) {
     if (!product && SETTINGS.DebugLevel > 10) console.error(`createTileFromProduct got no valid product element`);
     return new Promise((resolve, reject) => {
         const _btnAutoID = btnID || Math.round(Math.random() * 10000);
-        
+
         const _tile = document.createElement('div');
         _tile.setAttribute('class', 'vvp-item-tile');
         _tile.setAttribute('data-recommendation-id', product.data_recommendation_id);
@@ -454,12 +454,12 @@ function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
 
 async function createProductSite(siteType, productArray, cb) {
     if (!productArray) return;
-    
+
     const _productArrayLength = productArray.length;
     const _fastCount = Math.min(_productArrayLength, SETTINGS.MaxItemsPerPage);
     if (SETTINGS.DebugLevel > 10) console.log(`Create Overview for ${_productArrayLength} Products`);
 
-    
+
     // Remove Pagination
     const _pagination = document.querySelector('.a-pagination')
     if (_pagination) _pagination.remove();
@@ -477,11 +477,11 @@ async function createProductSite(siteType, productArray, cb) {
         const _topLine = _tilesContainer.getElementsByTagName('p')[0];
         _topLine.innerHTML = `<p>Anzeigen von <strong>${_fastCount}</strong> von <strong>${_productArrayLength}</strong> Ergebnissen</p>`
     }
-                                                
+
     const _tilesGrid = document.getElementById('vvp-items-grid');
     if (!_tilesGrid) reloadPageWithSubpageTarget(siteType);
     _tilesGrid.innerHTML = '';
-    
+
     let _index = 0;
     let _returned = 0;
 
@@ -495,7 +495,7 @@ async function createProductSite(siteType, productArray, cb) {
     }
 
     addLeftSideButtons(true);
- }
+}
 
 async function createInfiniteScrollSite(cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called createInfiniteScrollSite()`);
@@ -517,7 +517,7 @@ async function createInfiniteScrollSite(cb) {
         const _topLine = _tilesContainer.getElementsByTagName('p')[0];
         _topLine.innerHTML = ''
     }
-                                                
+
     const _tilesGrid = document.getElementById('vvp-items-grid');
     if (!_tilesGrid) reloadPageWithSubpageTarget(siteType);
     _tilesGrid.innerHTML = '';
@@ -525,7 +525,7 @@ async function createInfiniteScrollSite(cb) {
     addLeftSideButtons(true);
 
     cb(_tilesGrid);
- }
+}
 
 async function appendInfiniteScrollTiles(cb = ()=>{}){
     // So lange tiles hinzufügen bis wir wieder über dem sichtbaren bereich sind
@@ -533,35 +533,35 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
     const _tilesContainer = document.getElementById('vvp-items-grid');
 
     // setTimeout(async () => {
-        let _stopCreation = false;
-        let _createdCount = 0;
-        while (infiniteScrollTilesBufferArray.length > 0 && !_stopCreation) {
-            const _tile = infiniteScrollTilesBufferArray.shift();
-            if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
-                _tilesContainer.appendChild(_tile);
-                parseTileData(_tile, (_product) => {
-                    addStyleToTile(_tile, _product);
-                    addTileEventhandlers(_tile);
-                });
-            } else {
-                createTileFromProduct(_tile).then((_elem) => {
-                    _tilesContainer.appendChild(_elem);
-                    addTileEventhandlers(_elem);
-                })
-            }
-            
-
-
-            if (_createdCount++ >= 100) _stopCreation = true;
-
-            const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
-            if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))) _stopCreation = true;
-            
-            console.log(`appendInfiniteScrollTiles(): Inside WHILE: _maxScrollHeigt: ${_maxScrollHeight} currPosition ${window.scrollY}`);
+    let _stopCreation = false;
+    let _createdCount = 0;
+    while (infiniteScrollTilesBufferArray.length > 0 && !_stopCreation) {
+        const _tile = infiniteScrollTilesBufferArray.shift();
+        if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
+            _tilesContainer.appendChild(_tile);
+            parseTileData(_tile, (_product) => {
+                addStyleToTile(_tile, _product);
+                addTileEventhandlers(_tile);
+            });
+        } else {
+            createTileFromProduct(_tile).then((_elem) => {
+                _tilesContainer.appendChild(_elem);
+                addTileEventhandlers(_elem);
+            })
         }
 
-        console.log(`appendInfiniteScrollTiles(): After WHILE: left tile to create: ${infiniteScrollTilesBufferArray.length}`);
-        cb(true);
+
+
+        if (_createdCount++ >= 100) _stopCreation = true;
+
+        const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
+        if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))) _stopCreation = true;
+
+        console.log(`appendInfiniteScrollTiles(): Inside WHILE: _maxScrollHeigt: ${_maxScrollHeight} currPosition ${window.scrollY}`);
+    }
+
+    console.log(`appendInfiniteScrollTiles(): After WHILE: left tile to create: ${infiniteScrollTilesBufferArray.length}`);
+    cb(true);
 
     // },100);
 }
@@ -588,8 +588,8 @@ function createNewSite(type, data) {
         _btn.classList.add("a-button-normal");
         _btn.removeAttribute('aria-checked');
     }
-    
-    
+
+
     switch(type) {
         case PAGETYPE.NEW_ITEMS:{
             currentMainPage = PAGETYPE.NEW_ITEMS;
@@ -684,7 +684,7 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
                     _retArr.push(_elemArr[i].cloneNode(true));
                 }
                 cb(_retArr);
-                
+
                 const _paginationData = getPageinationData();
                 if (_paginationData) infiniteScrollMaxPreloadPage = _pageinationData.maxPage;
             }, _doc);
@@ -734,7 +734,7 @@ function updateTileStyle(prod) {
     for (let i = 0; i < _tilesLength; i++) {
         const _tile = _tiles[i];
         const _id = _tile.getAttribute('data-recommendation-id');
-        
+
         if (_id == prod.data_recommendation_id) {
             if (SETTINGS.DebugLevel > 10) console.log(`Found Tile with id: ${prod.id}`);
             _tile.setAttribute('style', (prod.isFav) ? SETTINGS.CssProductFavTag : (prod.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
@@ -759,25 +759,25 @@ function initTileEventHandlers() {
 }
 
 function addTileEventhandlers(_currTile) {
-        const _favStar = _currTile.querySelector('.ave-favorite-star');
-        const _btn = _currTile.querySelector('.vvp-details-btn input');
+    const _favStar = _currTile.querySelector('.ave-favorite-star');
+    const _btn = _currTile.querySelector('.vvp-details-btn input');
 
-        const _data = new Object()
-        _data.asin = _btn.getAttribute('data-asin');
-        _data.recommendation_id = _btn.getAttribute('data-recommendation-id');
-        
-        
-        const _childs = _btn.childNodes;
-        _btn.addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
-    
-        for(let j = 0; j < _childs.length; j++) {
-            if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
-            _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
-        }
-        
-        waitForHtmlElmement('.ave-favorite-star', (elem) => {
-            _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
-        }, _currTile);
+    const _data = new Object()
+    _data.asin = _btn.getAttribute('data-asin');
+    _data.recommendation_id = _btn.getAttribute('data-recommendation-id');
+
+
+    const _childs = _btn.childNodes;
+    _btn.addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
+
+    for(let j = 0; j < _childs.length; j++) {
+        if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
+        _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
+    }
+
+    waitForHtmlElmement('.ave-favorite-star', (elem) => {
+        _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
+    }, _currTile);
 }
 
 function completeDelayedInit() {
@@ -817,7 +817,7 @@ function updateAutoScanScreenText(text = '') {
 }
 
 function addBranding() {
-   
+
     const _text = document.createElement('div');
     _text.style.position = 'fixed';
     _text.style.bottom = '10px';
@@ -831,7 +831,7 @@ function addBranding() {
     _text.style.borderRadius = '3px';
     _text.innerHTML = `<p id="ave-brandig-text">${AVE_TITLE} - ${AVE_VERSION}</p>`;
 
-    
+
     document.body.appendChild(_text);
 }
 
@@ -862,7 +862,7 @@ function addAveSettingsTab(){
                 console.log('Creating Settings Menu Element: ', elem);
                 _settingsContainer.appendChild(createSettingsMenuElement(elem));
             }
-            
+
         });
 
         _upperButtonsContainer.appendChild(_upperSettingsButton);
@@ -872,22 +872,22 @@ function addAveSettingsTab(){
 
 function addAVESettingsMenu(){
     waitForHtmlElmement('.a-tab-container.vvp-tab-set-container', (_tabContainer) => {
-    //const _tabContainer = document.body.querySelector('.a-tab-container.vvp-tab-set-container');
+        //const _tabContainer = document.body.querySelector('.a-tab-container.vvp-tab-set-container');
 
-    const _boxContainer = document.createElement('div');
-    _boxContainer.setAttribute('data-a-name', 'ave-settings');
-    _boxContainer.classList = 'a-box a-box-tab a-tab-content a-hidden';
-    _boxContainer.role = 'tabpanel';
-    _boxContainer.tabindex = '0';
+        const _boxContainer = document.createElement('div');
+        _boxContainer.setAttribute('data-a-name', 'ave-settings');
+        _boxContainer.classList = 'a-box a-box-tab a-tab-content a-hidden';
+        _boxContainer.role = 'tabpanel';
+        _boxContainer.tabindex = '0';
 
-    const _contentContainer = document.createElement('div');
-    _contentContainer.classList = 'a-box-inner'
+        const _contentContainer = document.createElement('div');
+        _contentContainer.classList = 'a-box-inner'
 
-    _boxContainer.appendChild(_contentContainer);
-    _tabContainer.appendChild(_boxContainer);
-    console.log(_tabContainer);
+        _boxContainer.appendChild(_contentContainer);
+        _tabContainer.appendChild(_boxContainer);
+        console.log(_tabContainer);
 
-    _contentContainer.innerHTML = `
+        _contentContainer.innerHTML = `
     <style>
     :root {
   --toggleSliderSize: 1;
@@ -1003,7 +1003,9 @@ function addAVESettingsMenu(){
 
 /* Show tooltip content on hover */
 [data-ave-tooltip]:hover:before,
-[data-ave-tooltip]:hover:after {
+[data-ave-tooltip]:hover:after,
+[data-ave-tooltip]:focus-within:before,
+[data-ave-tooltip]:focus-within:after{
   visibility: visible;
   opacity: 1;
 }
@@ -1051,6 +1053,14 @@ input:checked + .ave-settings-switch-toggle-slider:before {
   display: none
 }
 
+.ave-keyword-wrapper {
+  margin: 25px 0;
+}
+
+.ave-keyword-input {
+  width: fit-content;
+}
+
 .ave-keyword-input button {
 font-weight: bold;
 }
@@ -1059,15 +1069,21 @@ font-weight: bold;
   margin-top: 10px;
 }
 
-.ave-keyword-list-wrapper > table {
+.ave-keyword-list-wrapper table {
   border-collapse: collapse;
   width: 500px;
 }
 
-.ave-keyword-list-wrapper > table td,.ave-keyword-list-wrapper > table th {
-  border: 1px solid #dddddd;
+.ave-keyword-list-wrapper > table td {
+  border: 1px solid #000000;
   text-align: left;
   padding: 8px;
+}
+
+.ave-keyword-list-wrapper > table td:first-child {
+  width: 25px;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .ave-keyword-list-wrapper > table tr:nth-child(even) {
@@ -1107,7 +1123,7 @@ font-weight: bold;
 
     <div id="ave-settings-header" style="margin-bottom: 10px"><h3>Einstellungen ${AVE_TITLE} - Version ${AVE_VERSION}</h3></div>
     <div id="ave-settings-container" class="ave-settings-container">
-  
+
 
 </div>
     `;
@@ -1120,7 +1136,7 @@ function createSettingsMenuElement(dat){
     _elem.classList.add('ave-settings-item');
 
     if (dat.type == 'bool') {// Boolean Value
-        
+
         const _elem_item_left = document.createElement('div');
         _elem_item_left.classList.add('ave-item-left');
         const _elem_item_left_label = document.createElement('label');
@@ -1133,7 +1149,7 @@ function createSettingsMenuElement(dat){
         // _elem_item_left_label_input.value = `${SETTINGS[dat.key]}`;
         _elem_item_left_label_input.checked = SETTINGS[dat.key];
         _elem_item_left_label_input.addEventListener('click', (event) => {console.log('This is a Boolean Value Input', event); SETTINGS[dat.key] = event.target.checked; SETTINGS.save();})
-        
+
         const _elem_item_left_label_span = document.createElement('span');
         _elem_item_left_label_span.classList.add('ave-settings-switch-toggle-slider');
 
@@ -1145,11 +1161,11 @@ function createSettingsMenuElement(dat){
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
         _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
-        
+
         _elem.appendChild(_elem_item_right);
 
     } else if (dat.type == 'number') { // Number Value
-    
+
         const _elem_item_left = document.createElement('div');
         _elem_item_left.classList.add('ave-item-left');
         const _elem_item_left_input = document.createElement('input');
@@ -1157,36 +1173,72 @@ function createSettingsMenuElement(dat){
         _elem_item_left_input.className = 'ave-input-number';
         _elem_item_left_input.setAttribute('ave-data-key', dat.key);
         _elem_item_left_input.setAttribute('value', SETTINGS[dat.key]);
+        _elem_item_left_input.style.width = (((SETTINGS[dat.key].toString().length + 1) * 8) + 30 + 'px');
+        //_elem_item_left_input.setAttribute('onInput', 'this.style.width = "calc(" + (this.value.length + 1) + "ch + 30px)";')
         if (!isNaN(dat.min)) _elem_item_left_input.setAttribute('min', dat.min);
         if (!isNaN(dat.max)) _elem_item_left_input.setAttribute('max', dat.max);
-        _elem_item_left_input.addEventListener('change', (event) => {console.log('This is a Number Value Input', event); SETTINGS[dat.key] = parseInt(event.target.value); SETTINGS.save();})
+        _elem_item_left_input.addEventListener('change', (event) => {
+            const _value = event.target.value;
+            const _min = parseFloat(event.target.min);
+            const _max = parseFloat(event.target.max);
+            console.log('This is a Number Value Input', event);
+
+            if(_value <= _max && _value >= _min){
+                console.log("Eingabe Valid");
+                SETTINGS[dat.key] = parseInt(event.target.value);
+                SETTINGS.save();
+            }else{
+                console.log("Eingabe Fehlerhaft");
+            }
+
+        })
+        _elem_item_left_input.addEventListener('input', (event) => {
+            event.target.style.width = "calc(" + (event.target.value.length + 1) + "ch + 30px)";
+            const _value = event.target.value;
+            const _min = parseFloat(event.target.min);
+            const _max = parseFloat(event.target.max);
+
+            if(_value <= _max && _value >= _min){
+                event.target.style.borderColor = 'inherit';
+                event.target.style.color = 'inherit';
+            }else{
+                event.target.style.borderColor = 'red';
+                event.target.style.color = 'red';
+            }
+        })
         _elem_item_left.appendChild(_elem_item_left_input);
         _elem.appendChild(_elem_item_left);
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
         _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
-        
+
         _elem.appendChild(_elem_item_right);
 
     } else if (dat.type == 'button') { // Number Value
-    
+
         const _elem_item_left = document.createElement('div');
         _elem_item_left.classList.add('ave-item-left');
+
+        const _elem_item_left_input_label  = document.createElement('label');
+        _elem_item_left_input_label.setAttribute('data-ave-tooltip',dat.description);
+
         const _elem_item_left_input = document.createElement('button');
         _elem_item_left_input.type = 'button';
         _elem_item_left_input.className = 'ave-input-button';
         // _elem_item_left_input.setAttribute('ave-data-key', dat.key);
         _elem_item_left_input.innerText = dat.name;
-        _elem_item_left_input.setAttribute('data-ave-tooltip',dat.description);
+        //_elem_item_left_input.setAttribute('data-ave-tooltip',dat.description);
         _elem_item_left_input.addEventListener('click', (event) => {console.log('This is a button Input', event); if(dat.btnClick) dat.btnClick();})
-        _elem_item_left.appendChild(_elem_item_left_input);
+
+        _elem_item_left_input_label.appendChild(_elem_item_left_input);
+        _elem_item_left.appendChild(_elem_item_left_input_label);
         _elem.appendChild(_elem_item_left);
 
         // const _elem_item_right = document.createElement('div');
         // _elem_item_right.classList.add('ave-item-right');
         // _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
-        
+
         // _elem.appendChild(_elem_item_right);
 
 
@@ -1206,7 +1258,7 @@ function createSettingsMenuElement(dat){
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
         _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
-        
+
         _elem.appendChild(_elem_item_right);
 
     } else if (dat.type == 'title'){
@@ -1228,9 +1280,14 @@ function createSettingsMenuElement(dat){
         const _elem_keyword_input = document.createElement('div');
         _elem_keyword_input.innerHTML = '<span></span>';
         _elem_keyword_input.classList.add('ave-keyword-input');
+
+
+        const _elem_keyword_input_label = document.createElement('label');
+        _elem_keyword_input_label.setAttribute('data-ave-tooltip', dat.inputPlaceholder);
+
         const _elem_keyword_input_input = document.createElement('input');
         _elem_keyword_input_input.setAttribute('type', 'text');
-        _elem_keyword_input_input.setAttribute('placeholder', dat.inputPlaceholder);
+        _elem_keyword_input_input.setAttribute('placeholder', 'Keyword');
         _elem_keyword_input_input.addEventListener('change', (elm, ev) => {
             console.log('EVENTHANDLER CHANGE:', elm, 'event:', ev);
             const _value = elm.target.value.trim();
@@ -1245,7 +1302,8 @@ function createSettingsMenuElement(dat){
         })
         // const _elem_keyword_input_button = document.createElement('button');
         // _elem_keyword_input_button.innerText = '+';
-        _elem_keyword_input.appendChild(_elem_keyword_input_input);
+        _elem_keyword_input_label.appendChild(_elem_keyword_input_input);
+        _elem_keyword_input.appendChild(_elem_keyword_input_label);
         // _elem_keyword_input.appendChild(_elem_keyword_input_button);
         _elem.appendChild(_elem_keyword_input);
 
@@ -1275,12 +1333,12 @@ function createSettingsKeywordsTableElement(dat, index, entry){
     _tableRow_td1_button.addEventListener('click', (elm, ev) =>{
         // console.log('DELETE_BTN:: ', elm)
         if (true) SETTINGS[dat.key].splice(index, 1);
-            SETTINGS.save();
-            const _table = document.getElementById(dat.key);
-            _table.innerHTML = '';
-            for (let i = 0; i < SETTINGS[dat.key].length; i++){
-                _table.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
-            }
+        SETTINGS.save();
+        const _table = document.getElementById(dat.key);
+        _table.innerHTML = '';
+        for (let i = 0; i < SETTINGS[dat.key].length; i++){
+            _table.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
+        }
     });
     _tableRow_td1.appendChild(_tableRow_td1_button);
     _tableRow.appendChild(_tableRow_td1);
@@ -1358,17 +1416,17 @@ function addOverlays() { // Old Settings Code
 
 
 function componentToHex(c) {
-  const _c = Math.min(c, 255)
-  const _hex = _c.toString(16);
-  return _hex.length == 1 ? "0" + _hex : _hex;
+    const _c = Math.min(c, 255)
+    const _hex = _c.toString(16);
+    return _hex.length == 1 ? "0" + _hex : _hex;
 }
 
 function rgbToHex(r, g, b){
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
 function rgbaToHex(r, g, b, a){
-  return "#" + componentToHex(a) + componentToHex(r) + componentToHex(g) + componentToHex(b);
+    return "#" + componentToHex(a) + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
 function colorToHex(color) {
@@ -1488,7 +1546,7 @@ function addLoadingSymbol(){
     .ave-db {
     }
     .ave-loading {
-        
+
     }
     .ave-loading svg {
       animation: rotate 2s linear infinite;
@@ -1522,7 +1580,7 @@ function getPageinationData(localDocument = document) {
 
     while ((!_ret.href || !_ret.maxPage) && _currChild) {
         const _curr = _currChild.childNodes[0];
-        
+
         if (_curr.hasAttribute('href')) _ret.href = _curr.getAttribute('href').replace(/=[0-9]+/, '=');
         if (parseInt(_curr.text)) _ret.maxPage = parseInt(_curr.text);
         _currChild = _currChild.previousSibling
@@ -1557,19 +1615,19 @@ async function cleanUpDatabase(cb = () => {}) {
             const _currEntry = prodArr[i];
             let _needUpdate = false;
             if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking Entry ${_currEntry.id} `);
-            
+
             // Checking Product Vars
             if (!_currEntry.ts_firstSeen){
                 _currEntry.ts_firstSeen = (unixTimeStamp() - Math.round(Math.random() * (SECONDS_PER_WEEK / 2)));
                 _needUpdate = true;
             }
-            
+
             if (!_currEntry.ts_lastSeen) {
                 _currEntry.ts_lastSeen = (_currEntry.ts_firstSeen + SECONDS_PER_DAY);
                 _needUpdate = true;
             }
 
-            
+
             const _notSeenCounter = (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) ? 0 : _currEntry.notSeenCounter + 1;
             if (_currEntry.notSeenCounter != _notSeenCounter) {
                 _currEntry.notSeenCounter = _notSeenCounter;
@@ -1578,7 +1636,7 @@ async function cleanUpDatabase(cb = () => {}) {
 
             if (_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount && !_currEntry.isFav) {
                 if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
-                
+
                 database.removeID(_currEntry.id, (ret) => {
                     _deleted++;
                     _localReturn();
@@ -1586,7 +1644,7 @@ async function cleanUpDatabase(cb = () => {}) {
             } else if (!_needUpdate){
                 _localReturn();
             } else {
-                
+
                 database.update(_currEntry, (ret) => {_updated++ ; _localReturn();});
             }
         }
@@ -1596,23 +1654,23 @@ async function cleanUpDatabase(cb = () => {}) {
 function initBackgroundScan() {
     if (SETTINGS.DebugLevel > 10) console.log('Called initBackgroundScan()');
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
-    
-     // Create iFrame if not exists
+
+    // Create iFrame if not exists
     if (!document.querySelector('#ave-iframe-backgroundloader')) {
         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): create iFrame');
         const iframe = document.createElement('iframe');
-            iframe.src = encodeURI(`${_baseUrl}?queue=encore&pn=&cn=&page=1`);
-            iframe.id = 'ave-iframe-backgroundloader';
-            iframe.style.position = 'fixed';
-            iframe.style.top = '0';
-            iframe.style.left = '-10000';
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.display = 'none';
-            iframe.style.zIndex = '100';
-            document.body.appendChild(iframe);
+        iframe.src = encodeURI(`${_baseUrl}?queue=encore&pn=&cn=&page=1`);
+        iframe.id = 'ave-iframe-backgroundloader';
+        iframe.style.position = 'fixed';
+        iframe.style.top = '0';
+        iframe.style.left = '-10000';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.display = 'none';
+        iframe.style.zIndex = '100';
+        document.body.appendChild(iframe);
     } 
-    
+
     const _paginatinWaitLoop = setInterval(() => {
         const _pageinationData = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
         if (_pageinationData) {
@@ -1626,103 +1684,103 @@ function initBackgroundScan() {
                 localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 1);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
             } 
-            
+
             let _loopIsWorking = false;
             let _subStage = 0;
             const _stageZeroSites = ['queue=potluck', 'queue=last_chance']
-            
-        backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage);
-          function initBackgroundScanSubFunctionScannerLoop(){                
-            if (_loopIsWorking) return;
-                    _loopIsWorking = true;
 
-                    let _backGroundScanStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE')) || 0;
-                    if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
-                    
-                    switch (_backGroundScanStage) {
-                        case 0:{    // potluck, last_chance
-                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
-                                if (_stageZeroSites[_subStage]) {
-                                    if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
-                                    backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
-                                    _subStage++
-                                } else {
-                                    if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
-                                    _subStage = 0;
-                                    _backGroundScanStage++;
-                                    _scanFinished();
-                                }
-                                break;
-                            }
-                        case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
-                                _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
-                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
-                                if (_subStage < (parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
-                                    backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
-                                    _subStage++
-                                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
-                                } else {
-                                    _subStage = 0;
-                                    _backGroundScanStage++;
-                                    _scanFinished();
-                                }
-                            break; 
+            backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage);
+            function initBackgroundScanSubFunctionScannerLoop(){
+                if (_loopIsWorking) return;
+                _loopIsWorking = true;
+
+                let _backGroundScanStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE')) || 0;
+                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
+
+                switch (_backGroundScanStage) {
+                    case 0:{    // potluck, last_chance
+                        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
+                        if (_stageZeroSites[_subStage]) {
+                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
+                            backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
+                            _subStage++
+                        } else {
+                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
+                            _subStage = 0;
+                            _backGroundScanStage++;
+                            _scanFinished();
                         }
-                        case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
-                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
-                                database.getAll((products) => {
-                                    const _needUpdate = [];
-                                    const _randCount = Math.round(Math.random() * 3);
-                                    for (_prod of products) {
-                                        if (_needUpdate.length < 3) {
-                                            if (!_prod.data_estimated_tax_prize) _needUpdate.push(_prod);
-                                        } else {
-                                            break;
-                                        }
-                                    }
-
-                                    const _promises = [];
-
-                                    for (_prod of _needUpdate) {
-                                        requestProductDetails(_prod).then((_newProd) => {
-                                            _promises.push(database.update(_newProd));
-                                        });
-                                    }
-
-                                    Promise.all(_promises).then(() => {
-                                        _scanFinished();
-                                        _subStage++;
-                                    }).finally(() => {
-                                        console.error('There was an error while updating an product in database');
-                                        _scanFinished();
-                                        _subStage++;
-                                    });
-                                });
-                            
-                                if (_subStage++ >= 10)
-                                {
-                                    _subStage = 0;
-                                    _backGroundScanStage++;
-                                    _scanFinished();
+                        break;
+                    }
+                    case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
+                        _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
+                        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
+                        if (_subStage < (parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
+                            backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
+                            _subStage++
+                            localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                        } else {
+                            _subStage = 0;
+                            _backGroundScanStage++;
+                            _scanFinished();
+                        }
+                        break;
+                    }
+                    case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
+                        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
+                        database.getAll((products) => {
+                            const _needUpdate = [];
+                            const _randCount = Math.round(Math.random() * 3);
+                            for (_prod of products) {
+                                if (_needUpdate.length < 3) {
+                                    if (!_prod.data_estimated_tax_prize) _needUpdate.push(_prod);
+                                } else {
+                                    break;
                                 }
-                                break;
-                        }   
-                            default: {
-                                cleanUpDatabase(() => {
-                                    _backGroundScanStage = 0;
-                                    _subStage = 0;
-                                    _scanFinished();
-                                })
-                                //clearInterval(backGroundScanTimeout);
-                   }
+                            }
+
+                            const _promises = [];
+
+                            for (_prod of _needUpdate) {
+                                requestProductDetails(_prod).then((_newProd) => {
+                                    _promises.push(database.update(_newProd));
+                                });
+                            }
+
+                            Promise.all(_promises).then(() => {
+                                _scanFinished();
+                                _subStage++;
+                            }).finally(() => {
+                                console.error('There was an error while updating an product in database');
+                                _scanFinished();
+                                _subStage++;
+                            });
+                        });
+
+                        if (_subStage++ >= 10)
+                        {
+                            _subStage = 0;
+                            _backGroundScanStage++;
+                            _scanFinished();
+                        }
+                        break;
                     }
-                    function _scanFinished() {
-                        if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
-                        localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
-                        localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
-                        _loopIsWorking = false;
-                        backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness));
+                    default: {
+                        cleanUpDatabase(() => {
+                            _backGroundScanStage = 0;
+                            _subStage = 0;
+                            _scanFinished();
+                        })
+                        //clearInterval(backGroundScanTimeout);
                     }
+                }
+                function _scanFinished() {
+                    if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
+                    localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
+                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                    _loopIsWorking = false;
+                    backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness));
+                }
             }            
         }
     }, 250);
@@ -1743,7 +1801,7 @@ function backGroundTileScanner(url, cb) {
             if (SETTINGS.DebugLevel > 10) console.log(`BackgroundsScan Querryd: ${url} and got ${_tilesLength} Tiles`);
             clearInterval(_loopDelay);
             if (_tilesLength > 0) {
-            let _returned = 0;
+                let _returned = 0;
                 for (let i = 0; i < _tilesLength; i++) {
                     parseTileData(_tiles[i], (prod) => {
                         _returned++;
@@ -1862,7 +1920,7 @@ function updateNewProductsBtn() {
 
             let _notifyed = false;
             const _configKeyWords = SETTINGS.DesktopNotifikationKeywords;
-            
+
 
             for (let i = 0; i < _prodArrLength; i++) {
                 const _prod = prodArr[i];
@@ -1878,10 +1936,10 @@ function updateNewProductsBtn() {
                         desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
                         _notifyed = true;
                     }                    
-                        break;
+                    break;
                 }        
             }
-        
+
 
             if (!_notifyed && _prodArrLength > oldCountOfNewItems){ 
                 if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
@@ -1969,26 +2027,26 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
 
 
 function addStyleToTile(_currTile, _product) {
-           
-                if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
-                    database.add(_product);
-                    _currTile.style.cssText = SETTINGS.CssProductSaved;
-                    _currTile.classList.add('ave-element-saved');
-                } else {
-                    let _style = SETTINGS.CssProductDefault;
-                    if(_product.isNew) {
-                        _style = SETTINGS.CssProductNewTag;
-                        _currTile.classList.add('ave-element-new');
-                    }
-                    if(_product.isFav) {
-                        _style = SETTINGS.CssProductFavTag;
-                        _currTile.classList.add('ave-element-fav');
-                    }
-                    _currTile.style.cssText = _style;
-                    
-                    // Update Timestamps
-                }
-                _currTile.prepend(createFavStarElement(_product));
+
+    if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
+        database.add(_product);
+        _currTile.style.cssText = SETTINGS.CssProductSaved;
+        _currTile.classList.add('ave-element-saved');
+    } else {
+        let _style = SETTINGS.CssProductDefault;
+        if(_product.isNew) {
+            _style = SETTINGS.CssProductNewTag;
+            _currTile.classList.add('ave-element-new');
+        }
+        if(_product.isFav) {
+            _style = SETTINGS.CssProductFavTag;
+            _currTile.classList.add('ave-element-fav');
+        }
+        _currTile.style.cssText = _style;
+
+        // Update Timestamps
+    }
+    _currTile.prepend(createFavStarElement(_product));
 }
 
 
@@ -2003,7 +2061,7 @@ async function requestProductDetails(prod) {
                 const _promArray = new Array();
                 prod.data_estimated_tax_prize = prod.data_estimated_tax_prize || 0;
                 for (_child of prod.data_childs) {
-                   _promArray.push(fetch(`${window.location.origin}/vine/api/recommendations/${(prod.id).replace(/#/g, '%23')}/item/${_child.asin}`.replace(/#/g, '%23')).then(r => r.json()).then((childData) => {
+                    _promArray.push(fetch(`${window.location.origin}/vine/api/recommendations/${(prod.id).replace(/#/g, '%23')}/item/${_child.asin}`.replace(/#/g, '%23')).then(r => r.json()).then((childData) => {
                         console.log('CHILD_DATA:', childData);
                         if (!childData.error) {
 
@@ -2027,9 +2085,9 @@ async function requestProductDetails(prod) {
         } else {
             fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}/item/${prod.data_asin}`.replace(/#/g, '%23')).then(r => r.json()).then(ret => {
                 console.log('RETURN:', ret);
-               if (ret.error) {
+                if (ret.error) {
                     reject(ret.error.exceptionType) // => "ITEM_NOT_IN_ENROLLMENT"
-               } else {
+                } else {
                     const data = ret.result;
                     prod.data_feature_bullets = data.featureBullets;
                     prod.data_contributors = data.byLineContributors;
@@ -2038,7 +2096,7 @@ async function requestProductDetails(prod) {
                     prod.data_estimated_tax_prize = data.taxValue;
                     prod.data_limited_quantity = data.limitedQuantity;
                     resolve(prod);
-               }
+                }
             })
         }
     })
@@ -2048,13 +2106,13 @@ async function requestProductDetails(prod) {
 
 function init(hasTiles) {
     // Get all Products on this page ;)
-    
+
 
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
-    
+
     const _aveSubpageRequest = getUrlParameter('ave-subpage');
     if (SETTINGS.DebugLevel > 10) console.log(`Got Subpage Parameter`, _aveSubpageRequest)
-    
+
     if (_aveSubpageRequest) createNewSite(parseInt(_aveSubpageRequest));
 
     if (hasTiles) {
@@ -2067,7 +2125,7 @@ function init(hasTiles) {
             _currTile.style.cssText = "background-color: yellow;";
             parseTileData(_currTile, (_product) => {
                 if (SETTINGS.DebugLevel > 10) console.log(`Got TileData Back: `, _product);
-                
+
                 _countdown++;
                 const _tilesToDoCount = _tilesLength - _countdown;
                 if (SETTINGS.DebugLevel > 10) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
@@ -2075,7 +2133,7 @@ function init(hasTiles) {
 
                 addStyleToTile(_currTile, _product);
 
-            if (_tilesToDoCount == 0) {
+                if (_tilesToDoCount == 0) {
                     if(INIT_AUTO_SCAN) {
                         startAutoScan();
                     } else if (AUTO_SCAN_IS_RUNNING) {
@@ -2090,11 +2148,11 @@ function init(hasTiles) {
         if (SETTINGS.DebugLevel > 10) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
     }
 
-    
+
     if (AUTO_SCAN_IS_RUNNING) return;
-    
-    
-    
+
+
+
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
 
     _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Alle Produkte', '', '', () => {createNewSite(PAGETYPE.ALL);}));
@@ -2130,9 +2188,9 @@ function init(hasTiles) {
         }
     });
 
-    
-        _searchBarSpan.appendChild(_searchBarInput);
-        _searchbarContainer.appendChild(_searchBarSpan);
+
+    _searchBarSpan.appendChild(_searchBarInput);
+    _searchbarContainer.appendChild(_searchBarSpan);
 
 
     // Manual Autoscan and Backgroundscan can not run together, so don´t create the button
@@ -2141,12 +2199,12 @@ function init(hasTiles) {
     if (hasTiles) addLeftSideButtons();
 
     if (SETTINGS.EnableBackgroundScan) initBackgroundScan();
-    
+
     // Modify Pageination if exists
     const _pageinationContainer = document.getElementsByClassName('a-pagination')[0];
     if (_pageinationContainer) {
         if (SETTINGS.DebugLevel > 10) console.log('Manipulating Pageination');
-        
+
         const _nextBtn = _pageinationContainer.lastChild;
         const _isNextBtnDisabled = (_nextBtn.getAttribute('class') != 'a-last');
         const _nextBtnLink = _nextBtn.lastChild.getAttribute('href');
@@ -2157,7 +2215,6 @@ function init(hasTiles) {
 
         const _btn = document.createElement('li');
         _btn.setAttribute('class', 'a-last');
-        _btn.setAttribute('style', 'background-color: lime');
         _btn.addEventListener('click', () => {
             markAllCurrentSiteProductsAsSeen(() => {
                 window.location.href = (_nextBtnLink);
@@ -2165,6 +2222,7 @@ function init(hasTiles) {
         })
 
         const _btn_a = document.createElement('a');
+        _btn_a.setAttribute('style', 'background-color: lime');
         _btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
 
         _btn.appendChild(_btn_a);
