@@ -54,20 +54,26 @@ const ave_eventhandler = new AVE_EVENTHANDLER();
 const SETTINGS_USERCONFIG_DEFINES = [];
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Vine', description: 'Tooltip Description of this Setting'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableFullWidth', type: 'bool', name: 'Enable Full Width', description: 'Uses the full width of the display'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooter', type: 'bool', name: 'Disable Footer', description: 'Disables the Footer of the Amazon Page'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestions', type: 'bool', name: 'Disable Suggestions', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnPotLuck', type: 'bool', name: 'Disable Button Potluck', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnLastChance', type: 'bool', name: 'Disable Button Last Chance', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnSeller', type: 'bool', name: 'Disable Button Seller', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooter', type: 'bool', name: 'Disable Footer', description: 'Disables the Footer of the Amazon Vine Page'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestions', type: 'bool', name: 'Disable Suggestions', description: 'Disables Suggestions on the Amazon Vine Page'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnPotLuck', type: 'bool', name: 'Disable Button Potluck', description: 'Disables the Section Button PotLuck(FSE)'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnLastChance', type: 'bool', name: 'Disable Button Last Chance', description: 'Disables the Section Button Last Chance(VFA)'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnSeller', type: 'bool', name: 'Disable Button Seller', description: 'Disables the Section Button Seller(ZA)'});
 
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Button All Products', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Background Scan', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Infiniti Scroll Live Querry', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikation', type: 'bool', name: 'Enable Desktop Notifikations', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Button All Products', description: 'Enable "All Products" Button'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Background Scan', description: 'Enables the Background scan, if disabled you will find a Button for Autoscan on the Vine Website'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Infiniti Scroll Live Querry', description: 'If enabled the Products of the All Products Page will get querryd from Amazon directls otherwise they will get loaded from Database(faster)'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikation', type: 'bool', name: 'Enable Desktop Notifikations', description: 'Enable Desktop Notifikations if new Products are detected'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notifikation Highlight Keywords', inputPlaceholder: 'Type in your highlight keyword and press [ENTER]', description: ''});
+
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScanDelayPerPage', type: 'number', min: 2000, max: 10000, name: 'Background Scan Per Page Min Delay(Milliseconds)', description: 'Minimal Delay per Page load of Background Scan'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScannerRandomness', type: 'number', min: 100, max: 10000, name: 'Background Scan Randomness per Page(Milliseconds)', description: 'A Vale that gives the maximal range for the Randomy added delay per page load'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationDelay', type: 'number', min: 1, max: 900, name: 'Desktop Notifikation Delay(Seconds)', description: 'Minimal Time between Desktop Notifikations. exept Notifikations with hitted keywords'});
+
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Shopping', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooterShopping', type: 'bool', name: 'Disable Footer Shopping', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestionsShopping', type: 'bool', name: 'Disable Suggestions Shopping', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooterShopping', type: 'bool', name: 'Disable Footer', description: 'Disables the Footer of the Amazon Shopping Page'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestionsShopping', type: 'bool', name: 'Disable Suggestions', description: 'Disables the Suggestions of the Amazon Shopping Page'});
 
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'General', description: ''});
@@ -76,15 +82,14 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'FavBtnColor', type: 'color', name: 'Butt
 SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorDefault', type: 'color', name: 'Color Favorite Star unchecked', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', name: 'Color Favorite Star checked', description: ''});
 
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notifikation Highlight Keywords', inputPlaceholder: 'Type in your highlight keyword and press [ENTER]', description: ''});
+
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Settings for Developers and Testers', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', min: 0, max: 15, name: 'Debuglevel', description: ''});
 
-SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'Do NOT click ME !!!', description: 'Dont do it', btnClick: () => {alert('I told u!!!'); window.location.href = 'https://neal.fun/space-elevator/'} });
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'Do NOT click ME !!!', description: 'Don`t do it', btnClick: () => {alert('I told u!!!'); window.location.href = 'https://neal.fun/space-elevator/'} });
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'RESET SETTINGS TO DEFAULT', description: 'It does what it says', btnClick: () => {SETTINGS.reset(); window.location.href = window.location.href} });
  
-
-
 
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;
@@ -138,6 +143,10 @@ class SETTINGS_DEFAULT {
             ave_eventhandler.emit('ave-save-cofig'); // A little trick to beat the Namespace Problem ;)
         }
     }
+
+    reset() {
+        GM_setValue('AVE_SETTINGS', new SETTINGS_DEFAULT());
+    }
 }
 
 const SETTINGS = new SETTINGS_DEFAULT();
@@ -147,14 +156,16 @@ const SETTINGS = new SETTINGS_DEFAULT();
   */ 
 function loadSettings() {
     const _settingsStore = GM_getValue('AVE_SETTINGS', {});
-    console.log('Got Settings from GM:', _settingsStore);
-    const _keys = Object.keys(_settingsStore);
-    const _keysLength = _keys.length;
+    console.log('Got Settings from GM:(', typeof(_settingsStore),')', _settingsStore);
+    if (typeof(_settingsStore) == 'object' && _settingsStore != null && _settingsStore != undefined) {
+        const _keys = Object.keys(_settingsStore);
+        const _keysLength = _keys.length;
 
-    for (let i = 0; i < _keysLength; i++) {
-        const _currKey = _keys[i];
-        console.log(`Restore Setting: ${_currKey} with Value: ${_settingsStore[_currKey]}`)
-        SETTINGS[_currKey] = _settingsStore[_currKey];
+        for (let i = 0; i < _keysLength; i++) {
+            const _currKey = _keys[i];
+            console.log(`Restore Setting: ${_currKey} with Value: ${_settingsStore[_currKey]}`)
+            SETTINGS[_currKey] = _settingsStore[_currKey];
+        }
     }
 }
 

@@ -17,11 +17,12 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 ## Changelog:
 
-##### [XX.12.2023] - Version 0.8.X
+##### [06.12.2023] - Version 0.9.0
 
 * Improved Search function to allow multiple keywords
 * More improvemnts in the background for faster datahandling, renamed a few variables to fit to new shorthand name AVE, etc.
-
+* Added Usersettings Page, and did a lot of stuff related to this.
+* Added Back to Top Button on all subpages.
 
 ##### [04.12.2023] - Version 0.8.0
 
