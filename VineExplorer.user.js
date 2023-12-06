@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.9.0.2
+// @version      0.9.0.3
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -1906,14 +1906,14 @@ function updateNewProductsBtn() {
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
     database.getNewEntries((prodArr) => { 
         const _btnBadge = document.getElementById('ave-new-items-btn-badge');
-        const _pageTitle = document.title.replace(/^[0-9]+/, '').trim();
+        const _pageTitle = document.title.replace(/^[^\|]*\|/, '').trim();
         const _prodArrLength = prodArr.length;
         if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
 
         if (_prodArrLength > 0) {
             _btnBadge.style.display = 'inline-block';
             _btnBadge.innerText = _prodArrLength;
-            document.title = `${_prodArrLength} ${_pageTitle}`;
+            document.title = `${_prodArrLength} | ${_pageTitle}`;
         } else {
             _btnBadge.style.display = 'none';
             _btnBadge.innerText = '';
@@ -2000,6 +2000,7 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
     const _btnInner = document.createElement('span');
     _btnInner.classList.add('a-button-inner');
     _btnInner.style.backgroundColor = color;
+    _btnInner.style.display = 'flex';
     _btn.append(_btnInner);
 
     const _btnInnerText = document.createElement('span');
@@ -2011,21 +2012,18 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
     if (badgeId) {
         const _btnInnerBadge = document.createElement('span');
         _btnInnerBadge.setAttribute('id', badgeId)
+        _btnInnerBadge.setAttribute('class', 'a-button-text')
         _btnInnerBadge.style.backgroundColor = 'red';
         _btnInnerBadge.style.color = 'white';
-        _btnInnerBadge.style.minWidth = '20px';
-        _btnInnerBadge.style.width =  '40px';
         _btnInnerBadge.style.display = 'inline-block';
         _btnInnerBadge.style.textAlign = 'center';
-        _btnInnerBadge.style.borderRadius = '10px';
         // _btnInnerBadge.style.transform = 'translate(-75%, -100%)';
         _btnInnerBadge.style.zIndex = '50';
         _btnInnerBadge.style.position = 'relativ';
         // _btnInnerBadge.style.padding = '5px';
-        _btnInnerBadge.style.marginLeft = '5px';
 
         _btnInnerBadge.innerText = badgeValue;
-        _btnInnerText.append(_btnInnerBadge);
+        _btnInner.append(_btnInnerBadge);
     }
 
     return _btn;
