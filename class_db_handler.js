@@ -160,6 +160,12 @@ class DB_HANDLER {
         const _request = this.#getStore(true).add(obj);
 
         _request.onerror = (event) => {
+            if (`${event.target.error}`.includes('data_asin')) {
+                console.error('Tryed to ADD New Product with existing ASIN ???', obj);
+                cb(true);
+                return;
+            }
+
             throw new Error(`DB_HANDLER.add(): ${event.target.error}`);
         };
         
