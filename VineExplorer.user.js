@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.8.0.2
+// @version      0.9.0
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
-// @description  Better View and Search and Explore for Vine Products - Vine Voices Edition
-// @author       MarkusSR1984
+// @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
+// @author       MarkusSR1984, Christof121
 // @match        *://www.amazon.de/*
 // @match        *://www.amazon.com/*
 // @license      MIT
@@ -16,7 +16,6 @@
 // @grant        GM.getValue
 // @grant        GM.setValue
 // @grant        GM.xmlHttpRequest
-// @grant        GM.openInTab
 // @grant        unsafeWindow
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/globals.js
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_db_handler.js
@@ -56,7 +55,7 @@
 */
 
 'use strict';
-console.log(`Init Vine Voices Explorer ${VVE_VERSION}`);
+console.log(`Init Vine Voices Explorer ${AVE_VERSION}`);
 
 /**
  * On witch page are we atm ? PAGETYPE
@@ -66,19 +65,18 @@ let currentMainPage;
 loadSettings();
 fastStyleChanges();
 
-let productDBIds = [];
 let searchInputTimeout;
 let backGroundScanTimeout;
 
 let TimeouteScrollTilesBufferArray = [];
 
 // Make some things accessable from console
-unsafeWindow.vve = {
+unsafeWindow.ave = {
     classes: [
         DB_HANDLER = DB_HANDLER
     ],
     config: SETTINGS,
-    event: vve_eventhandler,
+    event: ave_eventhandler,
 };
 
 
@@ -87,46 +85,42 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
         console.error(`Somithing was going wrong while init database :'(`);
         return;
     } else {
-        database.getAllKeys((keys) => {
-            if (SETTINGS.DebugLevel > 10) console.log('All keys:', keys);
-            productDBIds = keys;
-            
-            let _execLock = false;
-            console.log('Lets Check where we are....');
-            if (SITE_IS_VINE){
-                 console.log('We are on Amazon Vine'); // We are on the amazon vine site
-                waitForHtmlElmement('.vvp-details-btn', () => {
-                    if (_execLock) return;
-                    _execLock = true;
-                    addBranding();
-                    detectCurrentPageType();
-                    init(true);
-                });
-                waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
-                    if (_execLock) return;
-                    _execLock = true;
-                    addBranding();
-                    init(false);
-                    
-                });
-
-            } else if (SITE_IS_SHOPPING) {
-                console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
+        let _execLock = false;
+        console.log('Lets Check where we are....');
+        if (SITE_IS_VINE){
+            console.log('We are on Amazon Vine'); // We are on the amazon vine site
+            addAveSettingsTab();
+            addAVESettingsMenu();
+            waitForHtmlElmement('.vvp-details-btn', () => {
+                if (_execLock) return;
                 _execLock = true;
-                addBranding(); // For now, olny show that the script is active
-            }
-    	});
+                addBranding();
+                detectCurrentPageType();
+                
+                init(true);
+            });
+            waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
+                if (_execLock) return;
+                _execLock = true;
+                addBranding();
+                init(false);
+            });
+        } else if (SITE_IS_SHOPPING) {
+            console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
+            _execLock = true;
+            addBranding(); // For now, olny show that the script is active
+        }
     }
 });
 
-unsafeWindow.vve.database = database;
+unsafeWindow.ave.database = database;
 
 let oldCountOfNewItems = 0;
 
 let showDbUpdateLogoTimeout = null;
 let showDbUpdateLogoIcon = null;
 
-vve_eventhandler.on('vve-database-changed', () => {
+ave_eventhandler.on('ave-database-changed', () => {
     console.warn('EVENT - Database has new Data for us! we should look what has changed');
     updateNewProductsBtn();
 
@@ -143,8 +137,9 @@ vve_eventhandler.on('vve-database-changed', () => {
 })
 
 window.onscroll = () => { // ONSCROLL Event handler
-    stickElementToTopScrollEVhandler('vve-btn-allseen', '5px');
-    stickElementToTopScrollEVhandler('vve-btn-db-allseen', '35px');
+    stickElementToTopScrollEVhandler('ave-btn-allseen', '5px');
+    stickElementToTopScrollEVhandler('ave-btn-db-allseen', '40px');
+    stickElementToTopScrollEVhandler('ave-btn-backtotop', '75px');
 
     if (currentMainPage == PAGETYPE.ALL) handleInfiniteScroll();
 
@@ -210,104 +205,92 @@ function detectCurrentPageType(){
     
     // alert(`currentMainPage is: ${currentMainPage}`);
     
-    // getUrlParameter('vve-subpage');
+    // getUrlParameter('ave-subpage');
 
 }
-
-
-// Check if Product exists in our Database or if it is a new one
-function existsProduct(id) { 
-    if (SETTINGS.DebugLevel > 10) console.log(`Called existsProduct(${id})`);
-    return (productDBIds.lastIndexOf(id) != -1);
-}
-
 
 async function parseTileData(tile, cb) {
-    if (SETTINGS.DebugLevel > 10) console.log(`Called parseTileData(${tile})`);
+    if (SETTINGS.DebugLevel > 14) console.log(`Called parseTileData(`, tile, ')');
 
     const _id = tile.getAttribute('data-recommendation-id');
-
     
-    if (existsProduct(_id)) {
-        database.get(_id, (_ret) => {
+    database.get(_id, (_ret) => {
+        if (_ret) {
             _ret.gotFromDB = true;
             _ret.ts_lastSeen = unixTimeStamp();
             cb(_ret);
-        });
+        } else {
+            //We have to wait for a lot of Stuff
+            waitForHtmlElmement('.vvp-item-tile-content',async () => {
+                const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
+                waitForHtmlElmement('img', async () => {
+                    const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
+                        waitForHtmlElmement('.vvp-item-product-title-container', async () => {
+                            const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
+                                waitForHtmlElmement('a', async () => {
+                                    const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
+                                        waitForHtmlElmement('.a-button-inner', async () => {
+                                            const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
+                                                waitForHtmlElmement('input', async () => {
+                                                    const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
+                                                    const _newProduct = new Product(_id);
+                                                    _newProduct.data_recommendation_id = _id;
+                                                    _newProduct.data_img_url = tile.getAttribute('data-img-url');
+                                                    _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
+                                                    _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
+                                                    _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
+                                                    
+                                                    _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
+                                                    _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
+                                                    _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
 
-
-        return;
-    } // Fast exit if Product is in our DB
-
-    //We have to wait for a lot of Stuff
-    waitForHtmlElmement('.vvp-item-tile-content',async () => {
-        const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
-        waitForHtmlElmement('img', async () => {
-            const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
-                waitForHtmlElmement('.vvp-item-product-title-container', async () => {
-                    const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
-                        waitForHtmlElmement('a', async () => {
-                            const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
-                                waitForHtmlElmement('.a-button-inner', async () => {
-                                    const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
-                                        waitForHtmlElmement('input', async () => {
-                                            const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
-                                            const _newProduct = new Product(_id);
-                                            _newProduct.data_recommendation_id = _id;
-                                            _newProduct.data_img_url = tile.getAttribute('data-img-url');
-                                            _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
-                                            _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
-                                            _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
-                                            
-                                            _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
-                                            _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-                                            _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
-
-                                            _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                                            
-                                            
-                                            if (_newProduct.description_short == '') {
-                                                let _timeLoopCounter = 0;
-                                                const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
-                                                const _halfdelay = (SETTINGS.FetchRetryTime / 2)
-                                                function timeLoop() {
-                                                    if (_timeLoopCounter++ < _maxLoops){
-                                                            setTimeout(() => {
-                                                                const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                                                                if (_short != ""){ 
-                                                                    _newProduct.description_short = _short;
-                                                                    cb(_newProduct);
+                                                    _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+                                                    
+                                                    
+                                                    if (_newProduct.description_short == '') {
+                                                        let _timeLoopCounter = 0;
+                                                        const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
+                                                        const _halfdelay = (SETTINGS.FetchRetryTime / 2)
+                                                        function timeLoop() {
+                                                            if (_timeLoopCounter++ < _maxLoops){
+                                                                    setTimeout(() => {
+                                                                        const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+                                                                        if (_short != ""){ 
+                                                                            _newProduct.description_short = _short;
+                                                                            cb(_newProduct);
+                                                                        } else {
+                                                                            timeLoop();
+                                                                        }
+                                                                    }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
                                                                 } else {
-                                                                    timeLoop();
+                                                                    _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
+                                                                    _newProduct.generated_short = true;
+                                                                    cb(_newProduct);
                                                                 }
-                                                            }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
+                                                            }
+                                                        timeLoop();
                                                         } else {
-                                                            _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
-                                                            _newProduct.generated_short = true;
                                                             cb(_newProduct);
                                                         }
-                                                    }
-                                                timeLoop();
-                                                } else {
-                                                    cb(_newProduct);
-                                                }
-                                                
-                                            // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+                                                        
+                                                    // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
 
-                                        }, _div_vpp_item_tile_content_button_inner)
-                                }, _div_vpp_item_tile_content)
-                        }, _div_vvp_item_product_title_container)
+                                                }, _div_vpp_item_tile_content_button_inner)
+                                        }, _div_vpp_item_tile_content)
+                                }, _div_vvp_item_product_title_container)
+                        }, _div_vpp_item_tile_content);
                 }, _div_vpp_item_tile_content);
-        }, _div_vpp_item_tile_content);
-    }, tile)
+            }, tile)
+        }
+    });
 }
 
 
 function reloadPageWithSubpageTarget(target) {
     if (window.location.href.includes('?')) {
-        window.location.href = window.location.href + `&vve-subpage=${target}`;
+        window.location.href = window.location.href + `&ave-subpage=${target}`;
     } else {
-        window.location.href = window.location.href + `?vve-subpage=${target}`;
+        window.location.href = window.location.href + `?ave-subpage=${target}`;
     }
 }
 
@@ -319,13 +302,13 @@ function addLeftSideButtons(forceClean) {
     
     _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
-    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','vve-btn-allseen',  'width: 240px; background-color: lime;', () => {
+    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','ave-btn-allseen',  'width: 240px; background-color: lime;', () => {
         
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
     
-    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','vve-btn-db-allseen', 'width: 240px; background-color: rgb(255, 162, 142);', () => {
+    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', 'left: 0; width: 240px; background-color: rgb(255, 162, 142);', () => {
         
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         setTimeout(() => {
@@ -340,9 +323,18 @@ function addLeftSideButtons(forceClean) {
         }, 30);
     });
 
+    const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  'width: 240px; background-color: white;', () => {
+        
+        if (SETTINGS.DebugLevel > 10) console.log('Clicked back to Top Button');
+        window.scrollTo(0, 0);
+    });
+
+
+
 
     _nodesContainer.appendChild(_setAllSeenBtn);
     _nodesContainer.appendChild(_setAllSeenDBBtn);
+    _nodesContainer.appendChild(_backToTopBtn);
 
     // const _clearDBBtn = createButton('Datenbank Bereinigen', 'background-color: orange;', () => {
     //     if (SETTINGS.DebugLevel > 10) console.log('Clicked clear DB Button');
@@ -362,7 +354,7 @@ function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
             const _id = _tile.getAttribute('data-recommendation-id');
             database.get(_id, (prod) => {
                 prod.isNew = false;
-                database.update(prod, () => {
+                database.update(prod).then( () => {
                     updateTileStyle(prod);
                     _returned++;
                     if (_returned == _tilesLength) cb();
@@ -453,7 +445,7 @@ async function createTileFromProduct(product, btnID, cb) {
 function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
     const _favElement = document.createElement('div');
     _favElement.setAttribute("id", `p-fav-${index || Math.round(Math.random() * 5000)}`);
-    _favElement.classList.add('vve-favorite-star');
+    _favElement.classList.add('ave-favorite-star');
     _favElement.style.cssText = SETTINGS.CssProductFavStar();
     _favElement.textContent = '★';
     if (prod.isFav) _favElement.style.color = SETTINGS.FavStarColorChecked; // SETTINGS.FavStarColorChecked = Gelb;
@@ -549,13 +541,17 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
                 _tilesContainer.appendChild(_tile);
                 parseTileData(_tile, (_product) => {
                     addStyleToTile(_tile, _product);
+                    addTileEventhandlers(_tile);
                 });
             } else {
                 createTileFromProduct(_tile).then((_elem) => {
                     _tilesContainer.appendChild(_elem);
+                    addTileEventhandlers(_elem);
                 })
             }
             
+
+
             if (_createdCount++ >= 100) _stopCreation = true;
 
             const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
@@ -600,7 +596,7 @@ function createNewSite(type, data) {
             database.getNewEntries((_prodArr) => {
                 createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
-                    const _btn = document.getElementById('vve-btn-list-new');
+                    const _btn = document.getElementById('ave-btn-list-new');
                     _btn.classList.add('a-button-selected');
                     _btn.setAttribute('aria-checked', true);
                 });
@@ -612,7 +608,7 @@ function createNewSite(type, data) {
             database.getFavEntries((_prodArr) => {
                 createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
-                    const _btn = document.getElementById('vve-btn-favorites');
+                    const _btn = document.getElementById('ave-btn-favorites');
                     _btn.classList.add('a-button-selected');
                     _btn.setAttribute('aria-checked', true);
                 });
@@ -699,12 +695,15 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
 function btnEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
-        database.get(data.recommendation_id, (prod) => {
+        database.get(data.recommendation_id, async (prod) => {
+            if (SETTINGS.DebugLevel > 10) console.log(`btnEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isNew = false;
-                database.update(prod, () => {
-                    updateTileStyle(prod);
-                });
+                requestProductDetails(prod).then((_newProd) => {
+                    database.update(_newProd || prod).then( () => {
+                        updateTileStyle(prod);
+                    });
+                })
             }
         })
     }
@@ -714,9 +713,10 @@ function favStarEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called favStarEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
         database.get(data.recommendation_id, (prod) => {
+            if (SETTINGS.DebugLevel > 10) console.log(`favStarEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isFav = !prod.isFav;
-                database.update(prod, () => {
+                database.update(prod).then(() => {
                     updateTileStyle(prod);
                 });
             }
@@ -738,7 +738,7 @@ function updateTileStyle(prod) {
         if (_id == prod.data_recommendation_id) {
             if (SETTINGS.DebugLevel > 10) console.log(`Found Tile with id: ${prod.id}`);
             _tile.setAttribute('style', (prod.isFav) ? SETTINGS.CssProductFavTag : (prod.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
-            const _favStar = _tile.querySelector('.vve-favorite-star');
+            const _favStar = _tile.querySelector('.ave-favorite-star');
             _favStar.style.color = (prod.isFav) ? SETTINGS.FavStarColorChecked : 'white'; // SETTINGS.FavStarColorChecked = Gelb;
             return;
         }
@@ -759,7 +759,7 @@ function initTileEventHandlers() {
 }
 
 function addTileEventhandlers(_currTile) {
-        const _favStar = _currTile.querySelector('.vve-favorite-star');
+        const _favStar = _currTile.querySelector('.ave-favorite-star');
         const _btn = _currTile.querySelector('.vvp-details-btn input');
 
         const _data = new Object()
@@ -775,7 +775,7 @@ function addTileEventhandlers(_currTile) {
             _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
         }
         
-        waitForHtmlElmement('.vve-favorite-star', (elem) => {
+        waitForHtmlElmement('.ave-favorite-star', (elem) => {
             _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
         }, _currTile);
 }
@@ -805,28 +805,19 @@ function showAutoScanScreen(text) {
     _text.style.fontSize = '50px'; // Ändere die Schriftgröße hier
     _text.style.lineHeight = "1";
     _text.style.zIndex = '1001';
-    _text.innerHTML = `<p id="vve-autoscan-text">${text}</p>`;
+    _text.innerHTML = `<p id="ave-autoscan-text">${text}</p>`;
 
     document.body.appendChild(_overlay);
     document.body.appendChild(_text);
 }
 
 function updateAutoScanScreenText(text = '') {
-    const _elem = document.getElementById('vve-autoscan-text');
+    const _elem = document.getElementById('ave-autoscan-text');
     _elem.textContent = text;
 }
 
 function addBranding() {
-    // const _overlay = document.createElement('div');
-    // _overlay.style.position = 'fixed';
-    // _overlay.style.top = '0';
-    // _overlay.style.left = '0';
-    // _overlay.style.width = '100%';
-    // _overlay.style.height = '100%';
-    // _overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // Grauer Hintergrund mit Transparenz
-    // _overlay.style.zIndex = '1000'; // Stelle sicher, dass das Overlay über anderen Elementen liegt
-    // document.body.appendChild(_overlay);
-
+   
     const _text = document.createElement('div');
     _text.style.position = 'fixed';
     _text.style.bottom = '10px';
@@ -838,14 +829,470 @@ function addBranding() {
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
     _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
-    _text.innerHTML = `<p id="vve-brandig-text">VineExplorer - ${VVE_VERSION}</p>`;
+    _text.innerHTML = `<p id="ave-brandig-text">${AVE_TITLE} - ${AVE_VERSION}</p>`;
 
     
     document.body.appendChild(_text);
 }
 
 
-function addOverlays() {
+function addAveSettingsTab(){
+    waitForHtmlElmement('.vvp-tab-set-container > ul', (_upperButtonsContainer) => {
+        const _upperSettingsButton = document.createElement('li');
+        _upperSettingsButton.id = 'vvp-ave-settings-tab';
+        _upperSettingsButton.classList = 'a-tab-heading';
+        _upperSettingsButton.role = 'presentation';
+        _upperSettingsButton.innerHTML += `<a role="tab" aria-selected="false" tabindex="-1">AVE Einstellungen</a>`;
+
+        _upperSettingsButton.addEventListener('click',function(){
+            const _upperButtons = document.body.querySelectorAll('.a-tab-container.vvp-tab-set-container > ul > li');
+            _upperButtons.forEach(element => element.classList.remove('a-active'));
+
+            const _contentContainer = document.body.querySelectorAll('.a-tab-container.vvp-tab-set-container > div');
+            _contentContainer.forEach(element => element.classList.add('a-hidden'));
+            console.log(_contentContainer);
+
+            _upperSettingsButton.classList.add('a-active');
+            const _settingsContent = document.body.querySelector('[data-a-name="ave-settings"]');
+            _settingsContent.classList.remove('a-hidden');
+
+            const _settingsContainer = _settingsContent.querySelector('#ave-settings-container');
+            console.log(_settingsContainer);
+            for (const elem of SETTINGS_USERCONFIG_DEFINES) {
+                console.log('Creating Settings Menu Element: ', elem);
+                _settingsContainer.appendChild(createSettingsMenuElement(elem));
+            }
+            
+        });
+
+        _upperButtonsContainer.appendChild(_upperSettingsButton);
+
+    })
+}
+
+function addAVESettingsMenu(){
+    waitForHtmlElmement('.a-tab-container.vvp-tab-set-container', (_tabContainer) => {
+    //const _tabContainer = document.body.querySelector('.a-tab-container.vvp-tab-set-container');
+
+    const _boxContainer = document.createElement('div');
+    _boxContainer.setAttribute('data-a-name', 'ave-settings');
+    _boxContainer.classList = 'a-box a-box-tab a-tab-content a-hidden';
+    _boxContainer.role = 'tabpanel';
+    _boxContainer.tabindex = '0';
+
+    const _contentContainer = document.createElement('div');
+    _contentContainer.classList = 'a-box-inner'
+
+    _boxContainer.appendChild(_contentContainer);
+    _tabContainer.appendChild(_boxContainer);
+    console.log(_tabContainer);
+
+    _contentContainer.innerHTML = `
+    <style>
+    :root {
+  --toggleSliderSize: 1;
+  --numberBorder: 1px;
+  --numberPadding: 2px;
+  --itemHeight: 21px;
+}
+.ave-settings-container {
+  display: grid;
+}
+
+.ave-settings-container label {
+  padding: 0;
+}
+
+.ave-settings-container input[type="number"] {
+  width: 50px;
+  height: 21px;
+  border: var(--numberBorder) solid #888C8C;
+  padding: var(--numberPadding);
+}
+
+.ave-settings-container input[type="color"] {
+  width: 30px;
+  padding: 0;
+  border: 1px solid darfgrey;
+  cursor: pointer;
+  height: var(--itemHeight);
+}
+
+.ave-settings-container input[type="text"] {
+
+}
+
+.ave-settings-item{
+  display: inline-flex;
+  align-items: center;
+  margin: 5px 0;
+  height: var(--itemHeight);
+}
+
+.ave-item-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ave-item-right {
+
+}
+
+.ave-item-right > label {
+
+}
+
+.ave-settings-item > * >.ave-settings-label-setting {
+  margin-left: 5px;
+}
+
+.ave-settings-item > * >.ave-settings-label-setting:hover{
+  color: red;
+}
+
+/* Add this attribute to the element that needs a tooltip */
+[data-ave-tooltip] {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+
+/* Hide the tooltip content by default */
+[data-ave-tooltip]:before,
+[data-ave-tooltip]:after {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Position tooltip above the element */
+[data-ave-tooltip]:before {
+  position: absolute;
+  bottom: -50%;
+  /*left: calc(150% + 10px);*/
+  margin-bottom: 5px;
+  margin-left: calc(100% + 10px);
+  padding: 7px;
+  width: 160px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  background-color: hsla(0, 0%, 20%, 0.9);
+  color: #fff;
+  content: attr(data-ave-tooltip);
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* Triangle hack to make tooltip look like a speech bubble */
+[data-ave-tooltip]:after {
+  position: absolute;
+  bottom: 25%;
+  /*left: 50%;*/
+  margin-left: calc(0% + 5px);
+  width: 0;
+  border-right: 5px solid hsla(0, 0%, 20%, 0.9);
+  border-bottom: 5px solid transparent;
+  border-top: 5px solid transparent;
+  content: " ";
+  font-size: 0;
+  line-height: 0;
+}
+
+/* Show tooltip content on hover */
+[data-ave-tooltip]:hover:before,
+[data-ave-tooltip]:hover:after {
+  visibility: visible;
+  opacity: 1;
+}
+
+.ave-settings-label-switch{
+  position: relative;
+  display: inline-block;
+  width: calc(var(--toggleSliderSize) * 30px);
+  height: calc(var(--toggleSliderSize) * 17px);
+}
+
+.ave-settings-switch-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: calc(var(--toggleSliderSize) * 17px);
+}
+
+.ave-settings-switch-toggle-slider:before{
+  position: absolute;
+  content: "";
+  height: calc(var(--toggleSliderSize) * 13px);
+  width: calc(var(--toggleSliderSize) * 13px);
+  left: calc(var(--toggleSliderSize) * 2px);
+  bottom: calc(var(--toggleSliderSize) * 2px);
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .ave-settings-switch-toggle-slider {
+  background-color: #2196F3;
+}
+
+input:checked + .ave-settings-switch-toggle-slider:before {
+  transform: translateX(calc(var(--toggleSliderSize) * 13px));
+}
+
+.ave-settings-label-switch input{
+  display: none
+}
+
+.ave-keyword-input button {
+font-weight: bold;
+}
+
+.ave-keyword-list-wrapper {
+  margin-top: 10px;
+}
+
+.ave-keyword-list-wrapper > table {
+  border-collapse: collapse;
+  width: 500px;
+}
+
+.ave-keyword-list-wrapper > table td,.ave-keyword-list-wrapper > table th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+.ave-keyword-list-wrapper > table tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+.ave-keyword-list-wrapper #list-delete {
+  width: 75px;
+  text-align: center;
+}
+
+.ave-keyword-list-wrapper > table button {
+  display: flex;
+  margin: auto;
+  background-color: inherit;
+  border: none;
+}
+
+::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+::-webkit-color-swatch{
+  border: 0;
+  border-radius: 5px;
+}
+
+::-moz-color-swatch,
+::-moz-focus-inner{
+  border: 0;
+}
+
+::-moz-focus-inner{
+  padding: 0;
+}
+    </style>
+
+    <div id="ave-settings-header" style="margin-bottom: 10px"><h3>Einstellungen ${AVE_TITLE} - Version ${AVE_VERSION}</h3></div>
+    <div id="ave-settings-container" class="ave-settings-container">
+  
+
+</div>
+    `;
+    })
+}
+
+function createSettingsMenuElement(dat){
+    const _elem = document.createElement('div');
+    if (dat.key) _elem.setAttribute('ave-config-key', dat.key);
+    _elem.classList.add('ave-settings-item');
+
+    if (dat.type == 'bool') {// Boolean Value
+        
+        const _elem_item_left = document.createElement('div');
+        _elem_item_left.classList.add('ave-item-left');
+        const _elem_item_left_label = document.createElement('label');
+        _elem_item_left_label.classList.add('ave-settings-label-switch');
+        const _elem_item_left_label_input = document.createElement('input');
+        _elem_item_left_label_input.type = 'checkbox';
+        _elem_item_left_label_input.className = 'ave-input-binary';
+        _elem_item_left_label_input.setAttribute('ave-data-key', dat.key);
+        // _elem_item_left_label_input.setAttribute('checked', SETTINGS[dat.key])
+        // _elem_item_left_label_input.value = `${SETTINGS[dat.key]}`;
+        _elem_item_left_label_input.checked = SETTINGS[dat.key];
+        _elem_item_left_label_input.addEventListener('click', (event) => {console.log('This is a Boolean Value Input', event); SETTINGS[dat.key] = event.target.checked; SETTINGS.save();})
+        
+        const _elem_item_left_label_span = document.createElement('span');
+        _elem_item_left_label_span.classList.add('ave-settings-switch-toggle-slider');
+
+        _elem_item_left_label.appendChild(_elem_item_left_label_input);
+        _elem_item_left_label.appendChild(_elem_item_left_label_span);
+        _elem_item_left.appendChild(_elem_item_left_label);
+        _elem.appendChild(_elem_item_left);
+
+        const _elem_item_right = document.createElement('div');
+        _elem_item_right.classList.add('ave-item-right');
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
+        
+        _elem.appendChild(_elem_item_right);
+
+    } else if (dat.type == 'number') { // Number Value
+    
+        const _elem_item_left = document.createElement('div');
+        _elem_item_left.classList.add('ave-item-left');
+        const _elem_item_left_input = document.createElement('input');
+        _elem_item_left_input.type = 'number';
+        _elem_item_left_input.className = 'ave-input-number';
+        _elem_item_left_input.setAttribute('ave-data-key', dat.key);
+        _elem_item_left_input.setAttribute('value', SETTINGS[dat.key]);
+        if (!isNaN(dat.min)) _elem_item_left_input.setAttribute('min', dat.min);
+        if (!isNaN(dat.max)) _elem_item_left_input.setAttribute('max', dat.max);
+        _elem_item_left_input.addEventListener('change', (event) => {console.log('This is a Number Value Input', event); SETTINGS[dat.key] = parseInt(event.target.value); SETTINGS.save();})
+        _elem_item_left.appendChild(_elem_item_left_input);
+        _elem.appendChild(_elem_item_left);
+
+        const _elem_item_right = document.createElement('div');
+        _elem_item_right.classList.add('ave-item-right');
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
+        
+        _elem.appendChild(_elem_item_right);
+
+    } else if (dat.type == 'button') { // Number Value
+    
+        const _elem_item_left = document.createElement('div');
+        _elem_item_left.classList.add('ave-item-left');
+        const _elem_item_left_input = document.createElement('button');
+        _elem_item_left_input.type = 'button';
+        _elem_item_left_input.className = 'ave-input-button';
+        // _elem_item_left_input.setAttribute('ave-data-key', dat.key);
+        _elem_item_left_input.innerText = dat.name;
+        _elem_item_left_input.setAttribute('data-ave-tooltip',dat.description);
+        _elem_item_left_input.addEventListener('click', (event) => {console.log('This is a button Input', event); if(dat.btnClick) dat.btnClick();})
+        _elem_item_left.appendChild(_elem_item_left_input);
+        _elem.appendChild(_elem_item_left);
+
+        // const _elem_item_right = document.createElement('div');
+        // _elem_item_right.classList.add('ave-item-right');
+        // _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
+        
+        // _elem.appendChild(_elem_item_right);
+
+
+    } else if (dat.type == 'color') {
+
+        const _elem_item_left = document.createElement('div');
+        _elem_item_left.classList.add('ave-item-left');
+        const _elem_item_left_input = document.createElement('input');
+        _elem_item_left_input.type = 'color';
+        _elem_item_left_input.className = 'ave-input-color';
+        _elem_item_left_input.setAttribute('ave-data-key', dat.key);
+        _elem_item_left_input.setAttribute('value', colorToHex(SETTINGS[dat.key]));
+        _elem_item_left_input.addEventListener('change', (event) => {console.log('This is a Color Value Input', event); SETTINGS[dat.key] = event.target.value; SETTINGS.save();})
+        _elem_item_left.appendChild(_elem_item_left_input);
+        _elem.appendChild(_elem_item_left);
+
+        const _elem_item_right = document.createElement('div');
+        _elem_item_right.classList.add('ave-item-right');
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
+        
+        _elem.appendChild(_elem_item_right);
+
+    } else if (dat.type == 'title'){
+        const _elem_spacer_horizontal = document.createElement('hr');
+        _elem_spacer_horizontal.style.width = '100%';
+
+        const _elem_spacer_title = document.createElement('h4');
+        _elem_spacer_title.textContent = dat.name;
+
+        _elem.style.height = 'fit-content';
+        _elem.style.display = 'flex';
+        _elem.style.flexWrap = 'wrap';
+        _elem.appendChild(_elem_spacer_horizontal);
+        _elem.appendChild(_elem_spacer_title);
+    } else if (dat.type == 'keywords') {
+        _elem.classList.remove('ave-settings-item');
+        _elem.classList.add('ave-keyword-wrapper');
+        _elem.innerHTML = `<h4>${dat.name}</h4>`;
+        const _elem_keyword_input = document.createElement('div');
+        _elem_keyword_input.innerHTML = '<span></span>';
+        _elem_keyword_input.classList.add('ave-keyword-input');
+        const _elem_keyword_input_input = document.createElement('input');
+        _elem_keyword_input_input.setAttribute('type', 'text');
+        _elem_keyword_input_input.setAttribute('placeholder', dat.inputPlaceholder);
+        _elem_keyword_input_input.addEventListener('change', (elm, ev) => {
+            console.log('EVENTHANDLER CHANGE:', elm, 'event:', ev);
+            const _value = elm.target.value.trim();
+            if (_value && _value.length > 0 && !SETTINGS[dat.key].includes(_value)) SETTINGS[dat.key].push(_value);
+            SETTINGS.save();
+            elm.target.value = '';
+            const _table = document.getElementById(dat.key);
+            _table.innerHTML = '';
+            for (let i = 0; i < SETTINGS[dat.key].length; i++){
+                _table.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
+            }
+        })
+        // const _elem_keyword_input_button = document.createElement('button');
+        // _elem_keyword_input_button.innerText = '+';
+        _elem_keyword_input.appendChild(_elem_keyword_input_input);
+        // _elem_keyword_input.appendChild(_elem_keyword_input_button);
+        _elem.appendChild(_elem_keyword_input);
+
+        const _elem_keyword_list = document.createElement('div');
+        _elem_keyword_list.classList.add('ave-keyword-list-wrapper');
+        const _elem_keyword_list_table = document.createElement('table');
+        const _elem_keyword_list_table_tbody = document.createElement('tbody');
+        _elem_keyword_list_table_tbody.setAttribute('id', dat.key);
+        for (let i = 0; i < SETTINGS[dat.key].length; i++){
+            _elem_keyword_list_table_tbody.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
+        }
+        _elem_keyword_list_table.appendChild(_elem_keyword_list_table_tbody);
+        _elem_keyword_list.appendChild(_elem_keyword_list_table);
+        _elem.appendChild(_elem_keyword_list);
+    }
+
+    return _elem;
+}
+
+function createSettingsKeywordsTableElement(dat, index, entry){
+    const _tableRow = document.createElement('tr');
+    _tableRow.setAttribute('index', index);
+    const _tableRow_td1 = document.createElement('td');
+    const _tableRow_td1_button = document.createElement('button');
+    _tableRow_td1_button.innerHTML = `<i class="a-icon a-icon-close"></i>`;
+    _tableRow_td1_button.setAttribute('ave-data-keyword', entry);
+    _tableRow_td1_button.addEventListener('click', (elm, ev) =>{
+        // console.log('DELETE_BTN:: ', elm)
+        if (true) SETTINGS[dat.key].splice(index, 1);
+            SETTINGS.save();
+            const _table = document.getElementById(dat.key);
+            _table.innerHTML = '';
+            for (let i = 0; i < SETTINGS[dat.key].length; i++){
+                _table.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
+            }
+    });
+    _tableRow_td1.appendChild(_tableRow_td1_button);
+    _tableRow.appendChild(_tableRow_td1);
+    const _tableRow_td2 = document.createElement('td');
+    _tableRow_td2.innerText = entry;
+    _tableRow.appendChild(_tableRow_td2);
+    return _tableRow;
+}
+
+
+
+function addOverlays() { // Old Settings Code
     const _overlayBackground = document.createElement('div');
     _overlayBackground.style.position = 'fixed';
     _overlayBackground.style.backgroundColor = '#000000b0';
@@ -908,6 +1355,42 @@ function addOverlays() {
 
     document.body.appendChild(_settingsDiv);
 }
+
+
+function componentToHex(c) {
+  const _c = Math.min(c, 255)
+  const _hex = _c.toString(16);
+  return _hex.length == 1 ? "0" + _hex : _hex;
+}
+
+function rgbToHex(r, g, b){
+  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+function rgbaToHex(r, g, b, a){
+  return "#" + componentToHex(a) + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+function colorToHex(color) {
+    const _color = color.replace(/\s/g,''); // Remove all spaces
+    let _cache;
+
+    if (_color == 'white'){ 
+        return '#ffffff';
+    } else if (_color == 'black'){ 
+        return '#000000';
+    } else if (_cache = /rgb\(([\d]+),([\d]+),([\d]+)\)/.exec(_color)){ // rgb(0,0,0)
+        return rgbToHex(_cache[1], _cache[2], _cache[3]);
+    } else if (_cache = /rgba\(([\d]+),([\d]+),([\d]+),([\d]+|[\d]*.[\d]+)\)/.exec(_color)){ // rgba(0,0,0,0)
+        return rgbaToHex(_cache[1], _cache[2], _cache[3], _cache[4]);
+    } else if (/\#[0-9a-f]{6}|[0-9a-f]{8}$/.exec(_color)){ // #000000
+        return _color;
+    }
+
+}
+
+ave.colorToHex = colorToHex;
+
 
 function addDBCleaningSymbol(){
     const _cleaningDiv = document.createElement('div');
@@ -1097,7 +1580,6 @@ async function cleanUpDatabase(cb = () => {}) {
                 if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
                 
                 database.removeID(_currEntry.id, (ret) => {
-                    if (ret) productDBIds.splice(productDBIds.indexOf(_currEntry.id), 1) // Remove it also from our array
                     _deleted++;
                     _localReturn();
                 });
@@ -1116,11 +1598,11 @@ function initBackgroundScan() {
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
     
      // Create iFrame if not exists
-    if (!document.querySelector('#vve-iframe-backgroundloader')) {
+    if (!document.querySelector('#ave-iframe-backgroundloader')) {
         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): create iFrame');
         const iframe = document.createElement('iframe');
             iframe.src = encodeURI(`${_baseUrl}?queue=encore&pn=&cn=&page=1`);
-            iframe.id = 'vve-iframe-backgroundloader';
+            iframe.id = 'ave-iframe-backgroundloader';
             iframe.style.position = 'fixed';
             iframe.style.top = '0';
             iframe.style.left = '-10000';
@@ -1132,17 +1614,17 @@ function initBackgroundScan() {
     } 
     
     const _paginatinWaitLoop = setInterval(() => {
-        const _pageinationData = getPageinationData(document.querySelector('#vve-iframe-backgroundloader').contentWindow.document);
+        const _pageinationData = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
         if (_pageinationData) {
             clearInterval(_paginatinWaitLoop);
             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): pagination WaitLoop');
 
-            if (!localStorage.getItem('BACKGROUND_SCAN_IS_RUNNING') || true) {
+            if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_IS_RUNNING') == true)) {
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): init localStorage Variables');
-                localStorage.setItem('BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
-                localStorage.setItem('BACKGROUND_SCAN_IS_RUNNING', true);
-                localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', 1);
-                localStorage.setItem('BACKGROUND_SCAN_STAGE', 0);
+                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
+                localStorage.setItem('AVE_BACKGROUND_SCAN_IS_RUNNING', true);
+                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 1);
+                localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
             } 
             
             let _loopIsWorking = false;
@@ -1154,7 +1636,7 @@ function initBackgroundScan() {
             if (_loopIsWorking) return;
                     _loopIsWorking = true;
 
-                    let _backGroundScanStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_STAGE')) || 0;
+                    let _backGroundScanStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE')) || 0;
                     if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
                     
                     switch (_backGroundScanStage) {
@@ -1172,32 +1654,49 @@ function initBackgroundScan() {
                                 }
                                 break;
                             }
-                            case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
-                                _subStage = parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_CURRENT'));
+                        case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
+                                _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
                                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
-                                if (_subStage < (parseInt(localStorage.getItem('BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
+                                if (_subStage < (parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
                                     backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
                                     _subStage++
-                                    localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                                 } else {
                                     _subStage = 0;
                                     _backGroundScanStage++;
                                     _scanFinished();
                                 }
-                            break;            }
-                            case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
-                                if (SETTINGS.DebugLevel > 2) console.log('Backgroundscanner: Updating Product Data');
+                            break; 
+                        }
+                        case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
+                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                                 database.getAll((products) => {
                                     const _needUpdate = [];
+                                    const _randCount = Math.round(Math.random() * 3);
                                     for (_prod of products) {
-                                        if (_needUpdate.length < 5) {
+                                        if (_needUpdate.length < 3) {
                                             if (!_prod.data_estimated_tax_prize) _needUpdate.push(_prod);
+                                        } else {
+                                            break;
                                         }
                                     }
 
+                                    const _promises = [];
+
                                     for (_prod of _needUpdate) {
-                                        requestProductDetails(_prod).then((_newProd) => {database.update(_newProd)});
+                                        requestProductDetails(_prod).then((_newProd) => {
+                                            _promises.push(database.update(_newProd));
+                                        });
                                     }
+
+                                    Promise.all(_promises).then(() => {
+                                        _scanFinished();
+                                        _subStage++;
+                                    }).finally(() => {
+                                        console.error('There was an error while updating an product in database');
+                                        _scanFinished();
+                                        _subStage++;
+                                    });
                                 });
                             
                                 if (_subStage++ >= 10)
@@ -1207,7 +1706,7 @@ function initBackgroundScan() {
                                     _scanFinished();
                                 }
                                 break;
-                            }   
+                        }   
                             default: {
                                 cleanUpDatabase(() => {
                                     _backGroundScanStage = 0;
@@ -1219,8 +1718,8 @@ function initBackgroundScan() {
                     }
                     function _scanFinished() {
                         if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
-                        localStorage.setItem('BACKGROUND_SCAN_STAGE', _backGroundScanStage);
-                        localStorage.setItem('BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                         _loopIsWorking = false;
                         backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness));
                     }
@@ -1232,8 +1731,8 @@ function initBackgroundScan() {
 function backGroundTileScanner(url, cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called backgroundTileScanner(${url})`);
     const _iconLoading = addLoadingSymbol();
-    const _iframeDoc = document.querySelector('#vve-iframe-backgroundloader').contentWindow.document;
-    vve.backGroundIFrame = _iframeDoc;
+    const _iframeDoc = document.querySelector('#ave-iframe-backgroundloader').contentWindow.document;
+    ave.backGroundIFrame = _iframeDoc;
     _iframeDoc.location.href = url;
     const _loopDelay = setInterval(() => {
         if (SETTINGS.DebugLevel > 10) console.log(`backgroundTileScanner(): check if we have tiles to read...`);
@@ -1248,13 +1747,13 @@ function backGroundTileScanner(url, cb) {
                 for (let i = 0; i < _tilesLength; i++) {
                     parseTileData(_tiles[i], (prod) => {
                         _returned++;
+                        if (SETTINGS.DebugLevel > 14) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
                         if (!prod.gotFromDB) database.add(prod);
-                        if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
                         if (_returned == _tilesLength) {cb(true); _iconLoading.remove()};
                     })
                 }
             } else {
-                if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => We dont have to do here anything => resume autoscan`);
+                if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => We dont have anything to do here anything => resume autoscan`);
                 cb(true); // We dont have to do here anything
                 _iconLoading.remove();
             }
@@ -1268,10 +1767,10 @@ function startAutoScan() {
     markAllCurrentDatabaseProductsAsSeen(() => {
         if (SETTINGS.DebugLevel > 10) console.log('startAutoScan() - Got Callback from markAllCurrentDatabaseProductsAsSeen()');
         const _pageiDat = getPageinationData();
-        localStorage.setItem('INIT_AUTO_SCAN', false);
-        localStorage.setItem('AUTO_SCAN_IS_RUNNING', true);
-        localStorage.setItem('AUTO_SCAN_PAGE_MAX',_pageiDat.maxPage);
-        localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', 1);
+        localStorage.setItem('AVE_INIT_AUTO_SCAN', false);
+        localStorage.setItem('AVE_AUTO_SCAN_IS_RUNNING', true);
+        localStorage.setItem('AVE_AUTO_SCAN_PAGE_MAX',_pageiDat.maxPage);
+        localStorage.setItem('AVE_AUTO_SCAN_PAGE_CURRENT', 1);
         setTimeout(() => {
             const _url = `${_pageiDat.href}1`;
             if (SETTINGS.DebugLevel > 10) console.log(`Loding new Page ${_url}`)
@@ -1288,16 +1787,16 @@ function handleAutoScan() {
     if (SETTINGS.DebugLevel > 10) console.log(`handleAutoScan() - _delay: ${_delay}`);
     if (AUTO_SCAN_PAGE_CURRENT < AUTO_SCAN_PAGE_MAX) {
         const _nextPage = AUTO_SCAN_PAGE_CURRENT + 1;
-        localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', _nextPage);
+        localStorage.setItem('AVE_AUTO_SCAN_PAGE_CURRENT', _nextPage);
         setTimeout(() => {
             window.location.href = window.location.href.replace(/=[0-9]+/, `=${_nextPage}`);
         }, _delay);
     } else { // We are done ;)
         updateAutoScanScreenText('Success, cleaning up Database...');
         cleanUpDatabase(()=> {
-            localStorage.setItem('AUTO_SCAN_IS_RUNNING', false);
-            localStorage.setItem('AUTO_SCAN_PAGE_MAX', -1);
-            localStorage.setItem('AUTO_SCAN_PAGE_CURRENT', -1);
+            localStorage.setItem('AVE_AUTO_SCAN_IS_RUNNING', false);
+            localStorage.setItem('AVE_AUTO_SCAN_PAGE_MAX', -1);
+            localStorage.setItem('AVE_AUTO_SCAN_PAGE_CURRENT', -1);
             setTimeout(() => {
                 updateAutoScanScreenText('Finished Database\nupdate and cleanup\n\nPage reloading incoming... please wait');
                 setTimeout(()=> {
@@ -1321,8 +1820,8 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
         requestAnimationFrame(() => { 
             const _elemRect = _elem.getBoundingClientRect();
 
-            const _elemInitialTop = parseInt(_elem.getAttribute('vve-data-default-top'));
-            if (!_elemInitialTop) {_elem.setAttribute('vve-data-default-top', (window.scrollY + _elemRect.top)); return;}
+            const _elemInitialTop = parseInt(_elem.getAttribute('ave-data-default-top'));
+            if (!_elemInitialTop) {_elem.setAttribute('ave-data-default-top', (window.scrollY + _elemRect.top)); return;}
 
             if (SETTINGS.DebugLevel > 10) console.log(`### scrollY:${window.scrollY} maxScrollHeigt ${maxScrollHeight} initialTop: ${_elemInitialTop}`);
 
@@ -1342,7 +1841,7 @@ function updateNewProductsBtn() {
     if (AUTO_SCAN_IS_RUNNING) return;
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
     database.getNewEntries((prodArr) => { 
-        const _btnBadge = document.getElementById('vve-new-items-btn-badge');
+        const _btnBadge = document.getElementById('ave-new-items-btn-badge');
         const _pageTitle = document.title.replace(/^[0-9]+/, '').trim();
         const _prodArrLength = prodArr.length;
         if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
@@ -1376,7 +1875,7 @@ function updateNewProductsBtn() {
                     const _currKey = _configKeyWords[j].toLowerCase(); 
                     if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Deescription for Keyword: ${_currKey}`);
                     if (_descFull.includes(_currKey)) {
-                        desktopNotifikation(`Amazon Vine Explorer - ${VVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
+                        desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
                         _notifyed = true;
                     }                    
                         break;
@@ -1389,7 +1888,7 @@ function updateNewProductsBtn() {
                     oldCountOfNewItems = _prodArrLength;
                     lastDesktopNotifikationTimestamp = unixTimeStamp();
 
-                    desktopNotifikation(`Amazon Vine Explorer - ${VVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
+                    desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
                 } 
             }
         }
@@ -1413,7 +1912,7 @@ function desktopNotifikation(title, message, image = null, requireInteraction = 
             body: message,
             icon: (!requireInteraction) ? _vineLogo : _vineLogoImp,
             image: image || _defaultImage,
-            tag: (requireInteraction) ? `vve-notify-${Math.round(Math.random()* 10000000)}`: 'vve-notify',
+            tag: (requireInteraction) ? `ave-notify-${Math.round(Math.random()* 10000000)}`: 'ave-notify',
             requireInteraction: requireInteraction,
         });
 
@@ -1427,8 +1926,6 @@ function desktopNotifikation(title, message, image = null, requireInteraction = 
         });
     }
 }
-
-unsafeWindow.vve.DN = desktopNotifikation;
 
 function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeValue) {
     const _btn = document.createElement('span');
@@ -1476,16 +1973,16 @@ function addStyleToTile(_currTile, _product) {
                 if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
                     database.add(_product);
                     _currTile.style.cssText = SETTINGS.CssProductSaved;
-                    _currTile.classList.add('vve-element-saved');
+                    _currTile.classList.add('ave-element-saved');
                 } else {
                     let _style = SETTINGS.CssProductDefault;
                     if(_product.isNew) {
                         _style = SETTINGS.CssProductNewTag;
-                        _currTile.classList.add('vve-element-new');
+                        _currTile.classList.add('ave-element-new');
                     }
                     if(_product.isFav) {
                         _style = SETTINGS.CssProductFavTag;
-                        _currTile.classList.add('vve-element-fav');
+                        _currTile.classList.add('ave-element-fav');
                     }
                     _currTile.style.cssText = _style;
                     
@@ -1552,12 +2049,13 @@ async function requestProductDetails(prod) {
 function init(hasTiles) {
     // Get all Products on this page ;)
     
+
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
     
-    const _vveSubpageRequest = getUrlParameter('vve-subpage');
-    if (SETTINGS.DebugLevel > 10) console.log(`Got Subpage Parameter`, _vveSubpageRequest)
+    const _aveSubpageRequest = getUrlParameter('ave-subpage');
+    if (SETTINGS.DebugLevel > 10) console.log(`Got Subpage Parameter`, _aveSubpageRequest)
     
-    if (_vveSubpageRequest) createNewSite(parseInt(_vveSubpageRequest));
+    if (_aveSubpageRequest) createNewSite(parseInt(_aveSubpageRequest));
 
     if (hasTiles) {
         const _tiles = document.getElementsByClassName('vvp-item-tile');
@@ -1595,25 +2093,27 @@ function init(hasTiles) {
     
     if (AUTO_SCAN_IS_RUNNING) return;
     
+    
+    
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
 
-    _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Alle Produkte', '', '', () => {createNewSite(PAGETYPE.ALL);}));
-    _searchbarContainer.appendChild(createNavButton('vve-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
-    _searchbarContainer.appendChild(createNavButton('vve-btn-list-new', 'Neue Einträge', 'vve-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'vve-new-items-btn-badge', '-'));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Alle Produkte', '', '', () => {createNewSite(PAGETYPE.ALL);}));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
 
     updateNewProductsBtn();
 
 
     // Searchbar
     const _searchBarSpan = document.createElement('span');
-    _searchBarSpan.setAttribute('class', 'vve-search-container');
+    _searchBarSpan.setAttribute('class', 'ave-search-container');
     _searchBarSpan.style.cssText = `margin: 0.5em;`;
-    // _searchBarSpan.innerHTML = `<input type="text" style="width: 30em;" placeholder="Suche Vine Produkte" name="vve-search">`;
+    // _searchBarSpan.innerHTML = `<input type="text" style="width: 30em;" placeholder="Suche Vine Produkte" name="ave-search">`;
 
     const _searchBarInput = document.createElement('input');
-    _searchBarInput.setAttribute('type', 'text');
+    _searchBarInput.setAttribute('type', 'search');
     _searchBarInput.setAttribute('placeholder', 'Suche Vine Produkte');
-    _searchBarInput.setAttribute('name', 'vve-search');
+    _searchBarInput.setAttribute('name', 'ave-search');
     _searchBarInput.style.cssText = `width: 30em;`;
     _searchBarInput.addEventListener('keyup', (ev) => {
         const _input = _searchBarInput.value
@@ -1636,7 +2136,7 @@ function init(hasTiles) {
 
 
     // Manual Autoscan and Backgroundscan can not run together, so don´t create the button
-    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('vve-btn-updateDB', 'Update Database', 'vve-btn-updateDB-text','lime', () => {localStorage.setItem('INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
+    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('ave-btn-updateDB', 'Update Database', 'ave-btn-updateDB-text','lime', () => {localStorage.setItem('AVE_INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
 
     if (hasTiles) addLeftSideButtons();
 

@@ -126,12 +126,12 @@ class DB_HANDLER {
     };
 
     /**
-     * Fires the Event vve-database-changed when any writeaccess has happend
+     * Fires the Event ave-database-changed when any writeaccess has happend
      */
     #fireDataChangedEvent() {
         if (this.#eventDelayTimeout) clearTimeout(this.#eventDelayTimeout);
         this.#eventDelayTimeout = setTimeout(() => {
-            vve_eventhandler.emit('vve-database-changed');
+            ave_eventhandler.emit('ave-database-changed');
             this.#eventDelayTimeout = null;
         }, 250);
     }
@@ -160,7 +160,7 @@ class DB_HANDLER {
         const _request = this.#getStore(true).add(obj);
 
         _request.onerror = (event) => {
-            throw new Error(`DB_HANDLER.add(): ${event.target.error.name}`);
+            throw new Error(`DB_HANDLER.add(): ${event.target.error}`);
         };
         
         _request.onsuccess = (event) => {
@@ -180,7 +180,7 @@ class DB_HANDLER {
         if (typeof(cb) != 'function') throw new Error('DB_HANDLER.get(): cb is not defined or is not typeof function');
         
         const _request = this.#getStore().get(id);
-        _request.onerror = (event) => {cb(); throw new Error(`DB_HANDLER.add(): ${event.target.error.name}`);};
+        _request.onerror = (event) => {cb(); throw new Error(`DB_HANDLER.add(): ${event.target.error}`);};
         _request.onsuccess = (event) => {cb(event.target.result);};
     };
 
@@ -204,26 +204,27 @@ class DB_HANDLER {
     * Update Object
     * @async
     * @param {object} obj Object to update
-    * @param {function} [cb] Callback function executes when object update is done
+    * @return Promise
     */ 
-    async update(obj, cb = () => {}){
-        console.log('Called DB_HANDLER:update()');
-        if (typeof(obj) != 'object') throw new Error('DB_HANDLER.update(): obj is not defined or is not type of object');
-        console.log('Called DB_HANDLER:update() Stage 2');
+    async update(obj){
+        return new Promise((resolve, reject) => {
+            console.log('Called DB_HANDLER:update()');
+            if (typeof(obj) != 'object') throw new Error('DB_HANDLER.update(): obj is not defined or is not type of object');
+            // console.log('Called DB_HANDLER:update() Stage 2');
 
-        const _request = this.#getStore(true).put(obj);
-        console.log('Called DB_HANDLER:update() Stage 3');
+            const _request = this.#getStore(true).put(obj);
+            // console.log('Called DB_HANDLER:update() Stage 3');
 
-        _request.onerror = (event) => {
-            console.log('DB_HANDLER:update() --> had an Error');
-            cb(); 
-            throw new Error(`DB_HANDLER.update(): ${event.target.error.name}`)
-            ;};
-        _request.onsuccess = (event) => {
-            console.log('Called DB_HANDLER:update() --> success');
-            cb(true);
-            this.#fireDataChangedEvent();
-        }
+            _request.onerror = (event) => {
+                // console.log('DB_HANDLER:update() --> had an Error');
+                reject(event.target.error.name);};
+
+            _request.onsuccess = (event) => {
+                // console.log('Called DB_HANDLER:update() --> success');
+                this.#fireDataChangedEvent();
+                resolve(event);
+            }
+        })
     };
 
     /**
