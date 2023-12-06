@@ -1222,16 +1222,19 @@ function createSettingsMenuElement(dat){
     } else if (dat.type == 'button') { // Number Value
 
         const _elem_item_left = document.createElement('div');
+        
         _elem_item_left.classList.add('ave-item-left');
 
+
         const _elem_item_left_input_label  = document.createElement('label');
-        _elem_item_left_input_label.setAttribute('data-ave-tooltip',dat.description);
+        _elem_item_left_input_label.setAttribute('data-ave-tooltip', dat.description);
         _elem_item_left_input_label.setAttribute('class', 'a-button');
         _elem_item_left_input_label.style.width = "250px";
-
+        if (dat.bgColor) _elem_item_left_input_label.style.backgroundColor = dat.bgColor;
         const _elem_item_left_input = document.createElement('button');
         _elem_item_left_input.type = 'button';
         _elem_item_left_input.className = 'ave-input-button';
+        
         // _elem_item_left_input.setAttribute('ave-data-key', dat.key);
         _elem_item_left_input.innerText = dat.name;
         //_elem_item_left_input.setAttribute('data-ave-tooltip',dat.description);

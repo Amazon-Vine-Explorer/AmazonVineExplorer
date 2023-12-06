@@ -87,8 +87,8 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', nam
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Settings for Developers and Testers', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', min: 0, max: 15, name: 'Debuglevel', description: ''});
 
-SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'Do NOT click ME !!!', description: 'Don`t do it', btnClick: () => {alert('I told u!!!'); window.location.href = 'https://neal.fun/space-elevator/'} });
-SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'RESET SETTINGS TO DEFAULT', description: 'It does what it says', btnClick: () => {SETTINGS.reset(); window.location.href = window.location.href} });
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'Do NOT click ME !!!', bgColor: 'rgb(255,0,0)', description: 'Don`t do it', btnClick: () => {alert('I told u!!!'); window.location.href = 'https://neal.fun/space-elevator/'} });
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'RESET SETTINGS TO DEFAULT', bgColor: 'rgb(255,128,0)', description: 'It does what it says', btnClick: () => {SETTINGS.reset(); window.location.href = window.location.href} });
  
 
 class SETTINGS_DEFAULT {
