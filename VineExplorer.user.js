@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.9.0.1
+// @version      0.9.0.2
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -904,7 +904,7 @@ function addAVESettingsMenu(){
 }
 
 .ave-settings-container input[type="number"] {
-  width: 50px;
+  width: 75px;
   height: 21px;
   border: var(--numberBorder) solid #888C8C;
   padding: var(--numberPadding);
@@ -919,7 +919,7 @@ function addAVESettingsMenu(){
 }
 
 .ave-settings-container input[type="text"] {
-
+  width: 500px;
 }
 
 .ave-settings-item{
@@ -1102,6 +1102,12 @@ font-weight: bold;
   border: none;
 }
 
+.ave-input-button {
+  border: none;
+  background: none;
+  margin: 3px;
+}
+
 ::-webkit-color-swatch-wrapper {
   padding: 0;
 }
@@ -1173,7 +1179,6 @@ function createSettingsMenuElement(dat){
         _elem_item_left_input.className = 'ave-input-number';
         _elem_item_left_input.setAttribute('ave-data-key', dat.key);
         _elem_item_left_input.setAttribute('value', SETTINGS[dat.key]);
-        _elem_item_left_input.style.width = (((SETTINGS[dat.key].toString().length + 1) * 8) + 30 + 'px');
         //_elem_item_left_input.setAttribute('onInput', 'this.style.width = "calc(" + (this.value.length + 1) + "ch + 30px)";')
         if (!isNaN(dat.min)) _elem_item_left_input.setAttribute('min', dat.min);
         if (!isNaN(dat.max)) _elem_item_left_input.setAttribute('max', dat.max);
@@ -1193,7 +1198,6 @@ function createSettingsMenuElement(dat){
 
         })
         _elem_item_left_input.addEventListener('input', (event) => {
-            event.target.style.width = "calc(" + (event.target.value.length + 1) + "ch + 30px)";
             const _value = event.target.value;
             const _min = parseFloat(event.target.min);
             const _max = parseFloat(event.target.max);
@@ -1222,6 +1226,8 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_left_input_label  = document.createElement('label');
         _elem_item_left_input_label.setAttribute('data-ave-tooltip',dat.description);
+        _elem_item_left_input_label.setAttribute('class', 'a-button');
+        _elem_item_left_input_label.style.width = "250px";
 
         const _elem_item_left_input = document.createElement('button');
         _elem_item_left_input.type = 'button';
