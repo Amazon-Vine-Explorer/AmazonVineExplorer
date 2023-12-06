@@ -59,6 +59,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestions', type: 'bool', name:
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnPotLuck', type: 'bool', name: 'Disable Button Potluck', description: 'Disables the Section Button PotLuck(FSE)'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnLastChance', type: 'bool', name: 'Disable Button Last Chance', description: 'Disables the Section Button Last Chance(VFA)'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnSeller', type: 'bool', name: 'Disable Button Seller', description: 'Disables the Section Button Seller(ZA)'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableTopLogoChange', type: 'bool', name: 'Enable Top Logo Change', description: 'Enables the Change of the top logo to our AVE Logo'});
 
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Button All Products', description: 'Enable "All Products" Button'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Background Scan', description: 'Enables the Background scan, if disabled you will find a Button for Autoscan on the Vine Website'});
@@ -100,6 +101,7 @@ class SETTINGS_DEFAULT {
     DisableBtnPotLuck = false;
     DisableBtnLastChance = false;
     DisableBtnSeller = false;
+    EnableTopLogoChange = true;
     EnableBackgroundScan = true;
     EnableInfiniteScrollLiveQuerry = false;
     EnableDesktopNotifikation = false;
@@ -298,6 +300,13 @@ async function fastStyleChanges() {
             });
         }
 
+        if (SETTINGS.EnableTopLogoChange) {
+            waitForHtmlElmement('#vvp-logo-link > img', (elem) => {
+                elem.src = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/vine_logo_notification_image.png';
+                elem.style.height = '100px';
+            });
+
+        }
     } else if (SITE_IS_SHOPPING) {
 
         if (SETTINGS.DisableSuggestionsShopping) {
