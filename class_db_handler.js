@@ -12,16 +12,16 @@ class DB_HANDLER {
     * @param {string} dbName Name your Database
     * @param {string} [storeName] Object Store Name
     * @param {number} [version] Object Store Name
-    * @returns {Promise}
+    * @param {function} [cb] Callback function executes when database initialisation is done
+    * @return {DB_HANDLER} DBHANDLER Object
     */ 
-    constructor(dbName, storeName, version) {
-        return new Promise((resolve, reject) => {
-            if (!dbName) throw new Error(`CLASS DB_HANDLER needs a name for the database to init: exampe:  const db = new DB_HANDLER('AnyName')`);
-            this.#dbName = dbName;
-            this.#version = version || 1;
-            this.#storeName = storeName || dbName + '_ObjectStore';
-            this.#init().then(resolve).catch(reject);
-        })
+            
+    constructor(dbName, storeName, version, cb = (sucess, err) => {}) {
+        if (!dbName) throw new Error(`CLASS DB_HANDLER needs a name for the database to init: exampe:  const db = new DB_HANDLER('AnyName')`);
+        this.#dbName = dbName;
+        this.#version = version || 1;
+        this.#storeName = storeName || dbName + '_ObjectStore';
+        this.#init().then(cb).catch(cb(null, true));
     }
 
     /**
