@@ -97,7 +97,16 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 addBranding();
                 detectCurrentPageType();
 
-                init(true);
+                let _tileCount = 0;
+                const _initialWaitForAllTiles = setInterval(() => {
+                    const _count = document.getElementsByClassName('vvp-details-btn').length // Buttons take a bit more time as tiles
+                    if (_count > _tileCount) {
+                        _tileCount = _count;
+                    } else {
+                        clearInterval(_initialWaitForAllTiles);
+                        init(true);
+                    }
+                }, 100);
             });
             waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
                 if (_execLock) return;
@@ -210,7 +219,7 @@ function detectCurrentPageType(){
 }
 
 async function parseTileData(tile, cb) {
-    if (SETTINGS.DebugLevel > 14) console.log(`Called parseTileData(`, tile, ')');
+    if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
 
     const _id = tile.getAttribute('data-recommendation-id');
 
@@ -218,21 +227,28 @@ async function parseTileData(tile, cb) {
         if (_ret) {
             _ret.gotFromDB = true;
             _ret.ts_lastSeen = unixTimeStamp();
+            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): got DB Entry`);
             cb(_ret);
         } else {
             //We have to wait for a lot of Stuff
             waitForHtmlElmement('.vvp-item-tile-content',async () => {
                 const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
+                if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 1`);
                 waitForHtmlElmement('img', async () => {
                     const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
+                    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 2`);
                     waitForHtmlElmement('.vvp-item-product-title-container', async () => {
                         const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
+                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 3`);
                         waitForHtmlElmement('a', async () => {
                             const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
+                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 4`);
                             waitForHtmlElmement('.a-button-inner', async () => {
                                 const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
+                                if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 5`);
                                 waitForHtmlElmement('input', async () => {
                                     const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
+                                    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 6`);
                                     const _newProduct = new Product(_id);
                                     _newProduct.data_recommendation_id = _id;
                                     _newProduct.data_img_url = tile.getAttribute('data-img-url');
@@ -248,6 +264,7 @@ async function parseTileData(tile, cb) {
 
 
                                     if (_newProduct.description_short == '') {
+                                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): we don´t have a shot description`);
                                         let _timeLoopCounter = 0;
                                         const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
                                         const _halfdelay = (SETTINGS.FetchRetryTime / 2)
@@ -270,6 +287,7 @@ async function parseTileData(tile, cb) {
                                         }
                                         timeLoop();
                                     } else {
+                                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): END`);
                                         cb(_newProduct);
                                     }
 
@@ -540,6 +558,7 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
         if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
             _tilesContainer.appendChild(_tile);
             parseTileData(_tile, (_product) => {
+                if (SETTINGS.DebugLevel > 14) console.log('Come Back from parseTileData <<<<<<<<<< INFINITYSCROLL <<<<<<<<<<<<<<<<<<<<<<<', _tile, _product);
                 addStyleToTile(_tile, _product);
                 addTileEventhandlers(_tile);
             });
@@ -2124,6 +2143,7 @@ function init(hasTiles) {
 
     if (hasTiles) {
         const _tiles = document.getElementsByClassName('vvp-item-tile');
+
         const _tilesLength = _tiles.length;
         let _countdown = 0;
         const _parseStartTime = Date.now();
@@ -2131,7 +2151,7 @@ function init(hasTiles) {
             const _currTile = _tiles[i];
             _currTile.style.cssText = "background-color: yellow;";
             parseTileData(_currTile, (_product) => {
-                if (SETTINGS.DebugLevel > 10) console.log(`Got TileData Back: `, _product);
+                if (SETTINGS.DebugLevel > 14) console.log('Come Back from parseTileData <<<<<<<<<< INIT <<<<<<<<<<<<<<<<<<<<<<<', _currTile, _product);
 
                 _countdown++;
                 const _tilesToDoCount = _tilesLength - _countdown;

@@ -17,6 +17,12 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 ## Changelog:
 
+##### [XX.12.2023] - Version 0.10.0
+
+* Changed DB_HANDLER from Callbacks to Promises
+* BugFix: Tile Processing was faster then tile loading from Amazon => Added delayloop until all tiles are loaded
+
+
 ##### [06.12.2023] - Version 0.9.0
 
 * Improved Search function to allow multiple keywords
