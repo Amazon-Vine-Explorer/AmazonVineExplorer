@@ -214,7 +214,7 @@ async function parseTileData(tile, cb) {
 
     const _id = tile.getAttribute('data-recommendation-id');
 
-    database.get(_id, (_ret) => {
+    database.get(_id).then((_ret) => {
         if (_ret) {
             _ret.gotFromDB = true;
             _ret.ts_lastSeen = unixTimeStamp();
@@ -312,7 +312,7 @@ function addLeftSideButtons(forceClean) {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         setTimeout(() => {
-            database.getAll((prodsArr) => {
+            database.getAll().then((prodsArr) => {
                 const _prodsArryLength = prodsArr.length;
                 for (let i = 0; i < _prodsArryLength; i++) {
                     const _currProd = prodsArr[i];
@@ -352,7 +352,7 @@ function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
     for (let i = 0; i < _tilesLength; i++) {
         const _tile = _tiles[i];
         const _id = _tile.getAttribute('data-recommendation-id');
-        database.get(_id, (prod) => {
+        database.get(_id).then((prod) => {
             prod.isNew = false;
             database.update(prod).then( () => {
                 updateTileStyle(prod);
@@ -365,7 +365,7 @@ function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
 
 function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
     if (SETTINGS.DebugLevel > 10) console.log('Called markAllCurrentDatabaseProductsAsSeen()');
-    database.getNewEntries((prods) => {
+    database.getNewEntries().then((prods) => {
         const _prodsLength = prods.length;
         let _returned = 0;
         if (SETTINGS.DebugLevel > 10) console.log(`markAllCurrentDatabaseProductsAsSeen() - Got ${_prodsLength} Products with Tag isNew`);
@@ -593,7 +593,7 @@ function createNewSite(type, data) {
     switch(type) {
         case PAGETYPE.NEW_ITEMS:{
             currentMainPage = PAGETYPE.NEW_ITEMS;
-            database.getNewEntries((_prodArr) => {
+            database.getNewEntries().then((_prodArr) => {
                 createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
                     const _btn = document.getElementById('ave-btn-list-new');
@@ -605,7 +605,7 @@ function createNewSite(type, data) {
         }
         case PAGETYPE.FAVORITES:{
             currentMainPage = PAGETYPE.FAVORITES;
-            database.getFavEntries((_prodArr) => {
+            database.getFavEntries().then((_prodArr) => {
                 createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
                     const _btn = document.getElementById('ave-btn-favorites');
@@ -641,7 +641,7 @@ function createNewSite(type, data) {
                         })
                     })
                 } else {
-                    database.getAll((prodArr) => {
+                    database.getAll().then((prodArr) => {
                         infiniteScrollTilesBufferArray = prodArr;
                         appendInfiniteScrollTiles();
                     });
@@ -695,7 +695,7 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
 function btnEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
-        database.get(data.recommendation_id, async (prod) => {
+        database.get(data.recommendation_id).then(async (prod) => {
             if (SETTINGS.DebugLevel > 10) console.log(`btnEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isNew = false;
@@ -712,7 +712,7 @@ function btnEventhandlerClick(event, data) {
 function favStarEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called favStarEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
-        database.get(data.recommendation_id, (prod) => {
+        database.get(data.recommendation_id).then((prod) => {
             if (SETTINGS.DebugLevel > 10) console.log(`favStarEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isFav = !prod.isFav;
@@ -1603,7 +1603,7 @@ function getPageinationData(localDocument = document) {
 async function cleanUpDatabase(cb = () => {}) {
     if (SETTINGS.DebugLevel > 10) console.log('Called cleanUpDatabase()');
     const _dbCleanIcon = addDBCleaningSymbol();
-    database.getAll((prodArr) => {
+    database.getAll().then((prodArr) => {
         const _prodArrLength = prodArr.length;
         if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
 
@@ -1646,7 +1646,7 @@ async function cleanUpDatabase(cb = () => {}) {
             if (_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount && !_currEntry.isFav) {
                 if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
 
-                database.removeID(_currEntry.id, (ret) => {
+                database.removeID(_currEntry.id).then((ret) => {
                     _deleted++;
                     _localReturn();
                 });
@@ -1654,7 +1654,7 @@ async function cleanUpDatabase(cb = () => {}) {
                 _localReturn();
             } else {
 
-                database.update(_currEntry, (ret) => {_updated++ ; _localReturn();});
+                database.update(_currEntry).then((ret) => {_updated++ ; _localReturn();});
             }
         }
     });
@@ -1737,7 +1737,7 @@ function initBackgroundScan() {
                     }
                     case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
-                        database.getAll((products) => {
+                        database.getAll().then((products) => {
                             const _needUpdate = [];
                             const _randCount = Math.round(Math.random() * 3);
                             for (_prod of products) {
@@ -1759,7 +1759,7 @@ function initBackgroundScan() {
                             Promise.all(_promises).then(() => {
                                 _scanFinished();
                                 _subStage++;
-                            }).finally(() => {
+                            }).catch(() => {
                                 console.error('There was an error while updating an product in database');
                                 _scanFinished();
                                 _subStage++;
@@ -1907,7 +1907,7 @@ let lastDesktopNotifikationTimestamp = 0;
 function updateNewProductsBtn() {
     if (AUTO_SCAN_IS_RUNNING) return;
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
-    database.getNewEntries((prodArr) => { 
+    database.getNewEntries().then((prodArr) => { 
         const _btnBadge = document.getElementById('ave-new-items-btn-badge');
         const _pageTitle = document.title.replace(/^[^\|]*\|/, '').trim();
         const _prodArrLength = prodArr.length;
@@ -2186,7 +2186,7 @@ function init(hasTiles) {
         if (_input.length >= 3) {
             if (searchInputTimeout) clearTimeout(searchInputTimeout);
             searchInputTimeout = setTimeout(() => {
-                database.query(_input.split(' '), (_objArr) => {
+                database.query(_input.split(' ')).then((_objArr) => {
                     if (SETTINGS.DebugLevel > 10) console.log(`Found ${_objArr.length} Items with this Search`);
                     createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
                     searchInputTimeout = null;
