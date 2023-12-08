@@ -1677,7 +1677,7 @@ async function cleanUpDatabase(cb = () => {}) {
             }))
         }
 
-        Promise.allSettled().then(() => {
+        Promise.allSettled(_workersProms).then(() => {
                 if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
                 _dbCleanIcon.remove();
                 cb(true);
