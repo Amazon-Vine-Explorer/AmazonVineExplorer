@@ -338,7 +338,7 @@ class DB_HANDLER {
                 const _cursor = event.target.result;
 
                 if (_cursor) {
-                    if (_cursor.value.isFav) {ID
+                    if (_cursor.value.isFav) {
                         _result.push(_cursor.value);
                     }
 
