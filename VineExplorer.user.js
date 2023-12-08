@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.0
+// @version      0.10.1
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -69,6 +69,7 @@ let searchInputTimeout;
 let backGroundScanTimeout;
 
 let TimeouteScrollTilesBufferArray = [];
+let BackGroundScanIsRunning = false;
 
 // Make some things accessable from console
 unsafeWindow.ave = {
@@ -838,7 +839,11 @@ function updateAutoScanScreenText(text = '') {
 
 function addBranding() {
 
+    const _oldElem = document.getElementById('ave-branding-text');
+    if (_oldElem) _oldElem.remove();
+    
     const _text = document.createElement('div');
+    _text.id = 'ave-branding-text';
     _text.style.position = 'fixed';
     _text.style.bottom = '10px';
     _text.style.left = '10px';
@@ -852,8 +857,10 @@ function addBranding() {
     _text.innerHTML = `<p id="ave-brandig-text">${AVE_TITLE}${(AVE_IS_THIS_SESSION_MASTER) ? ' - Master': ''} - ${AVE_VERSION}</p>`;
 
 
-    document.body.appendChild(_text);
+    document?.body?.appendChild(_text);
 }
+
+unsafeWindow.ave.addBranding = addBranding;
 
 
 function addAveSettingsTab(){
@@ -1623,60 +1630,66 @@ function getPageinationData(localDocument = document) {
 async function cleanUpDatabase(cb = () => {}) {
     if (SETTINGS.DebugLevel > 10) console.log('Called cleanUpDatabase()');
     const _dbCleanIcon = addDBCleaningSymbol();
+    
     database.getAll().then((prodArr) => {
+        
         const _prodArrLength = prodArr.length;
+        const _workersProms = [];
         if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
 
-        let _returned = 0;
         let _updated = 0;
         let _deleted = 0;
 
-        const _localReturn = () => { // Dirty, I'm so fucking dirty, but its needed to speed things up
-            _returned++
-            if (_returned == _prodArrLength) {
-                if (SETTINGS.DebugLevel > 10) console.log(`Databasecleanup Finished: Entrys:${_returned} Updated:${_updated} Deleted:${_deleted}`);
+        for (const _currEntry of prodArr) {
+            _workersProms.push(new Promise((resolve, reject) => {
+                let _needUpdate = false;
+                if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking Entry ${_currEntry.id} `);
+
+                // Checking Product Vars
+                if (!_currEntry.ts_firstSeen){
+                    _currEntry.ts_firstSeen = (unixTimeStamp() - Math.round(Math.random() * (SECONDS_PER_WEEK / 2)));
+                    _needUpdate = true;
+                }
+
+                if (!_currEntry.ts_lastSeen) {
+                    _currEntry.ts_lastSeen = (_currEntry.ts_firstSeen + SECONDS_PER_DAY);
+                    _needUpdate = true;
+                }
+
+
+                let _notSeenCounter = 0;
+                if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
+                    _notSeenCounter++;
+                } else if (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
+                    _notSeenCounter++;
+                }
+                
+                if (_currEntry.notSeenCounter != _notSeenCounter) {
+                    _currEntry.notSeenCounter = _notSeenCounter;
+                    _needUpdate = true;
+                }
+
+                if (_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount && !_currEntry.isFav) {
+                    if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
+
+                    database.removeID(_currEntry.id).then((ret) => {
+                        _deleted++;
+                        resolve()
+                    });
+                } else if (!_needUpdate){
+                    resolve()
+                } else {
+                    database.update(_currEntry).then((ret) => {_updated++; resolve();});
+                }
+            }))
+        }
+
+        Promise.allSettled(_workersProms).then(() => {
+                if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
                 _dbCleanIcon.remove();
                 cb(true);
-            }
-        }
+        })
 
-        for (let i = 0; i < _prodArrLength; i++) {
-            const _currEntry = prodArr[i];
-            let _needUpdate = false;
-            if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking Entry ${_currEntry.id} `);
-
-            // Checking Product Vars
-            if (!_currEntry.ts_firstSeen){
-                _currEntry.ts_firstSeen = (unixTimeStamp() - Math.round(Math.random() * (SECONDS_PER_WEEK / 2)));
-                _needUpdate = true;
-            }
-
-            if (!_currEntry.ts_lastSeen) {
-                _currEntry.ts_lastSeen = (_currEntry.ts_firstSeen + SECONDS_PER_DAY);
-                _needUpdate = true;
-            }
-
-
-            const _notSeenCounter = (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) ? 0 : _currEntry.notSeenCounter + 1;
-            if (_currEntry.notSeenCounter != _notSeenCounter) {
-                _currEntry.notSeenCounter = _notSeenCounter;
-                _needUpdate = true;
-            }
-
-            if (_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount && !_currEntry.isFav) {
-                if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
-
-                database.removeID(_currEntry.id).then((ret) => {
-                    _deleted++;
-                    _localReturn();
-                });
-            } else if (!_needUpdate){
-                _localReturn();
-            } else {
-
-                database.update(_currEntry).then((ret) => {_updated++ ; _localReturn();});
-            }
-        }
     });
 }
 
@@ -1767,9 +1780,14 @@ function readFile(file) {
     });
 }
 
+
+
 function initBackgroundScan() {
     if (SETTINGS.DebugLevel > 10) console.log('Called initBackgroundScan()');
-    if (!AVE_IS_THIS_SESSION_MASTER) console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan');
+    if  (BackGroundScanIsRunning) {console.warn('initBackgroundScan(): Backgroundscan is already running => Exit');return;}
+    if  (!SETTINGS.EnableBackgroundScan) {console.warn('initBackgroundScan(): Backgroundscan is disabled => Exit');return;}
+    if (!AVE_IS_THIS_SESSION_MASTER) {console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan'); return;}
+    BackGroundScanIsRunning = true;
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
 
     // Create iFrame if not exists

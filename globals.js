@@ -68,13 +68,39 @@ setTimeout(() => {
         AVE_IS_THIS_SESSION_MASTER = _isMasterInstance;
         _sessions.push({id: AVE_SESSION_ID, ts: Date.now(), master: _isMasterInstance});
         localStorage.setItem('AVE_SESSIONS', JSON.stringify(_sessions));
+        addBranding();
     }
 
-    // if (AVE_IS_THIS_SESSION_MASTER) { // Before we implement a cleanup we try how reliable the close events are
-    //     setInterval(() => { // 
+    setInterval(() => { // 
+        const _sessions = JSON.parse(localStorage.getItem('AVE_SESSIONS', '[]'))
+        let _noValidMaster = false;
+        let _ownIndex = -1;
+        for (let i = 0; i < _sessions.length; i++) {
+            const _session = _sessions[i];
+            if (_session.id == AVE_SESSION_ID){ 
+                _session.ts = Date.now();
+                _ownIndex = i;
+            } else if (_session.ts + 2500 < Date.now()) { // We have found a Invalid Session => Handle this
+                if (_session.master && SITE_IS_VINE) { // Should we takeover Master ? ONLY IF WE ARE ON VINE SITE
+                    _noValidMaster = true;
+                    _sessions.splice(_sessions.indexOf(_session), 1);
+                } else {
+                    _sessions.splice(_sessions.indexOf(_session), 1);
+                }
+            }
+        }
 
-    //     }, 1000);
-    // }
+        if (!AVE_IS_THIS_SESSION_MASTER && (_noValidMaster || _sessions.length == 1)) {
+            AVE_IS_THIS_SESSION_MASTER = true;
+            _sessions[_ownIndex].master = true;
+            addBranding();
+            console.log('WE TOOK OVER MASTER SESSION TO OUR CURRENT');
+            initBackgroundScan();
+            // More Handling NEEDED ????
+        }
+        localStorage.setItem("AVE_SESSIONS", JSON.stringify(_sessions));
+    }, 1000);
+
 
 }, Math.round(Math.random() * 100));
 
