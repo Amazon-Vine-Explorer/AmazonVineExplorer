@@ -159,7 +159,7 @@ class DB_HANDLER {
     * Add Object to Database
     * @async
     * @param {object} dbName Name your Database
-    * @returns {Promise}
+    * @returns {Promise<void>}
     */ 
     async add(obj) {
         return new Promise((resolve, reject) => {
@@ -221,7 +221,7 @@ class DB_HANDLER {
     * Update Object
     * @async
     * @param {object} obj Object to update
-    * @returns {Promise}
+    * @returns {Promise<void>}
     */ 
     async update(obj){
         return new Promise((resolve, reject) => {
@@ -367,7 +367,7 @@ class DB_HANDLER {
     * Removes Object with given ID from Database
     * @async
     * @param {string} id Object ID
-    * @returns {Promise}
+    * @returns {Promise<void>}
     */ 
     async removeID(id){
         return new Promise((resolve, reject) => {
@@ -381,8 +381,26 @@ class DB_HANDLER {
             _request.onerror = (event) => {reject(`DB_HANDLER.removeID(): ${event.target.error.name}`);};
         })
     };
+
+     /**
+     * Deletes the entire database.
+     * @async
+     * @returns {Promise<void>}
+     */
+    async deleteDatabase() {
+        return new Promise((resolve, reject) => {
+            const deleteRequest = indexedDB.deleteDatabase(this.#dbName);
+
+            deleteRequest.onerror = (event) => {
+                reject(event);
+                console.error(event);
+                throw new Error('Error deleting the database');
+            };
+
+            deleteRequest.onsuccess = () => {
+                this.#db = null; // Reset the reference to the database
+                resolve();
+            };
+        });
+    }
 }
-
-
-
-

@@ -90,7 +90,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', min: 0, max
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'Do NOT click ME !!!', bgColor: 'rgb(255,0,0)', description: 'Don`t do it', btnClick: () => {alert('I told u!!!'); window.location.href = 'https://neal.fun/space-elevator/'} });
 SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'RESET SETTINGS TO DEFAULT', bgColor: 'rgb(255,128,0)', description: 'It does what it says', btnClick: () => {SETTINGS.reset(); window.location.href = window.location.href} });
- 
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DELETE DATABSE', bgColor: 'rgb(255,0,0)', description: 'A USER DOES NOT NEED TO DO THIS ! ITS ONLY FOR DEVELOPMENT PURPOSES', btnClick: () => {database.deleteDatabase().then(() => {window.location.href = window.location.href})}});
 
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;
