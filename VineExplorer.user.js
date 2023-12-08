@@ -69,6 +69,7 @@ let searchInputTimeout;
 let backGroundScanTimeout;
 
 let TimeouteScrollTilesBufferArray = [];
+let BackGroundScanIsRunning = false;
 
 // Make some things accessable from console
 unsafeWindow.ave = {
@@ -838,7 +839,11 @@ function updateAutoScanScreenText(text = '') {
 
 function addBranding() {
 
+    const _oldElem = document.getElementById('ave-branding-text');
+    if (_oldElem) _oldElem.remove();
+    
     const _text = document.createElement('div');
+    _text.id = 'ave-branding-text';
     _text.style.position = 'fixed';
     _text.style.bottom = '10px';
     _text.style.left = '10px';
@@ -852,8 +857,10 @@ function addBranding() {
     _text.innerHTML = `<p id="ave-brandig-text">${AVE_TITLE}${(AVE_IS_THIS_SESSION_MASTER) ? ' - Master': ''} - ${AVE_VERSION}</p>`;
 
 
-    document.body.appendChild(_text);
+    document?.body?.appendChild(_text);
 }
+
+unsafeWindow.ave.addBranding = addBranding;
 
 
 function addAveSettingsTab(){
@@ -1773,9 +1780,14 @@ function readFile(file) {
     });
 }
 
+
+
 function initBackgroundScan() {
     if (SETTINGS.DebugLevel > 10) console.log('Called initBackgroundScan()');
-    if (!AVE_IS_THIS_SESSION_MASTER) console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan');
+    if  (BackGroundScanIsRunning) {console.warn('initBackgroundScan(): Backgroundscan is already running => Exit');return;}
+    if  (!SETTINGS.EnableBackgroundScan) {console.warn('initBackgroundScan(): Backgroundscan is disabled => Exit');return;}
+    if (!AVE_IS_THIS_SESSION_MASTER) {console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan'); return;}
+    BackGroundScanIsRunning = true;
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
 
     // Create iFrame if not exists

@@ -17,9 +17,11 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 ## Changelog:
 
-##### [XX.12.2023] - Version 0.10.X
+##### [08.12.2023] - Version 0.10.1
 * Improved reliability of Databae Cleanup
 * PutLuck Products get removed from Database after one day now
+* Added more Master Slave Session detection handling
+* Added dead Sessions removement
 
 ##### [08.12.2023] - Version 0.10.0
 
