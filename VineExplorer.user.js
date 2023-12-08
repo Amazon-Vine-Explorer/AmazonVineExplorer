@@ -1623,66 +1623,66 @@ function getPageinationData(localDocument = document) {
 async function cleanUpDatabase(cb = () => {}) {
     if (SETTINGS.DebugLevel > 10) console.log('Called cleanUpDatabase()');
     const _dbCleanIcon = addDBCleaningSymbol();
+    
     database.getAll().then((prodArr) => {
+        
         const _prodArrLength = prodArr.length;
+        const _workersProms = [];
         if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
 
-        let _returned = 0;
         let _updated = 0;
         let _deleted = 0;
 
-        const _localReturn = () => { // Dirty, I'm so fucking dirty, but its needed to speed things up
-            _returned++
-            if (_returned == _prodArrLength) {
-                if (SETTINGS.DebugLevel > 10) console.log(`Databasecleanup Finished: Entrys:${_returned} Updated:${_updated} Deleted:${_deleted}`);
+        for (const _currEntry of prodArr) {
+            _workersProms.push(new Promise((resolve, reject) => {
+                let _needUpdate = false;
+                if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking Entry ${_currEntry.id} `);
+
+                // Checking Product Vars
+                if (!_currEntry.ts_firstSeen){
+                    _currEntry.ts_firstSeen = (unixTimeStamp() - Math.round(Math.random() * (SECONDS_PER_WEEK / 2)));
+                    _needUpdate = true;
+                }
+
+                if (!_currEntry.ts_lastSeen) {
+                    _currEntry.ts_lastSeen = (_currEntry.ts_firstSeen + SECONDS_PER_DAY);
+                    _needUpdate = true;
+                }
+
+
+                let _notSeenCounter = 0;
+                if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
+                    _notSeenCounter++;
+                } else if (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
+                    _notSeenCounter++;
+                }
+                
+                if (_currEntry.notSeenCounter != _notSeenCounter) {
+                    _currEntry.notSeenCounter = _notSeenCounter;
+                    _needUpdate = true;
+                }
+
+                if (_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount && !_currEntry.isFav) {
+                    if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
+
+                    database.removeID(_currEntry.id).then((ret) => {
+                        _deleted++;
+                        resolve()
+                    });
+                } else if (!_needUpdate){
+                    resolve()
+                } else {
+                    database.update(_currEntry).then((ret) => {_updated++; resolve();});
+                }
+            }))
+        }
+
+        Promise.allSettled().then(() => {
+                if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
                 _dbCleanIcon.remove();
                 cb(true);
-            }
-        }
+        })
 
-        for (let i = 0; i < _prodArrLength; i++) {
-            const _currEntry = prodArr[i];
-            let _needUpdate = false;
-            if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking Entry ${_currEntry.id} `);
-
-            // Checking Product Vars
-            if (!_currEntry.ts_firstSeen){
-                _currEntry.ts_firstSeen = (unixTimeStamp() - Math.round(Math.random() * (SECONDS_PER_WEEK / 2)));
-                _needUpdate = true;
-            }
-
-            if (!_currEntry.ts_lastSeen) {
-                _currEntry.ts_lastSeen = (_currEntry.ts_firstSeen + SECONDS_PER_DAY);
-                _needUpdate = true;
-            }
-
-
-            let _notSeenCounter = 0;
-            if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
-                _notSeenCounter++;
-            } else if (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
-                _notSeenCounter++;
-            }
-            
-            if (_currEntry.notSeenCounter != _notSeenCounter) {
-                _currEntry.notSeenCounter = _notSeenCounter;
-                _needUpdate = true;
-            }
-
-            if (_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount && !_currEntry.isFav) {
-                if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
-
-                database.removeID(_currEntry.id).then((ret) => {
-                    _deleted++;
-                    _localReturn();
-                });
-            } else if (!_needUpdate){
-                _localReturn();
-            } else {
-
-                database.update(_currEntry).then((ret) => {_updated++ ; _localReturn();});
-            }
-        }
     });
 }
 
