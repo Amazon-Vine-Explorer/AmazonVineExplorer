@@ -1657,7 +1657,13 @@ async function cleanUpDatabase(cb = () => {}) {
             }
 
 
-            const _notSeenCounter = (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) ? 0 : _currEntry.notSeenCounter + 1;
+            let _notSeenCounter = 0;
+            if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
+                _notSeenCounter++;
+            } else if (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
+                _notSeenCounter++;
+            }
+            
             if (_currEntry.notSeenCounter != _notSeenCounter) {
                 _currEntry.notSeenCounter = _notSeenCounter;
                 _needUpdate = true;
