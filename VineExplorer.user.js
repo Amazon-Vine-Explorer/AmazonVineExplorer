@@ -218,89 +218,91 @@ function detectCurrentPageType(){
 
 }
 
-async function parseTileData(tile, cb) {
-    if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
+async function parseTileData(tile) {
+    return new Promise((resolve, reject) => {
+                if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
 
-    const _id = tile.getAttribute('data-recommendation-id');
+        const _id = tile.getAttribute('data-recommendation-id');
 
-    database.get(_id).then((_ret) => {
-        if (_ret) {
-            _ret.gotFromDB = true;
-            _ret.ts_lastSeen = unixTimeStamp();
-            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): got DB Entry`);
-            cb(_ret);
-        } else {
-            //We have to wait for a lot of Stuff
-            waitForHtmlElmement('.vvp-item-tile-content',async () => {
-                const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
-                if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 1`);
-                waitForHtmlElmement('img', async () => {
-                    const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
-                    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 2`);
-                    waitForHtmlElmement('.vvp-item-product-title-container', async () => {
-                        const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
-                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 3`);
-                        waitForHtmlElmement('a', async () => {
-                            const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
-                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 4`);
-                            waitForHtmlElmement('.a-button-inner', async () => {
-                                const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
-                                if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 5`);
-                                waitForHtmlElmement('input', async () => {
-                                    const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
-                                    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 6`);
-                                    const _newProduct = new Product(_id);
-                                    _newProduct.data_recommendation_id = _id;
-                                    _newProduct.data_img_url = tile.getAttribute('data-img-url');
-                                    _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
-                                    _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
-                                    _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
+        database.get(_id).then((_ret) => {
+            if (_ret) {
+                _ret.gotFromDB = true;
+                _ret.ts_lastSeen = unixTimeStamp();
+                if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): got DB Entry`);
+                resolve(_ret);
+            } else {
+                //We have to wait for a lot of Stuff
+                waitForHtmlElmement('.vvp-item-tile-content',async () => {
+                    const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
+                    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 1`);
+                    waitForHtmlElmement('img', async () => {
+                        const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
+                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 2`);
+                        waitForHtmlElmement('.vvp-item-product-title-container', async () => {
+                            const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
+                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 3`);
+                            waitForHtmlElmement('a', async () => {
+                                const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
+                                if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 4`);
+                                waitForHtmlElmement('.a-button-inner', async () => {
+                                    const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
+                                    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 5`);
+                                    waitForHtmlElmement('input', async () => {
+                                        const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
+                                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 6`);
+                                        const _newProduct = new Product(_id);
+                                        _newProduct.data_recommendation_id = _id;
+                                        _newProduct.data_img_url = tile.getAttribute('data-img-url');
+                                        _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
+                                        _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
+                                        _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
 
-                                    _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
-                                    _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-                                    _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
+                                        _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
+                                        _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
+                                        _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
 
-                                    _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+                                        _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
 
 
-                                    if (_newProduct.description_short == '') {
-                                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): we don´t have a shot description`);
-                                        let _timeLoopCounter = 0;
-                                        const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
-                                        const _halfdelay = (SETTINGS.FetchRetryTime / 2)
-                                        function timeLoop() {
-                                            if (_timeLoopCounter++ < _maxLoops){
-                                                setTimeout(() => {
-                                                    const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                                                    if (_short != ""){
-                                                        _newProduct.description_short = _short;
-                                                        cb(_newProduct);
-                                                    } else {
-                                                        timeLoop();
-                                                    }
-                                                }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
-                                            } else {
-                                                _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
-                                                _newProduct.generated_short = true;
-                                                cb(_newProduct);
+                                        if (_newProduct.description_short == '') {
+                                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): we don´t have a shot description`);
+                                            let _timeLoopCounter = 0;
+                                            const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
+                                            const _halfdelay = (SETTINGS.FetchRetryTime / 2)
+                                            function timeLoop() {
+                                                if (_timeLoopCounter++ < _maxLoops){
+                                                    setTimeout(() => {
+                                                        const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+                                                        if (_short != ""){
+                                                            _newProduct.description_short = _short;
+                                                            resolve(_newProduct);
+                                                        } else {
+                                                            timeLoop();
+                                                        }
+                                                    }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
+                                                } else {
+                                                    _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
+                                                    _newProduct.generated_short = true;
+                                                    resolve(_newProduct);
+                                                }
                                             }
+                                            timeLoop();
+                                        } else {
+                                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): END`);
+                                            resolve(_newProduct);
                                         }
-                                        timeLoop();
-                                    } else {
-                                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): END`);
-                                        cb(_newProduct);
-                                    }
 
-                                    // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+                                        // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
 
-                                }, _div_vpp_item_tile_content_button_inner)
-                            }, _div_vpp_item_tile_content)
-                        }, _div_vvp_item_product_title_container)
+                                    }, _div_vpp_item_tile_content_button_inner)
+                                }, _div_vpp_item_tile_content)
+                            }, _div_vvp_item_product_title_container)
+                        }, _div_vpp_item_tile_content);
                     }, _div_vpp_item_tile_content);
-                }, _div_vpp_item_tile_content);
-            }, tile)
-        }
-    });
+                }, tile)
+            }
+        });
+    })
 }
 
 
@@ -541,7 +543,6 @@ async function createInfiniteScrollSite(cb) {
     _tilesGrid.innerHTML = '';
 
     addLeftSideButtons(true);
-
     cb(_tilesGrid);
 }
 
@@ -557,7 +558,7 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
         const _tile = infiniteScrollTilesBufferArray.shift();
         if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
             _tilesContainer.appendChild(_tile);
-            parseTileData(_tile, (_product) => {
+            parseTileData(_tile).then((_product) => {
                 if (SETTINGS.DebugLevel > 14) console.log('Come Back from parseTileData <<<<<<<<<< INFINITYSCROLL <<<<<<<<<<<<<<<<<<<<<<<', _tile, _product);
                 addStyleToTile(_tile, _product);
                 addTileEventhandlers(_tile);
@@ -1830,14 +1831,20 @@ function backGroundTileScanner(url, cb) {
             clearInterval(_loopDelay);
             if (_tilesLength > 0) {
                 let _returned = 0;
+                const _tilesProm = []
                 for (let i = 0; i < _tilesLength; i++) {
-                    parseTileData(_tiles[i], (prod) => {
+                    _tilesProm.push(parseTileData(_tiles[i]).then((prod) => {
                         _returned++;
                         if (SETTINGS.DebugLevel > 14) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
                         if (!prod.gotFromDB) database.add(prod);
-                        if (_returned == _tilesLength) {cb(true); _iconLoading.remove()};
-                    })
+                        
+                    }))
                 }
+
+                Promise.allSettled(_tilesProm).then(() => {
+                    cb(true);
+                    _iconLoading.remove();
+                });
             } else {
                 if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => We dont have anything to do here anything => resume autoscan`);
                 cb(true); // We dont have to do here anything
@@ -2145,31 +2152,26 @@ function init(hasTiles) {
         const _tiles = document.getElementsByClassName('vvp-item-tile');
 
         const _tilesLength = _tiles.length;
-        let _countdown = 0;
+        const _tilePorms = [];
         const _parseStartTime = Date.now();
         for (let i = 0; i < _tilesLength; i++) {
             const _currTile = _tiles[i];
             _currTile.style.cssText = "background-color: yellow;";
-            parseTileData(_currTile, (_product) => {
+            _tilePorms.push(parseTileData(_currTile).then((_product) => {
                 if (SETTINGS.DebugLevel > 14) console.log('Come Back from parseTileData <<<<<<<<<< INIT <<<<<<<<<<<<<<<<<<<<<<<', _currTile, _product);
-
-                _countdown++;
-                const _tilesToDoCount = _tilesLength - _countdown;
-                if (SETTINGS.DebugLevel > 10) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
-                if (SETTINGS.DebugLevel > 10 && _tilesToDoCount == 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Parsing ${_tilesLength} has taken ${Date.now() - _parseStartTime} ms`);
-
                 addStyleToTile(_currTile, _product);
 
-                if (_tilesToDoCount == 0) {
-                    if(INIT_AUTO_SCAN) {
-                        startAutoScan();
-                    } else if (AUTO_SCAN_IS_RUNNING) {
-                        handleAutoScan();
-                    } else {
-                        completeDelayedInit();
-                    }
+            }));
+
+            Promise.allSettled(_tilePorms).then(() => {
+                if(INIT_AUTO_SCAN) {
+                    startAutoScan();
+                } else if (AUTO_SCAN_IS_RUNNING) {
+                    handleAutoScan();
+                } else {
+                    completeDelayedInit();
                 }
-            });
+            })
         }
     } else {
         if (SETTINGS.DebugLevel > 10) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
