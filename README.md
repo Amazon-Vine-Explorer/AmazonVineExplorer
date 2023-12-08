@@ -22,7 +22,9 @@ This script enhances the experience on the Amazon Vine website. However, it does
 * Changed DB_HANDLER from Callbacks to Promises
 * BugFix: Tile Processing was faster then tile loading from Amazon => Added delayloop until all tiles are loaded
 * Changed Tile Processor to Promises to increase reliability
-
+* Added Button Colors to Usersettings
+* Added the possibility to delete the database
+* Added the possibility to export the database
 
 ##### [06.12.2023] - Version 0.9.0
 

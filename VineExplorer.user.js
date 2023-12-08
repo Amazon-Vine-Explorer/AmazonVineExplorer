@@ -1680,6 +1680,24 @@ async function cleanUpDatabase(cb = () => {}) {
     });
 }
 
+function exportDatabase() {
+    console.log('Create Database Dump...');
+
+    database.getAll().then((db) => {
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(db, null, 4)));
+        element.setAttribute('download', 'AmazonVineExplorerDatabase.json');
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+    })
+    
+}
+
 function initBackgroundScan() {
     if (SETTINGS.DebugLevel > 10) console.log('Called initBackgroundScan()');
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
