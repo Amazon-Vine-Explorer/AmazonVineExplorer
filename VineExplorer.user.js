@@ -1698,6 +1698,75 @@ function exportDatabase() {
     
 }
 
+/**
+ * Opens a file selector dialog and imports a database from a JSON file.
+ * @async
+ * @returns {Promise<void>}
+ */
+async function importDatabase() {
+    return new Promise((resolve, reject) => {
+        // Create an input element of type "file"
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.json';
+
+        // Set up an event listener for when a file is selected
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+
+            if (file) {
+                try {
+                    const jsonData = await readFile(file);
+
+                    // Assuming that the `database` object has a method like `add` to insert data
+                    // Adjust this part based on the actual methods provided by your database object
+                    for (const data of jsonData) {
+                        const existingRecord = await database.get(data.id);
+
+                        if (!existingRecord) {
+                            await database.add(data);
+                        } else {
+                            console.warn(`Record with ID ${data.id} already exists. Skipping.`);
+                        }
+                    }
+
+                    console.log('Data imported successfully.');
+                    resolve();
+                } catch (error) {
+                    console.error('Error importing data:', error);
+                    reject(error);
+                }
+            }
+        });
+
+        // Trigger a click event to open the file selector dialog
+        fileInput.click();
+    });
+}
+
+unsafeWindow.ave.importDB = importDatabase;
+
+/**
+ * Reads the content of a file as text.
+ * @param {File} file - The file to read.
+ * @returns {Promise<string>} - A Promise that resolves to the file content as a string.
+ */
+function readFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (event) => {
+            resolve(JSON.parse(event.target.result));
+        };
+
+        reader.onerror = (error) => {
+            reject(error);
+        };
+
+        reader.readAsText(file);
+    });
+}
+
 function initBackgroundScan() {
     if (SETTINGS.DebugLevel > 10) console.log('Called initBackgroundScan()');
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
