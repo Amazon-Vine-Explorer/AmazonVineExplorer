@@ -8,6 +8,12 @@ const SECONDS_PER_WEEK = 604800 / 2;
 const SECONDS_PER_DAY = 86400;
 const SITE_IS_VINE = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\//.test(window.location.href);
 const SITE_IS_SHOPPING = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/(?!vine)(?!gp\/video)(?!music)/.test(window.location.href);
+const AVE_SESSION_ID = generateSessionID();
+
+/**
+ * Is this Browser Tab / Window the Master Instance ??
+ */
+let AVE_IS_THIS_SESSION_MASTER = false;
 
 // Obsolete sobald der Backgroundscan läuft
 const INIT_AUTO_SCAN = (localStorage.getItem('AVE_INIT_AUTO_SCAN') == 'true') ? true : false;
@@ -50,6 +56,45 @@ class AVE_EVENTHANDLER {
 }
 const ave_eventhandler = new AVE_EVENTHANDLER();
 
+setTimeout(() => {
+    if (!localStorage.getItem('AVE_SESSIONS')) {
+        localStorage.setItem("AVE_SESSIONS", JSON.stringify([{id: AVE_SESSION_ID, ts: Date.now()}]));
+    } else {
+        const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
+        let _isMasterInstance = SITE_IS_VINE;
+        for (const _session of _sessions) {
+            if (_session.master) _isMasterInstance = false;
+        }
+        AVE_IS_THIS_SESSION_MASTER = _isMasterInstance;
+        _sessions.push({id: AVE_SESSION_ID, ts: Date.now(), master: _isMasterInstance});
+        localStorage.setItem('AVE_SESSIONS', JSON.stringify(_sessions));
+    }
+
+    // if (AVE_IS_THIS_SESSION_MASTER) { // Before we implement a cleanup we try how reliable the close events are
+    //     setInterval(() => { // 
+
+    //     }, 1000);
+    // }
+
+}, Math.round(Math.random() * 100));
+
+
+window.onbeforeunload = function () {
+   console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY'); 
+   const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
+   for (let i = 0; i < _sessions.length; i++) {
+        const _elem = _sessions[i];
+        if (_elem.id == AVE_SESSION_ID) {
+            _sessions.splice(i, 1);
+            localStorage.setItem('AVE_SESSIONS', JSON.stringify(_sessions));
+            console.log('SESSION ID GOT REMOVED');
+            return;
+        }
+    }
+    return 'Realy ?'
+}
+
+
 // All Config Options that should shown to the User
 const SETTINGS_USERCONFIG_DEFINES = [];
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Vine', description: 'Tooltip Description of this Setting'});
@@ -59,37 +104,39 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestions', type: 'bool', name:
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnPotLuck', type: 'bool', name: 'Disable Button Potluck', description: 'Disables the Section Button PotLuck(FSE)'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnLastChance', type: 'bool', name: 'Disable Button Last Chance', description: 'Disables the Section Button Last Chance(VFA)'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnSeller', type: 'bool', name: 'Disable Button Seller', description: 'Disables the Section Button Seller(ZA)'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableTopLogoChange', type: 'bool', name: 'Enable Top Logo Change', description: 'Enables the Change of the top logo to our AVE Logo'});
 
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Button All Products', description: 'Enable "All Products" Button'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Background Scan', description: 'Enables the Background scan, if disabled you will find a Button for Autoscan on the Vine Website'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Infiniti Scroll Live Querry', description: 'If enabled the Products of the All Products Page will get querryd from Amazon directls otherwise they will get loaded from Database(faster)'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikation', type: 'bool', name: 'Enable Desktop Notifikations', description: 'Enable Desktop Notifikations if new Products are detected'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notifikation Highlight Keywords', inputPlaceholder: 'Type in your highlight keyword and press [ENTER]', description: ''});
-
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikation', type: 'bool', name: 'Enable Desktop Notifications', description: 'Enable Desktop Notifications if new Products are detected'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notifickation Highlight Keywords', inputPlaceholder: 'Type in your highlight keyword and press [ENTER]', description: 'Create a List of words u want to Highlight if Product desciption containes one or more of them'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScanDelayPerPage', type: 'number', min: 2000, max: 10000, name: 'Background Scan Per Page Min Delay(Milliseconds)', description: 'Minimal Delay per Page load of Background Scan'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScannerRandomness', type: 'number', min: 100, max: 10000, name: 'Background Scan Randomness per Page(Milliseconds)', description: 'A Vale that gives the maximal range for the Randomy added delay per page load'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationDelay', type: 'number', min: 1, max: 900, name: 'Desktop Notifikation Delay(Seconds)', description: 'Minimal Time between Desktop Notifikations. exept Notifikations with hitted keywords'});
 
+SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Colors and Styles', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorNewProducts', type: 'color', name: 'Button Color New Products', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorMarkCurrSiteAsSeen', type: 'color', name: 'Button Color Mark Current Site As Seen', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorMarkAllAsSeen', type: 'color', name: 'Button Color Mark All As Seen', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorBackToTop', type: 'color', name: 'Button Color Back To Top', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorUpdateDB', type: 'color', name: 'Button Color Update Database', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorAllProducts', type: 'color', name: 'Button Color All Products', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorFavorites', type: 'color', name: 'Button Color Favorites', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorDefault', type: 'color', name: 'Color Favorite Star unchecked', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', name: 'Color Favorite Star checked', description: ''});
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Shopping', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooterShopping', type: 'bool', name: 'Disable Footer', description: 'Disables the Footer of the Amazon Shopping Page'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestionsShopping', type: 'bool', name: 'Disable Suggestions', description: 'Disables the Suggestions of the Amazon Shopping Page'});
 
-
-SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'General', description: ''});
-
-SETTINGS_USERCONFIG_DEFINES.push({key: 'FavBtnColor', type: 'color', name: 'Button Color Favorites', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorDefault', type: 'color', name: 'Color Favorite Star unchecked', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', name: 'Color Favorite Star checked', description: ''});
-
-
-
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Settings for Developers and Testers', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', min: 0, max: 15, name: 'Debuglevel', description: ''});
 
-SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'Do NOT click ME !!!', description: 'Don`t do it', btnClick: () => {alert('I told u!!!'); window.location.href = 'https://neal.fun/space-elevator/'} });
-SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'RESET SETTINGS TO DEFAULT', description: 'It does what it says', btnClick: () => {SETTINGS.reset(); window.location.href = window.location.href} });
- 
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'RESET SETTINGS TO DEFAULT', bgColor: 'rgb(255,128,0)', description: 'It does what it says', btnClick: () => {SETTINGS.reset(); window.location.href = window.location.href} });
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DATABSE EXPORT >>>', bgColor: 'lime', description: 'Export the entire Database', btnClick: () => {exportDatabase();}});
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DATABSE IMPORT <<<', bgColor: 'yellow', description: 'Imports Database from earlyer exported file !! ATTENTION !! At the Moment there is NO VALIDATION CHECK', btnClick: () => {importDatabase();}});
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DELETE DATABSE', bgColor: 'rgb(255,0,0)', description: 'A USER DOES NOT NEED TO DO THIS ! ITS ONLY FOR DEVELOPMENT PURPOSES', btnClick: () => {database.deleteDatabase().then(() => {window.location.href = window.location.href})}});
 
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;
@@ -100,13 +147,23 @@ class SETTINGS_DEFAULT {
     DisableBtnPotLuck = false;
     DisableBtnLastChance = false;
     DisableBtnSeller = false;
+    EnableTopLogoChange = true;
     EnableBackgroundScan = true;
     EnableInfiniteScrollLiveQuerry = false;
     EnableDesktopNotifikation = false;
     EnableBtnAll = true;
-    FavBtnColor = 'rgb(255, 255, 102)';
+    
+    BtnColorFavorites = '#ffe143';
+    BtnColorNewProducts = '#00FF00';
+    BtnColorMarkCurrSiteAsSeen = '#00FF00';
+    BtnColorMarkAllAsSeen = '#FFA28E';
+    BtnColorBackToTop = '#FFFFFF'
+    BtnColorUpdateDB = '#00FF00';
+    BtnColorAllProducts = '#FFFFFF';
+
     FavStarColorDefault = 'white';
     FavStarColorChecked = '#ffe143';
+
     NotSeenMaxCount = 5;
     PageLoadMinDelay = 750;
     DebugLevel = 0;
@@ -298,6 +355,13 @@ async function fastStyleChanges() {
             });
         }
 
+        if (SETTINGS.EnableTopLogoChange) {
+            waitForHtmlElmement('#vvp-logo-link > img', (elem) => {
+                elem.src = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/vine_logo_notification_image.png';
+                elem.style.height = '100px';
+            });
+
+        }
     } else if (SITE_IS_SHOPPING) {
 
         if (SETTINGS.DisableSuggestionsShopping) {
@@ -314,12 +378,13 @@ async function fastStyleChanges() {
                 elem.style.visibility = 'hidden';
             });
         }
-
-
-        
-
-
     }
+}
 
-
+/**
+ * Generates a randomly generated Session ID to identify different Tabs and Windows
+ * @returns {string} Session ID
+ */
+function generateSessionID() {
+    return 'aaaa-aaaaa-AVE-SESSION-aaaaaaa-aaaaaaaa'.replace(/[a]/g, ( c ) => { return Math.round(Math.random() * 36).toString(36) });
 }

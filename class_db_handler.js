@@ -15,85 +15,92 @@ class DB_HANDLER {
     * @param {function} [cb] Callback function executes when database initialisation is done
     * @return {DB_HANDLER} DBHANDLER Object
     */ 
+            
     constructor(dbName, storeName, version, cb = (sucess, err) => {}) {
         if (!dbName) throw new Error(`CLASS DB_HANDLER needs a name for the database to init: exampe:  const db = new DB_HANDLER('AnyName')`);
         this.#dbName = dbName;
         this.#version = version || 1;
         this.#storeName = storeName || dbName + '_ObjectStore';
-        this.#init(cb);
+        this.#init().then(cb).catch(cb(null, true));
     }
 
-    // Private Init
-    async #init(cb) {
-       const _request = indexedDB.open(this.#dbName, this.#version);
-       const _storeName = this.#storeName; // private class variable is not accessable inside _request functions
-        console.log('IndexedDB init()');
-        console.log(_request);
+    /**
+     * Class Internal DB Init Function
+     * @async
+     * @returns {Promise<string>}
+     */
+    async #init() {
+        return new Promise((resolve, reject) => {
+            const _request = indexedDB.open(this.#dbName, this.#version);
+            const _storeName = this.#storeName; // private class variable is not accessable inside _request functions
+                console.log('IndexedDB init()');
+                console.log(_request);
 
-        _request.onerror = (event) => {
-            cb(undefined, true)
-            console.error(event);
-            throw new Error('Indexed DB has an Error');
-        }
-
-        _request.onblocked = (event) => {
-            cb(undefined, true)
-            console.log(event);
-            throw new Error('IndexedDB is blocked');
-        }
-
-        _request.onsuccess = (event) => {
-            this.#db = event.target.result;
-            cb(event.target.result);
-        }
-
-        _request.onupgradeneeded = (event) => {
-            console.log(`DB_HANDLER: Database has to be created or Updated`);
-            console.log(JSON.stringify(event, null, 4));
-            console.log(event);
-
-            const _req = event.target;
-            const _db = _req.result;
-
-            if (!_db.objectStoreNames.contains(_storeName)) {
-                if (SETTINGS.DebugLevel > 10) console.log('Database needs to be created...');
-                const _storeOS = _db.createObjectStore(_storeName, { keyPath: 'id' });
-                // _storeOS.createIndex('isNew', 'isNew', { unique: false });
-                // _storeOS.createIndex('isFav', 'isFav', { unique: false });
-                _storeOS.createIndex('data_asin', 'data_asin', { unique: true });
-            } else {
-                // Get a reference to the implicit transaction for this request
-                // @type IDBTransaction
-                const _transaction = _req.transaction;
-
-                // Now, get a reference to the existing object store
-                // @type IDBObjectStore
-                const _store = _transaction.objectStore(_storeName);
-
-                console.log(`Updating Database from Version ${event.oldVersion} to ${event.newVersion}`);
-                switch(event.oldVersion) { // existing db version
-                    //case 0: // We had to Create the DB, but this case should never happen
-                    case 1: { // Update DB from Verion 1 to 2
-                        // Add index for New and Favorites
-                        // _store.createIndex('data_asin', 'data_asin');
-                        break;
-                    }
-                    case 2: {
-                        if (this.#checkForDuplicatedASIN()) {
-                            _storeOS.createIndex('data_asin', 'data_asin', { unique: true });
-                        }   
-                        break;
-                    }
-                    case 3: {
-                        //  _store.createIndex('data_asin', 'data_asin');
-                        break;
-                    }
-                    default: {
-                        console.error(`There was any Unknown Error while Updating Database from ${event.oldVersion} to ${event.newVersion}`);
-                    }
+                _request.onerror = (event) => {
+                    reject(event);
+                    console.error(event);
+                    throw new Error('Indexed DB has an Error');
                 }
-            }
-        };
+
+                _request.onblocked = (event) => {
+                    reject(event);
+                    console.warn(event);
+                    throw new Error('IndexedDB is blocked');
+                }
+
+                _request.onsuccess = (event) => {
+                    this.#db = event.target.result;
+                    resolve(event.target.result);
+                }
+
+                _request.onupgradeneeded = (event) => {
+                    console.log(`DB_HANDLER: Database has to be created or Updated`);
+                    console.log(JSON.stringify(event, null, 4));
+                    console.log(event);
+
+                    const _req = event.target;
+                    const _db = _req.result;
+
+                    if (!_db.objectStoreNames.contains(_storeName)) {
+                        if (SETTINGS.DebugLevel > 10) console.log('Database needs to be created...');
+                        const _storeOS = _db.createObjectStore(_storeName, { keyPath: 'id' });
+                        // _storeOS.createIndex('isNew', 'isNew', { unique: false });
+                        // _storeOS.createIndex('isFav', 'isFav', { unique: false });
+                        _storeOS.createIndex('data_asin', 'data_asin', { unique: true });
+                    } else {
+                        // Get a reference to the implicit transaction for this request
+                        // @type IDBTransaction
+                        const _transaction = _req.transaction;
+
+                        // Now, get a reference to the existing object store
+                        // @type IDBObjectStore
+                        const _store = _transaction.objectStore(_storeName);
+
+                        console.log(`Updating Database from Version ${event.oldVersion} to ${event.newVersion}`);
+                        switch(event.oldVersion) { // existing db version
+                            //case 0: // We had to Create the DB, but this case should never happen
+                            case 1: { // Update DB from Verion 1 to 2
+                                // Add index for New and Favorites
+                                // _store.createIndex('data_asin', 'data_asin');
+                                break;
+                            }
+                            case 2: {
+                                if (this.#checkForDuplicatedASIN()) {
+                                    _storeOS.createIndex('data_asin', 'data_asin', { unique: true });
+                                }   
+                                break;
+                            }
+                            case 3: {
+                                //  _store.createIndex('data_asin', 'data_asin');
+                                break;
+                            }
+                            default: {
+                                console.error(`There was any Unknown Error while Updating Database from ${event.oldVersion} to ${event.newVersion}`);
+                            }
+                        }
+                    }
+                };
+        })
     };
 
     /**
@@ -152,64 +159,74 @@ class DB_HANDLER {
     * Add Object to Database
     * @async
     * @param {object} dbName Name your Database
-    * @param {function} [cb] Callback function executes when database is successfull created
+    * @returns {Promise<void>}
     */ 
-    async add(obj, cb = () => {}) {
-        if (typeof(obj) != 'object') throw new Error('DB_HANDLER.add(): obj is not defined or is not type of object');
+    async add(obj) {
+        return new Promise((resolve, reject) => {
+            if (typeof(obj) != 'object') reject('DB_HANDLER.add(): obj is not defined or is not type of object');
 
-        const _request = this.#getStore(true).add(obj);
+            const _request = this.#getStore(true).add(obj);
 
-        _request.onerror = (event) => {
-            throw new Error(`DB_HANDLER.add(): ${event.target.error}`);
-        };
-        
-        _request.onsuccess = (event) => {
-            cb(true);
-            this.#fireDataChangedEvent();
-        };
+            _request.onerror = (event) => {
+                if (`${event.target.error}`.includes('data_asin')) {
+                    console.error('Tryed to ADD New Product with existing ASIN ???', obj);
+                    // reject(event.target.error);
+                    // return;
+                }
+
+                reject(`DB_HANDLER.add(): ${event.target.error}`);
+            };
+            
+            _request.onsuccess = (event) => {
+                resolve();
+                this.#fireDataChangedEvent();
+            };
+        })
     };
 
     /**
     * Get Object by ID
     * @async
     * @param {string} id Object ID
-    * @param {function} cb Callback function executes when database query is done returns result or undefined
+    * @returns {Promise<Product>}
     */ 
-    async get(id, cb){
-        if (typeof(id) != 'string') throw new Error('DB_HANDLER.get(): id is not defined or is not typeof string');
-        if (typeof(cb) != 'function') throw new Error('DB_HANDLER.get(): cb is not defined or is not typeof function');
-        
-        const _request = this.#getStore().get(id);
-        _request.onerror = (event) => {cb(); throw new Error(`DB_HANDLER.add(): ${event.target.error}`);};
-        _request.onsuccess = (event) => {cb(event.target.result);};
+    async get(id){
+        return new Promise((resolve, reject) => {
+            if (typeof(id) != 'string') reject('DB_HANDLER.get(): id is not defined or is not typeof string');
+            
+            const _request = this.#getStore().get(id);
+            _request.onerror = (event) => {reject(`DB_HANDLER.add(): ${event.target.error}`);};
+            _request.onsuccess = (event) => {resolve(event.target.result);};
+        })
     };
 
     /**
     * Get Object by ASIN
     * @async
     * @param {string} asin ASIN
-    * @param {function} cb Callback function executes when database query is done returns result or undefined
+    * @returns {Promise<Product>}
     */ 
-    async getByASIN(asin, cb){
-        if (typeof(asin) != 'string') throw new Error('DB_HANDLER.get(): asin is not defined or is not typeof string');
-        if (typeof(cb) != 'function') throw new Error('DB_HANDLER.get(): cb is not defined or is not typeof function');
-        
-        const _index = this.#getStore().index('data_asin');
-        const _request = _index.get(asin);
-        _request.onerror = (event) => {cb(); throw new Error(`DB_HANDLER.add(): ${event.target.error.name}`);};
-        _request.onsuccess = (event) => {cb(event.target.result);};
+    async getByASIN(asin){
+        return new Promise((resolve, reject) => {
+            if (typeof(asin) != 'string') reject('DB_HANDLER.get(): asin is not defined or is not typeof string');
+            
+            const _index = this.#getStore().index('data_asin');
+            const _request = _index.get(asin);
+            _request.onerror = (event) => {reject(`DB_HANDLER.add(): ${event.target.error.name}`);};
+            _request.onsuccess = (event) => {resole(event.target.result);};
+        })
     };
 
     /**
     * Update Object
     * @async
     * @param {object} obj Object to update
-    * @return Promise
+    * @returns {Promise<void>}
     */ 
     async update(obj){
         return new Promise((resolve, reject) => {
             console.log('Called DB_HANDLER:update()');
-            if (typeof(obj) != 'object') throw new Error('DB_HANDLER.update(): obj is not defined or is not type of object');
+            if (typeof(obj) != 'object') reject('DB_HANDLER.update(): obj is not defined or is not type of object');
             // console.log('Called DB_HANDLER:update() Stage 2');
 
             const _request = this.#getStore(true).put(obj);
@@ -217,12 +234,12 @@ class DB_HANDLER {
 
             _request.onerror = (event) => {
                 // console.log('DB_HANDLER:update() --> had an Error');
-                reject(event.target.error.name);};
+                reject(event.target.error);};
 
             _request.onsuccess = (event) => {
                 // console.log('Called DB_HANDLER:update() --> success');
                 this.#fireDataChangedEvent();
-                resolve(event);
+                resolve();
             }
         })
     };
@@ -231,139 +248,159 @@ class DB_HANDLER {
     * Query Database for Searchstring
     * @async
     * @param {(string|array)} query String to find
-    * @param {function} cb Callback function executes when database query is done
+    * @returns {Promise<Product[]>}
     */ 
-    async query(query, cb){
-        if (typeof(query) != 'string' && !Array.isArray(query)) throw new Error('DB_HANDLER.query(): query is not defined or is not typeof string or array');
-        if (typeof(cb) != 'function') throw new Error('DB_HANDLER.query(): cb is not defined or is not typeof function');
+    async query(query){
+        return new Promise((resolve, reject) => {
+            if (typeof(query) != 'string' && !Array.isArray(query)) reject('DB_HANDLER.query(): query is not defined or is not typeof string or array');
 
-        const _request = this.#getStore().openCursor();
-        const _result = [];
+            const _request = this.#getStore().openCursor();
+            const _result = [];
 
-        // Use a Array of words for search
-        const _keys = (typeof(query) == 'string') ? [query] : query;
-        for (let _key of _keys) {_key = _key.toLowerCase();}
+            // Use a Array of words for search
+            const _keys = (typeof(query) == 'string') ? [query] : query;
+            for (let _key of _keys) {_key = _key.toLowerCase();}
 
-        _request.onsuccess = (event) => {
-            const _cursor = event.target.result;
-            if (_cursor) {
-                const _descriptionFull = (_cursor.value.description_full || '').toLowerCase();
+            _request.onsuccess = (event) => {
+                const _cursor = event.target.result;
+                if (_cursor) {
+                    const _descriptionFull = (_cursor.value.description_full || '').toLowerCase();
 
-                if (_keys.every((_key) => _descriptionFull.includes(_key))) {
-                    _result.push(_cursor.value);
+                    if (_keys.every((_key) => _descriptionFull.includes(_key))) {
+                        _result.push(_cursor.value);
+                    }
+
+                    _cursor.continue();
+
+                } else { // No more entries
+                    resolve(_result);
                 }
+            };
 
-                _cursor.continue();
-
-            } else { // No more entries
-                cb(_result);
-            }
-        };
-
-        _request.onerror = (event) => {
-            console.error('Error querying records:', event.target.error.name);
-            cb([]);
-        };
+            _request.onerror = (event) => {
+                reject('Error querying records:', event.target.error.name);
+            };
+        })
     };
 
 
    /**
     * Get all keys from Database
     * @async
-    * @param {function} cb Callback function executes when database query is done
+    * @returns {Promise<string[]>}
     */     
-    async getAllKeys(cb){
-        if (typeof(cb) != 'function') throw new Error('DB_HANDLER.getAllKeys(): cb is not defined or is not typeof function');
-
-        const _request = this.#getStore().getAllKeys();
-        _request.onsuccess = (event) => {cb(event.target.result);};
-        _request.onerror = (event) => {cb([]); throw new Error(`DB_HANDLER.getAllKeys(): ${event.target.error.name}`)};
+    async getAllKeys(){
+        return new Promise((resolve, reject) => {
+            const _request = this.#getStore().getAllKeys();
+            _request.onsuccess = (event) => {resolve(event.target.result);};
+            _request.onerror = (event) => {reject(`DB_HANDLER.getAllKeys(): ${event.target.error.name}`)};
+        })
     };
-
 
    /**
     * Get all new "unseen" products from Database
     * @async
-    * @param {function} cb Callback function executes when database query is done
+    * @returns {Promise<Product[]>}
     */     
-    async getNewEntries(cb){
-        if (typeof(cb) != 'function') throw new Error('DB_HANDLER.getNewEntries(): cb is not defined or is not typeof function');
-        const _result = [];
-        const _request = this.#getStore().openCursor();
+    async getNewEntries(){
+        return new Promise((resolve, reject) => {
+            const _result = [];
+            const _request = this.#getStore().openCursor();
 
-        _request.onsuccess = (event) => {
-            const _cursor = event.target.result;
+            _request.onsuccess = (event) => {
+                const _cursor = event.target.result;
 
-            if (_cursor) {
-                if (_cursor.value.isNew) {
-                    _result.push(_cursor.value);
+                if (_cursor) {
+                    if (_cursor.value.isNew) {
+                        _result.push(_cursor.value);
+                    }
+
+                    _cursor.continue();
+                } else { // No more entries
+                    resolve(_result);
                 }
-
-                _cursor.continue();
-            } else { // No more entries
-                cb(_result);
-            }
-        };
-        _request.onerror = (event) => {cb([]); throw new Error(`DB_HANDLER.getNewEntrys(): ${event.target.error.name}`);};
+            };
+            _request.onerror = (event) => {reject(`DB_HANDLER.getNewEntrys(): ${event.target.error.name}`);};
+        })
     };
 
    /**
     * Get all Favorite products from Database
     * @async
-    * @param {function} cb Callback function executes when database query is done
+    * @returns {Promise<Product[]>}
     */     
     async getFavEntries(cb){
-        if (typeof(cb) != 'function') throw new Error('DB_HANDLER.getNewEntries(): cb is not defined or is not typeof function');
-        const _result = [];
-        const _request = this.#getStore().openCursor();
+        return new Promise((resolve, reject) => {
+            const _result = [];
+            const _request = this.#getStore().openCursor();
 
-        _request.onsuccess = (event) => {
-            const _cursor = event.target.result;
+            _request.onsuccess = (event) => {
+                const _cursor = event.target.result;
 
-            if (_cursor) {
-                if (_cursor.value.isFav) {
-                    _result.push(_cursor.value);
+                if (_cursor) {
+                    if (_cursor.value.isFav) {
+                        _result.push(_cursor.value);
+                    }
+
+                    _cursor.continue();
+                } else { // No more entries
+                    resolve(_result);
                 }
-
-                _cursor.continue();
-            } else { // No more entries
-                cb(_result);
-            }
-        };
-        _request.onerror = (event) => {cb([]); throw new Error(`DB_HANDLER.getNewEntrys(): ${event.target.error.name}`);};
+            };
+            _request.onerror = (event) => {reject(`DB_HANDLER.getNewEntrys(): ${event.target.error.name}`);};
+        })
     };
     
     /**
      * Get all the Objects stored in our DB
-     * @param {function} cb Callback function executes when the database query is done
+     * @returns {Promise<Product[]>}
      */
-    getAll(cb) {
-        if (typeof (cb) !== 'function') throw new Error('DB_HANDLER.getAll(): cb is not defined or is not typeof function');
-        
-        const _request = this.#getStore().getAll();
-        _request.onsuccess = (event) => {cb(event.target.result);};
-        _request.onerror = (event) => {cb([]); throw new Error(`DB_HANDLER.getAll(): ${event.target.error.name}`);};
+    getAll() {
+        return new Promise((resolve, reject) => {
+            const _request = this.#getStore().getAll();
+            _request.onsuccess = (event) => {resolve(event.target.result);};
+            _request.onerror = (event) => {reject(`DB_HANDLER.getAll(): ${event.target.error.name}`);};
+        })        
     }
 
     /**
     * Removes Object with given ID from Database
     * @async
     * @param {string} id Object ID
-    * @param {function} [cb] Callback function executes when database query is done returns result or undefined
+    * @returns {Promise<void>}
     */ 
-    async removeID(id, cb){
-        if (typeof(id) != 'string') throw new Error('DB_HANDLER.removeID(): id is not defined or is not typeof string');
+    async removeID(id){
+        return new Promise((resolve, reject) => {
+            if (typeof(id) != 'string') (reject('DB_HANDLER.removeID(): id is not defined or is not typeof string'));
 
-        const _request = this.#getStore(true).delete(id);
-        _request.onsuccess = (event) => {
-            cb(true);
-            this.#fireDataChangedEvent();
-        };
-
-        _request.onerror = (event) => {cb(); throw new Error(`DB_HANDLER.removeID(): ${event.target.error.name}`);};
+            const _request = this.#getStore(true).delete(id);
+            _request.onsuccess = (event) => {
+                resolve();
+                this.#fireDataChangedEvent();
+            };
+            _request.onerror = (event) => {reject(`DB_HANDLER.removeID(): ${event.target.error.name}`);};
+        })
     };
+
+     /**
+     * Deletes the entire database.
+     * @async
+     * @returns {Promise<void>}
+     */
+    async deleteDatabase() {
+        return new Promise((resolve, reject) => {
+            const deleteRequest = indexedDB.deleteDatabase(this.#dbName);
+
+            deleteRequest.onerror = (event) => {
+                reject(event);
+                console.error(event);
+                throw new Error('Error deleting the database');
+            };
+
+            deleteRequest.onsuccess = () => {
+                this.#db = null; // Reset the reference to the database
+                resolve();
+            };
+        });
+    }
 }
-
-
-
-

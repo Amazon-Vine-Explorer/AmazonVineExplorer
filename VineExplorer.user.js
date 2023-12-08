@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.9.0
+// @version      0.9.0.3
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -43,7 +43,7 @@
     - Automatisches Bestellen via Prioliste ?!?
 
     Todo:
-        
+
     - Zum Löschen markierten Produkten die Information hinzufügen wann sie gelöscht werden
 
     - Zu den TOP Buttons die Anzahl der Elemente in der jeweiligen Kategorie hinzufügen
@@ -96,8 +96,17 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 _execLock = true;
                 addBranding();
                 detectCurrentPageType();
-                
-                init(true);
+
+                let _tileCount = 0;
+                const _initialWaitForAllTiles = setInterval(() => {
+                    const _count = document.getElementsByClassName('vvp-details-btn').length // Buttons take a bit more time as tiles
+                    if (_count > _tileCount) {
+                        _tileCount = _count;
+                    } else {
+                        clearInterval(_initialWaitForAllTiles);
+                        init(true);
+                    }
+                }, 100);
             });
             waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
                 if (_execLock) return;
@@ -132,7 +141,7 @@ ave_eventhandler.on('ave-database-changed', () => {
         showDbUpdateLogoTimeout = null;
         showDbUpdateLogoIcon = null;
     }, 5000);
-        
+
 
 })
 
@@ -163,11 +172,11 @@ function handleInfiniteScroll() {
     if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
         if (blockHandleInfiniteScroll) return;
         blockHandleInfiniteScroll = true;
-        
+
         const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
-        
+
         console.log(`handleInfiniteScroll(): _maxScrollHeight: ${_maxScrollHeight} window.scrollY+inner: ${window.scrollY + window.innerHeight}`);
-        
+
         if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))){
             blockHandleInfiniteScroll = false;  
             return;
@@ -202,87 +211,98 @@ function detectCurrentPageType(){
     } else if (getUrlParameter('queue') == 'encore') {
         currentMainPage = PAGETYPE.ORIGINAL_SELLER;
     }
-    
+
     // alert(`currentMainPage is: ${currentMainPage}`);
-    
+
     // getUrlParameter('ave-subpage');
 
 }
 
-async function parseTileData(tile, cb) {
-    if (SETTINGS.DebugLevel > 14) console.log(`Called parseTileData(`, tile, ')');
+async function parseTileData(tile) {
+    return new Promise((resolve, reject) => {
+                if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
 
-    const _id = tile.getAttribute('data-recommendation-id');
-    
-    database.get(_id, (_ret) => {
-        if (_ret) {
-            _ret.gotFromDB = true;
-            _ret.ts_lastSeen = unixTimeStamp();
-            cb(_ret);
-        } else {
-            //We have to wait for a lot of Stuff
-            waitForHtmlElmement('.vvp-item-tile-content',async () => {
-                const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
-                waitForHtmlElmement('img', async () => {
-                    const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
+        const _id = tile.getAttribute('data-recommendation-id');
+
+        database.get(_id).then((_ret) => {
+            if (_ret) {
+                _ret.gotFromDB = true;
+                _ret.ts_lastSeen = unixTimeStamp();
+                if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): got DB Entry`);
+                resolve(_ret);
+            } else {
+                //We have to wait for a lot of Stuff
+                waitForHtmlElmement('.vvp-item-tile-content',async () => {
+                    const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
+                    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 1`);
+                    waitForHtmlElmement('img', async () => {
+                        const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
+                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 2`);
                         waitForHtmlElmement('.vvp-item-product-title-container', async () => {
                             const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
-                                waitForHtmlElmement('a', async () => {
-                                    const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
-                                        waitForHtmlElmement('.a-button-inner', async () => {
-                                            const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
-                                                waitForHtmlElmement('input', async () => {
-                                                    const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
-                                                    const _newProduct = new Product(_id);
-                                                    _newProduct.data_recommendation_id = _id;
-                                                    _newProduct.data_img_url = tile.getAttribute('data-img-url');
-                                                    _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
-                                                    _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
-                                                    _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
-                                                    
-                                                    _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
-                                                    _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-                                                    _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
+                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 3`);
+                            waitForHtmlElmement('a', async () => {
+                                const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
+                                if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 4`);
+                                waitForHtmlElmement('.a-button-inner', async () => {
+                                    const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
+                                    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 5`);
+                                    waitForHtmlElmement('input', async () => {
+                                        const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
+                                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 6`);
+                                        const _newProduct = new Product(_id);
+                                        _newProduct.data_recommendation_id = _id;
+                                        _newProduct.data_img_url = tile.getAttribute('data-img-url');
+                                        _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
+                                        _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
+                                        _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
 
-                                                    _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                                                    
-                                                    
-                                                    if (_newProduct.description_short == '') {
-                                                        let _timeLoopCounter = 0;
-                                                        const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
-                                                        const _halfdelay = (SETTINGS.FetchRetryTime / 2)
-                                                        function timeLoop() {
-                                                            if (_timeLoopCounter++ < _maxLoops){
-                                                                    setTimeout(() => {
-                                                                        const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                                                                        if (_short != ""){ 
-                                                                            _newProduct.description_short = _short;
-                                                                            cb(_newProduct);
-                                                                        } else {
-                                                                            timeLoop();
-                                                                        }
-                                                                    }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
-                                                                } else {
-                                                                    _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
-                                                                    _newProduct.generated_short = true;
-                                                                    cb(_newProduct);
-                                                                }
-                                                            }
-                                                        timeLoop();
+                                        _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
+                                        _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
+                                        _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
+
+                                        _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+
+
+                                        if (_newProduct.description_short == '') {
+                                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): we don´t have a shot description`);
+                                            let _timeLoopCounter = 0;
+                                            const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
+                                            const _halfdelay = (SETTINGS.FetchRetryTime / 2)
+                                            function timeLoop() {
+                                                if (_timeLoopCounter++ < _maxLoops){
+                                                    setTimeout(() => {
+                                                        const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+                                                        if (_short != ""){
+                                                            _newProduct.description_short = _short;
+                                                            resolve(_newProduct);
                                                         } else {
-                                                            cb(_newProduct);
+                                                            timeLoop();
                                                         }
-                                                        
-                                                    // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+                                                    }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
+                                                } else {
+                                                    _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
+                                                    _newProduct.generated_short = true;
+                                                    resolve(_newProduct);
+                                                }
+                                            }
+                                            timeLoop();
+                                        } else {
+                                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): END`);
+                                            resolve(_newProduct);
+                                        }
 
-                                                }, _div_vpp_item_tile_content_button_inner)
-                                        }, _div_vpp_item_tile_content)
-                                }, _div_vvp_item_product_title_container)
+                                        // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+
+                                    }, _div_vpp_item_tile_content_button_inner)
+                                }, _div_vpp_item_tile_content)
+                            }, _div_vvp_item_product_title_container)
                         }, _div_vpp_item_tile_content);
-                }, _div_vpp_item_tile_content);
-            }, tile)
-        }
-    });
+                    }, _div_vpp_item_tile_content);
+                }, tile)
+            }
+        });
+    })
 }
 
 
@@ -296,23 +316,23 @@ function reloadPageWithSubpageTarget(target) {
 
 function addLeftSideButtons(forceClean) {
     const _nodesContainer = document.getElementById('vvp-browse-nodes-container');
-    
+
     if (forceClean) _nodesContainer.innerHTML = '';
-    
-    
+
+
     _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
-    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','ave-btn-allseen',  'width: 240px; background-color: lime;', () => {
-        
+    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','ave-btn-allseen',  `width: 240px; background-color: ${SETTINGS.BtnColorMarkCurrSiteAsSeen};`, () => {
+
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
-    
-    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', 'left: 0; width: 240px; background-color: rgb(255, 162, 142);', () => {
-        
+
+    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', `left: 0; width: 240px; background-color: ${SETTINGS.BtnColorMarkAllAsSeen};`, () => {
+
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         setTimeout(() => {
-            database.getAll((prodsArr) => {
+            database.getAll().then((prodsArr) => {
                 const _prodsArryLength = prodsArr.length;
                 for (let i = 0; i < _prodsArryLength; i++) {
                     const _currProd = prodsArr[i];
@@ -323,8 +343,8 @@ function addLeftSideButtons(forceClean) {
         }, 30);
     });
 
-    const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  'width: 240px; background-color: white;', () => {
-        
+    const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  `width: 240px; background-color: ${SETTINGS.BtnColorBackToTop};`, () => {
+
         if (SETTINGS.DebugLevel > 10) console.log('Clicked back to Top Button');
         window.scrollTo(0, 0);
     });
@@ -345,27 +365,27 @@ function addLeftSideButtons(forceClean) {
 }
 
 function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
-        const _tiles = document.getElementsByClassName('vvp-item-tile');
-        const _tilesLength = _tiles.length;
+    const _tiles = document.getElementsByClassName('vvp-item-tile');
+    const _tilesLength = _tiles.length;
 
-        let _returned = 0;
-        for (let i = 0; i < _tilesLength; i++) {
-            const _tile = _tiles[i];
-            const _id = _tile.getAttribute('data-recommendation-id');
-            database.get(_id, (prod) => {
-                prod.isNew = false;
-                database.update(prod).then( () => {
-                    updateTileStyle(prod);
-                    _returned++;
-                    if (_returned == _tilesLength) cb();
-                })
+    let _returned = 0;
+    for (let i = 0; i < _tilesLength; i++) {
+        const _tile = _tiles[i];
+        const _id = _tile.getAttribute('data-recommendation-id');
+        database.get(_id).then((prod) => {
+            prod.isNew = false;
+            database.update(prod).then( () => {
+                updateTileStyle(prod);
+                _returned++;
+                if (_returned == _tilesLength) cb();
             })
-        }
+        })
+    }
 }
 
 function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
     if (SETTINGS.DebugLevel > 10) console.log('Called markAllCurrentDatabaseProductsAsSeen()');
-    database.getNewEntries((prods) => {
+    database.getNewEntries().then((prods) => {
         const _prodsLength = prods.length;
         let _returned = 0;
         if (SETTINGS.DebugLevel > 10) console.log(`markAllCurrentDatabaseProductsAsSeen() - Got ${_prodsLength} Products with Tag isNew`);
@@ -411,7 +431,7 @@ async function createTileFromProduct(product, btnID, cb) {
     if (!product && SETTINGS.DebugLevel > 10) console.error(`createTileFromProduct got no valid product element`);
     return new Promise((resolve, reject) => {
         const _btnAutoID = btnID || Math.round(Math.random() * 10000);
-        
+
         const _tile = document.createElement('div');
         _tile.setAttribute('class', 'vvp-item-tile');
         _tile.setAttribute('data-recommendation-id', product.data_recommendation_id);
@@ -454,12 +474,12 @@ function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
 
 async function createProductSite(siteType, productArray, cb) {
     if (!productArray) return;
-    
+
     const _productArrayLength = productArray.length;
     const _fastCount = Math.min(_productArrayLength, SETTINGS.MaxItemsPerPage);
     if (SETTINGS.DebugLevel > 10) console.log(`Create Overview for ${_productArrayLength} Products`);
 
-    
+
     // Remove Pagination
     const _pagination = document.querySelector('.a-pagination')
     if (_pagination) _pagination.remove();
@@ -477,11 +497,11 @@ async function createProductSite(siteType, productArray, cb) {
         const _topLine = _tilesContainer.getElementsByTagName('p')[0];
         _topLine.innerHTML = `<p>Anzeigen von <strong>${_fastCount}</strong> von <strong>${_productArrayLength}</strong> Ergebnissen</p>`
     }
-                                                
+
     const _tilesGrid = document.getElementById('vvp-items-grid');
     if (!_tilesGrid) reloadPageWithSubpageTarget(siteType);
     _tilesGrid.innerHTML = '';
-    
+
     let _index = 0;
     let _returned = 0;
 
@@ -495,7 +515,7 @@ async function createProductSite(siteType, productArray, cb) {
     }
 
     addLeftSideButtons(true);
- }
+}
 
 async function createInfiniteScrollSite(cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called createInfiniteScrollSite()`);
@@ -517,15 +537,14 @@ async function createInfiniteScrollSite(cb) {
         const _topLine = _tilesContainer.getElementsByTagName('p')[0];
         _topLine.innerHTML = ''
     }
-                                                
+
     const _tilesGrid = document.getElementById('vvp-items-grid');
     if (!_tilesGrid) reloadPageWithSubpageTarget(siteType);
     _tilesGrid.innerHTML = '';
 
     addLeftSideButtons(true);
-
     cb(_tilesGrid);
- }
+}
 
 async function appendInfiniteScrollTiles(cb = ()=>{}){
     // So lange tiles hinzufügen bis wir wieder über dem sichtbaren bereich sind
@@ -533,35 +552,36 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
     const _tilesContainer = document.getElementById('vvp-items-grid');
 
     // setTimeout(async () => {
-        let _stopCreation = false;
-        let _createdCount = 0;
-        while (infiniteScrollTilesBufferArray.length > 0 && !_stopCreation) {
-            const _tile = infiniteScrollTilesBufferArray.shift();
-            if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
-                _tilesContainer.appendChild(_tile);
-                parseTileData(_tile, (_product) => {
-                    addStyleToTile(_tile, _product);
-                    addTileEventhandlers(_tile);
-                });
-            } else {
-                createTileFromProduct(_tile).then((_elem) => {
-                    _tilesContainer.appendChild(_elem);
-                    addTileEventhandlers(_elem);
-                })
-            }
-            
-
-
-            if (_createdCount++ >= 100) _stopCreation = true;
-
-            const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
-            if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))) _stopCreation = true;
-            
-            console.log(`appendInfiniteScrollTiles(): Inside WHILE: _maxScrollHeigt: ${_maxScrollHeight} currPosition ${window.scrollY}`);
+    let _stopCreation = false;
+    let _createdCount = 0;
+    while (infiniteScrollTilesBufferArray.length > 0 && !_stopCreation) {
+        const _tile = infiniteScrollTilesBufferArray.shift();
+        if (SETTINGS.EnableInfiniteScrollLiveQuerry) {
+            _tilesContainer.appendChild(_tile);
+            parseTileData(_tile).then((_product) => {
+                if (SETTINGS.DebugLevel > 14) console.log('Come Back from parseTileData <<<<<<<<<< INFINITYSCROLL <<<<<<<<<<<<<<<<<<<<<<<', _tile, _product);
+                addStyleToTile(_tile, _product);
+                addTileEventhandlers(_tile);
+            });
+        } else {
+            createTileFromProduct(_tile).then((_elem) => {
+                _tilesContainer.appendChild(_elem);
+                addTileEventhandlers(_elem);
+            })
         }
 
-        console.log(`appendInfiniteScrollTiles(): After WHILE: left tile to create: ${infiniteScrollTilesBufferArray.length}`);
-        cb(true);
+
+
+        if (_createdCount++ >= 100) _stopCreation = true;
+
+        const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
+        if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))) _stopCreation = true;
+
+        console.log(`appendInfiniteScrollTiles(): Inside WHILE: _maxScrollHeigt: ${_maxScrollHeight} currPosition ${window.scrollY}`);
+    }
+
+    console.log(`appendInfiniteScrollTiles(): After WHILE: left tile to create: ${infiniteScrollTilesBufferArray.length}`);
+    cb(true);
 
     // },100);
 }
@@ -588,12 +608,12 @@ function createNewSite(type, data) {
         _btn.classList.add("a-button-normal");
         _btn.removeAttribute('aria-checked');
     }
-    
-    
+
+
     switch(type) {
         case PAGETYPE.NEW_ITEMS:{
             currentMainPage = PAGETYPE.NEW_ITEMS;
-            database.getNewEntries((_prodArr) => {
+            database.getNewEntries().then((_prodArr) => {
                 createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
                     const _btn = document.getElementById('ave-btn-list-new');
@@ -605,7 +625,7 @@ function createNewSite(type, data) {
         }
         case PAGETYPE.FAVORITES:{
             currentMainPage = PAGETYPE.FAVORITES;
-            database.getFavEntries((_prodArr) => {
+            database.getFavEntries().then((_prodArr) => {
                 createProductSite(type, _prodArr, () => {
                     initTileEventHandlers();
                     const _btn = document.getElementById('ave-btn-favorites');
@@ -641,7 +661,7 @@ function createNewSite(type, data) {
                         })
                     })
                 } else {
-                    database.getAll((prodArr) => {
+                    database.getAll().then((prodArr) => {
                         infiniteScrollTilesBufferArray = prodArr;
                         appendInfiniteScrollTiles();
                     });
@@ -684,7 +704,7 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
                     _retArr.push(_elemArr[i].cloneNode(true));
                 }
                 cb(_retArr);
-                
+
                 const _paginationData = getPageinationData();
                 if (_paginationData) infiniteScrollMaxPreloadPage = _pageinationData.maxPage;
             }, _doc);
@@ -695,7 +715,7 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
 function btnEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
-        database.get(data.recommendation_id, async (prod) => {
+        database.get(data.recommendation_id).then(async (prod) => {
             if (SETTINGS.DebugLevel > 10) console.log(`btnEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isNew = false;
@@ -712,7 +732,7 @@ function btnEventhandlerClick(event, data) {
 function favStarEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called favStarEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
-        database.get(data.recommendation_id, (prod) => {
+        database.get(data.recommendation_id).then((prod) => {
             if (SETTINGS.DebugLevel > 10) console.log(`favStarEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isFav = !prod.isFav;
@@ -734,7 +754,7 @@ function updateTileStyle(prod) {
     for (let i = 0; i < _tilesLength; i++) {
         const _tile = _tiles[i];
         const _id = _tile.getAttribute('data-recommendation-id');
-        
+
         if (_id == prod.data_recommendation_id) {
             if (SETTINGS.DebugLevel > 10) console.log(`Found Tile with id: ${prod.id}`);
             _tile.setAttribute('style', (prod.isFav) ? SETTINGS.CssProductFavTag : (prod.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
@@ -759,25 +779,25 @@ function initTileEventHandlers() {
 }
 
 function addTileEventhandlers(_currTile) {
-        const _favStar = _currTile.querySelector('.ave-favorite-star');
-        const _btn = _currTile.querySelector('.vvp-details-btn input');
+    // const _favStar = _currTile.querySelector('.ave-favorite-star');
+    const _btn = _currTile.querySelector('.vvp-details-btn input');
 
-        const _data = new Object()
-        _data.asin = _btn.getAttribute('data-asin');
-        _data.recommendation_id = _btn.getAttribute('data-recommendation-id');
-        
-        
-        const _childs = _btn.childNodes;
-        _btn.addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
-    
-        for(let j = 0; j < _childs.length; j++) {
-            if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
-            _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
-        }
-        
-        waitForHtmlElmement('.ave-favorite-star', (elem) => {
-            _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
-        }, _currTile);
+    const _data = new Object()
+    _data.asin = _btn.getAttribute('data-asin');
+    _data.recommendation_id = _btn.getAttribute('data-recommendation-id');
+
+
+    const _childs = _btn.childNodes;
+    _btn.addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
+
+    for(let j = 0; j < _childs.length; j++) {
+        if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
+        _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
+    }
+
+    waitForHtmlElmement('.ave-favorite-star', (elem) => {
+        elem.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
+    }, _currTile);
 }
 
 function completeDelayedInit() {
@@ -817,21 +837,21 @@ function updateAutoScanScreenText(text = '') {
 }
 
 function addBranding() {
-   
+
     const _text = document.createElement('div');
     _text.style.position = 'fixed';
     _text.style.bottom = '10px';
     _text.style.left = '10px';
     // _text.style.transform = 'translate(-50%, -50%)';
     _text.style.color = 'blue'; // Textfarbe
-    _text.style.backgroundColor = 'rgba(218, 247, 166, .75)';
+    _text.style.backgroundColor = (AVE_IS_THIS_SESSION_MASTER) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)';
     _text.style.textAlign = 'left';
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
     _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
-    _text.innerHTML = `<p id="ave-brandig-text">${AVE_TITLE} - ${AVE_VERSION}</p>`;
+    _text.innerHTML = `<p id="ave-brandig-text">${AVE_TITLE}${(AVE_IS_THIS_SESSION_MASTER) ? ' - Master': ''} - ${AVE_VERSION}</p>`;
 
-    
+
     document.body.appendChild(_text);
 }
 
@@ -862,7 +882,7 @@ function addAveSettingsTab(){
                 console.log('Creating Settings Menu Element: ', elem);
                 _settingsContainer.appendChild(createSettingsMenuElement(elem));
             }
-            
+
         });
 
         _upperButtonsContainer.appendChild(_upperSettingsButton);
@@ -872,22 +892,22 @@ function addAveSettingsTab(){
 
 function addAVESettingsMenu(){
     waitForHtmlElmement('.a-tab-container.vvp-tab-set-container', (_tabContainer) => {
-    //const _tabContainer = document.body.querySelector('.a-tab-container.vvp-tab-set-container');
+        //const _tabContainer = document.body.querySelector('.a-tab-container.vvp-tab-set-container');
 
-    const _boxContainer = document.createElement('div');
-    _boxContainer.setAttribute('data-a-name', 'ave-settings');
-    _boxContainer.classList = 'a-box a-box-tab a-tab-content a-hidden';
-    _boxContainer.role = 'tabpanel';
-    _boxContainer.tabindex = '0';
+        const _boxContainer = document.createElement('div');
+        _boxContainer.setAttribute('data-a-name', 'ave-settings');
+        _boxContainer.classList = 'a-box a-box-tab a-tab-content a-hidden';
+        _boxContainer.role = 'tabpanel';
+        _boxContainer.tabindex = '0';
 
-    const _contentContainer = document.createElement('div');
-    _contentContainer.classList = 'a-box-inner'
+        const _contentContainer = document.createElement('div');
+        _contentContainer.classList = 'a-box-inner'
 
-    _boxContainer.appendChild(_contentContainer);
-    _tabContainer.appendChild(_boxContainer);
-    console.log(_tabContainer);
+        _boxContainer.appendChild(_contentContainer);
+        _tabContainer.appendChild(_boxContainer);
+        console.log(_tabContainer);
 
-    _contentContainer.innerHTML = `
+        _contentContainer.innerHTML = `
     <style>
     :root {
   --toggleSliderSize: 1;
@@ -904,7 +924,7 @@ function addAVESettingsMenu(){
 }
 
 .ave-settings-container input[type="number"] {
-  width: 50px;
+  width: 75px;
   height: 21px;
   border: var(--numberBorder) solid #888C8C;
   padding: var(--numberPadding);
@@ -919,7 +939,7 @@ function addAVESettingsMenu(){
 }
 
 .ave-settings-container input[type="text"] {
-
+  width: 500px;
 }
 
 .ave-settings-item{
@@ -1003,7 +1023,9 @@ function addAVESettingsMenu(){
 
 /* Show tooltip content on hover */
 [data-ave-tooltip]:hover:before,
-[data-ave-tooltip]:hover:after {
+[data-ave-tooltip]:hover:after,
+[data-ave-tooltip]:focus-within:before,
+[data-ave-tooltip]:focus-within:after{
   visibility: visible;
   opacity: 1;
 }
@@ -1051,6 +1073,14 @@ input:checked + .ave-settings-switch-toggle-slider:before {
   display: none
 }
 
+.ave-keyword-wrapper {
+  margin: 25px 0;
+}
+
+.ave-keyword-input {
+  width: fit-content;
+}
+
 .ave-keyword-input button {
 font-weight: bold;
 }
@@ -1059,15 +1089,21 @@ font-weight: bold;
   margin-top: 10px;
 }
 
-.ave-keyword-list-wrapper > table {
+.ave-keyword-list-wrapper table {
   border-collapse: collapse;
   width: 500px;
 }
 
-.ave-keyword-list-wrapper > table td,.ave-keyword-list-wrapper > table th {
-  border: 1px solid #dddddd;
+.ave-keyword-list-wrapper > table td {
+  border: 1px solid #000000;
   text-align: left;
   padding: 8px;
+}
+
+.ave-keyword-list-wrapper > table td:first-child {
+  width: 25px;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .ave-keyword-list-wrapper > table tr:nth-child(even) {
@@ -1084,6 +1120,12 @@ font-weight: bold;
   margin: auto;
   background-color: inherit;
   border: none;
+}
+
+.ave-input-button {
+  border: none;
+  background: none;
+  margin: 3px;
 }
 
 ::-webkit-color-swatch-wrapper {
@@ -1107,7 +1149,7 @@ font-weight: bold;
 
     <div id="ave-settings-header" style="margin-bottom: 10px"><h3>Einstellungen ${AVE_TITLE} - Version ${AVE_VERSION}</h3></div>
     <div id="ave-settings-container" class="ave-settings-container">
-  
+
 
 </div>
     `;
@@ -1120,7 +1162,7 @@ function createSettingsMenuElement(dat){
     _elem.classList.add('ave-settings-item');
 
     if (dat.type == 'bool') {// Boolean Value
-        
+
         const _elem_item_left = document.createElement('div');
         _elem_item_left.classList.add('ave-item-left');
         const _elem_item_left_label = document.createElement('label');
@@ -1133,7 +1175,7 @@ function createSettingsMenuElement(dat){
         // _elem_item_left_label_input.value = `${SETTINGS[dat.key]}`;
         _elem_item_left_label_input.checked = SETTINGS[dat.key];
         _elem_item_left_label_input.addEventListener('click', (event) => {console.log('This is a Boolean Value Input', event); SETTINGS[dat.key] = event.target.checked; SETTINGS.save();})
-        
+
         const _elem_item_left_label_span = document.createElement('span');
         _elem_item_left_label_span.classList.add('ave-settings-switch-toggle-slider');
 
@@ -1144,12 +1186,12 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
-        
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description != '') ? dat.description : dat.name}">${dat.name}</label>`
+
         _elem.appendChild(_elem_item_right);
 
     } else if (dat.type == 'number') { // Number Value
-    
+
         const _elem_item_left = document.createElement('div');
         _elem_item_left.classList.add('ave-item-left');
         const _elem_item_left_input = document.createElement('input');
@@ -1157,36 +1199,75 @@ function createSettingsMenuElement(dat){
         _elem_item_left_input.className = 'ave-input-number';
         _elem_item_left_input.setAttribute('ave-data-key', dat.key);
         _elem_item_left_input.setAttribute('value', SETTINGS[dat.key]);
+        //_elem_item_left_input.setAttribute('onInput', 'this.style.width = "calc(" + (this.value.length + 1) + "ch + 30px)";')
         if (!isNaN(dat.min)) _elem_item_left_input.setAttribute('min', dat.min);
         if (!isNaN(dat.max)) _elem_item_left_input.setAttribute('max', dat.max);
-        _elem_item_left_input.addEventListener('change', (event) => {console.log('This is a Number Value Input', event); SETTINGS[dat.key] = parseInt(event.target.value); SETTINGS.save();})
+        _elem_item_left_input.addEventListener('change', (event) => {
+            const _value = event.target.value;
+            const _min = parseFloat(event.target.min);
+            const _max = parseFloat(event.target.max);
+            console.log('This is a Number Value Input', event);
+
+            if(_value <= _max && _value >= _min){
+                console.log("Eingabe Valid");
+                SETTINGS[dat.key] = parseInt(event.target.value);
+                SETTINGS.save();
+            }else{
+                console.log("Eingabe Fehlerhaft");
+            }
+
+        })
+        _elem_item_left_input.addEventListener('input', (event) => {
+            const _value = event.target.value;
+            const _min = parseFloat(event.target.min);
+            const _max = parseFloat(event.target.max);
+
+            if(_value <= _max && _value >= _min){
+                event.target.style.borderColor = 'inherit';
+                event.target.style.color = 'inherit';
+            }else{
+                event.target.style.borderColor = 'red';
+                event.target.style.color = 'red';
+            }
+        })
         _elem_item_left.appendChild(_elem_item_left_input);
         _elem.appendChild(_elem_item_left);
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
-        
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description != '') ? dat.description : dat.name}">${dat.name}</label>`
+
         _elem.appendChild(_elem_item_right);
 
     } else if (dat.type == 'button') { // Number Value
-    
+
         const _elem_item_left = document.createElement('div');
+        
         _elem_item_left.classList.add('ave-item-left');
+
+
+        const _elem_item_left_input_label  = document.createElement('label');
+        _elem_item_left_input_label.setAttribute('data-ave-tooltip', (dat.description && dat.description != '') ? dat.description : dat.name);
+        _elem_item_left_input_label.setAttribute('class', 'a-button');
+        _elem_item_left_input_label.style.width = "250px";
+        if (dat.bgColor) _elem_item_left_input_label.style.backgroundColor = dat.bgColor;
         const _elem_item_left_input = document.createElement('button');
         _elem_item_left_input.type = 'button';
         _elem_item_left_input.className = 'ave-input-button';
+        
         // _elem_item_left_input.setAttribute('ave-data-key', dat.key);
         _elem_item_left_input.innerText = dat.name;
-        _elem_item_left_input.setAttribute('data-ave-tooltip',dat.description);
+        //_elem_item_left_input.setAttribute('data-ave-tooltip',dat.description);
         _elem_item_left_input.addEventListener('click', (event) => {console.log('This is a button Input', event); if(dat.btnClick) dat.btnClick();})
-        _elem_item_left.appendChild(_elem_item_left_input);
+
+        _elem_item_left_input_label.appendChild(_elem_item_left_input);
+        _elem_item_left.appendChild(_elem_item_left_input_label);
         _elem.appendChild(_elem_item_left);
 
         // const _elem_item_right = document.createElement('div');
         // _elem_item_right.classList.add('ave-item-right');
         // _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
-        
+
         // _elem.appendChild(_elem_item_right);
 
 
@@ -1205,8 +1286,8 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
-        
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description != '') ? dat.description : dat.name}">${dat.name}</label>`
+
         _elem.appendChild(_elem_item_right);
 
     } else if (dat.type == 'title'){
@@ -1228,6 +1309,11 @@ function createSettingsMenuElement(dat){
         const _elem_keyword_input = document.createElement('div');
         _elem_keyword_input.innerHTML = '<span></span>';
         _elem_keyword_input.classList.add('ave-keyword-input');
+
+
+        const _elem_keyword_input_label = document.createElement('label');
+        _elem_keyword_input_label.setAttribute('data-ave-tooltip', dat.description);
+
         const _elem_keyword_input_input = document.createElement('input');
         _elem_keyword_input_input.setAttribute('type', 'text');
         _elem_keyword_input_input.setAttribute('placeholder', dat.inputPlaceholder);
@@ -1245,7 +1331,8 @@ function createSettingsMenuElement(dat){
         })
         // const _elem_keyword_input_button = document.createElement('button');
         // _elem_keyword_input_button.innerText = '+';
-        _elem_keyword_input.appendChild(_elem_keyword_input_input);
+        _elem_keyword_input_label.appendChild(_elem_keyword_input_input);
+        _elem_keyword_input.appendChild(_elem_keyword_input_label);
         // _elem_keyword_input.appendChild(_elem_keyword_input_button);
         _elem.appendChild(_elem_keyword_input);
 
@@ -1275,12 +1362,12 @@ function createSettingsKeywordsTableElement(dat, index, entry){
     _tableRow_td1_button.addEventListener('click', (elm, ev) =>{
         // console.log('DELETE_BTN:: ', elm)
         if (true) SETTINGS[dat.key].splice(index, 1);
-            SETTINGS.save();
-            const _table = document.getElementById(dat.key);
-            _table.innerHTML = '';
-            for (let i = 0; i < SETTINGS[dat.key].length; i++){
-                _table.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
-            }
+        SETTINGS.save();
+        const _table = document.getElementById(dat.key);
+        _table.innerHTML = '';
+        for (let i = 0; i < SETTINGS[dat.key].length; i++){
+            _table.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
+        }
     });
     _tableRow_td1.appendChild(_tableRow_td1_button);
     _tableRow.appendChild(_tableRow_td1);
@@ -1358,17 +1445,17 @@ function addOverlays() { // Old Settings Code
 
 
 function componentToHex(c) {
-  const _c = Math.min(c, 255)
-  const _hex = _c.toString(16);
-  return _hex.length == 1 ? "0" + _hex : _hex;
+    const _c = Math.min(c, 255)
+    const _hex = _c.toString(16);
+    return _hex.length == 1 ? "0" + _hex : _hex;
 }
 
 function rgbToHex(r, g, b){
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
 function rgbaToHex(r, g, b, a){
-  return "#" + componentToHex(a) + componentToHex(r) + componentToHex(g) + componentToHex(b);
+    return "#" + componentToHex(a) + componentToHex(r) + componentToHex(g) + componentToHex(b);
 }
 
 function colorToHex(color) {
@@ -1383,7 +1470,7 @@ function colorToHex(color) {
         return rgbToHex(_cache[1], _cache[2], _cache[3]);
     } else if (_cache = /rgba\(([\d]+),([\d]+),([\d]+),([\d]+|[\d]*.[\d]+)\)/.exec(_color)){ // rgba(0,0,0,0)
         return rgbaToHex(_cache[1], _cache[2], _cache[3], _cache[4]);
-    } else if (/\#[0-9a-f]{6}|[0-9a-f]{8}$/.exec(_color)){ // #000000
+    } else if (/\#[0-9a-fA-F]{6}|[0-9a-fA-F]{8}$/.exec(_color)){ // #000000
         return _color;
     }
 
@@ -1488,7 +1575,7 @@ function addLoadingSymbol(){
     .ave-db {
     }
     .ave-loading {
-        
+
     }
     .ave-loading svg {
       animation: rotate 2s linear infinite;
@@ -1522,7 +1609,7 @@ function getPageinationData(localDocument = document) {
 
     while ((!_ret.href || !_ret.maxPage) && _currChild) {
         const _curr = _currChild.childNodes[0];
-        
+
         if (_curr.hasAttribute('href')) _ret.href = _curr.getAttribute('href').replace(/=[0-9]+/, '=');
         if (parseInt(_curr.text)) _ret.maxPage = parseInt(_curr.text);
         _currChild = _currChild.previousSibling
@@ -1536,7 +1623,7 @@ function getPageinationData(localDocument = document) {
 async function cleanUpDatabase(cb = () => {}) {
     if (SETTINGS.DebugLevel > 10) console.log('Called cleanUpDatabase()');
     const _dbCleanIcon = addDBCleaningSymbol();
-    database.getAll((prodArr) => {
+    database.getAll().then((prodArr) => {
         const _prodArrLength = prodArr.length;
         if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
 
@@ -1557,19 +1644,19 @@ async function cleanUpDatabase(cb = () => {}) {
             const _currEntry = prodArr[i];
             let _needUpdate = false;
             if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking Entry ${_currEntry.id} `);
-            
+
             // Checking Product Vars
             if (!_currEntry.ts_firstSeen){
                 _currEntry.ts_firstSeen = (unixTimeStamp() - Math.round(Math.random() * (SECONDS_PER_WEEK / 2)));
                 _needUpdate = true;
             }
-            
+
             if (!_currEntry.ts_lastSeen) {
                 _currEntry.ts_lastSeen = (_currEntry.ts_firstSeen + SECONDS_PER_DAY);
                 _needUpdate = true;
             }
 
-            
+
             const _notSeenCounter = (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) ? 0 : _currEntry.notSeenCounter + 1;
             if (_currEntry.notSeenCounter != _notSeenCounter) {
                 _currEntry.notSeenCounter = _notSeenCounter;
@@ -1578,41 +1665,129 @@ async function cleanUpDatabase(cb = () => {}) {
 
             if (_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount && !_currEntry.isFav) {
                 if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
-                
-                database.removeID(_currEntry.id, (ret) => {
+
+                database.removeID(_currEntry.id).then((ret) => {
                     _deleted++;
                     _localReturn();
                 });
             } else if (!_needUpdate){
                 _localReturn();
             } else {
-                
-                database.update(_currEntry, (ret) => {_updated++ ; _localReturn();});
+
+                database.update(_currEntry).then((ret) => {_updated++ ; _localReturn();});
             }
         }
     });
 }
 
+function exportDatabase() {
+    console.log('Create Database Dump...');
+
+    database.getAll().then((db) => {
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(db, null, 4)));
+        element.setAttribute('download', 'AmazonVineExplorerDatabase.json');
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+    })
+    
+}
+
+/**
+ * Opens a file selector dialog and imports a database from a JSON file.
+ * @async
+ * @returns {Promise<void>}
+ */
+async function importDatabase() {
+    return new Promise((resolve, reject) => {
+        // Create an input element of type "file"
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.json';
+
+        // Set up an event listener for when a file is selected
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+
+            if (file) {
+                try {
+                    const jsonData = await readFile(file);
+
+                    // Assuming that the `database` object has a method like `add` to insert data
+                    // Adjust this part based on the actual methods provided by your database object
+                    for (const data of jsonData) {
+                        const existingRecord = await database.get(data.id);
+
+                        if (!existingRecord) {
+                            await database.add(data);
+                        } else {
+                            console.warn(`Record with ID ${data.id} already exists. Skipping.`);
+                        }
+                    }
+
+                    console.log('Data imported successfully.');
+                    resolve();
+                } catch (error) {
+                    console.error('Error importing data:', error);
+                    reject(error);
+                }
+            }
+        });
+
+        // Trigger a click event to open the file selector dialog
+        fileInput.click();
+    });
+}
+
+unsafeWindow.ave.importDB = importDatabase;
+
+/**
+ * Reads the content of a file as text.
+ * @param {File} file - The file to read.
+ * @returns {Promise<string>} - A Promise that resolves to the file content as a string.
+ */
+function readFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (event) => {
+            resolve(JSON.parse(event.target.result));
+        };
+
+        reader.onerror = (error) => {
+            reject(error);
+        };
+
+        reader.readAsText(file);
+    });
+}
+
 function initBackgroundScan() {
     if (SETTINGS.DebugLevel > 10) console.log('Called initBackgroundScan()');
+    if (!AVE_IS_THIS_SESSION_MASTER) console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan');
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
-    
-     // Create iFrame if not exists
+
+    // Create iFrame if not exists
     if (!document.querySelector('#ave-iframe-backgroundloader')) {
         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): create iFrame');
         const iframe = document.createElement('iframe');
-            iframe.src = encodeURI(`${_baseUrl}?queue=encore&pn=&cn=&page=1`);
-            iframe.id = 'ave-iframe-backgroundloader';
-            iframe.style.position = 'fixed';
-            iframe.style.top = '0';
-            iframe.style.left = '-10000';
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.display = 'none';
-            iframe.style.zIndex = '100';
-            document.body.appendChild(iframe);
+        iframe.src = encodeURI(`${_baseUrl}?queue=encore&pn=&cn=&page=1`);
+        iframe.id = 'ave-iframe-backgroundloader';
+        iframe.style.position = 'fixed';
+        iframe.style.top = '0';
+        iframe.style.left = '-10000';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.display = 'none';
+        iframe.style.zIndex = '100';
+        document.body.appendChild(iframe);
     } 
-    
+
     const _paginatinWaitLoop = setInterval(() => {
         const _pageinationData = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
         if (_pageinationData) {
@@ -1626,103 +1801,103 @@ function initBackgroundScan() {
                 localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 1);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
             } 
-            
+
             let _loopIsWorking = false;
             let _subStage = 0;
             const _stageZeroSites = ['queue=potluck', 'queue=last_chance']
-            
-        backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage);
-          function initBackgroundScanSubFunctionScannerLoop(){                
-            if (_loopIsWorking) return;
-                    _loopIsWorking = true;
 
-                    let _backGroundScanStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE')) || 0;
-                    if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
-                    
-                    switch (_backGroundScanStage) {
-                        case 0:{    // potluck, last_chance
-                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
-                                if (_stageZeroSites[_subStage]) {
-                                    if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
-                                    backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
-                                    _subStage++
-                                } else {
-                                    if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
-                                    _subStage = 0;
-                                    _backGroundScanStage++;
-                                    _scanFinished();
-                                }
-                                break;
-                            }
-                        case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
-                                _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
-                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
-                                if (_subStage < (parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
-                                    backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
-                                    _subStage++
-                                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
-                                } else {
-                                    _subStage = 0;
-                                    _backGroundScanStage++;
-                                    _scanFinished();
-                                }
-                            break; 
+            backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage);
+            function initBackgroundScanSubFunctionScannerLoop(){
+                if (_loopIsWorking) return;
+                _loopIsWorking = true;
+
+                let _backGroundScanStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE')) || 0;
+                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
+
+                switch (_backGroundScanStage) {
+                    case 0:{    // potluck, last_chance
+                        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
+                        if (_stageZeroSites[_subStage]) {
+                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
+                            backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
+                            _subStage++
+                        } else {
+                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
+                            _subStage = 0;
+                            _backGroundScanStage++;
+                            _scanFinished();
                         }
-                        case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
-                                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
-                                database.getAll((products) => {
-                                    const _needUpdate = [];
-                                    const _randCount = Math.round(Math.random() * 3);
-                                    for (_prod of products) {
-                                        if (_needUpdate.length < 3) {
-                                            if (!_prod.data_estimated_tax_prize) _needUpdate.push(_prod);
-                                        } else {
-                                            break;
-                                        }
-                                    }
-
-                                    const _promises = [];
-
-                                    for (_prod of _needUpdate) {
-                                        requestProductDetails(_prod).then((_newProd) => {
-                                            _promises.push(database.update(_newProd));
-                                        });
-                                    }
-
-                                    Promise.all(_promises).then(() => {
-                                        _scanFinished();
-                                        _subStage++;
-                                    }).finally(() => {
-                                        console.error('There was an error while updating an product in database');
-                                        _scanFinished();
-                                        _subStage++;
-                                    });
-                                });
-                            
-                                if (_subStage++ >= 10)
-                                {
-                                    _subStage = 0;
-                                    _backGroundScanStage++;
-                                    _scanFinished();
+                        break;
+                    }
+                    case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
+                        _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
+                        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
+                        if (_subStage < (parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
+                            backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
+                            _subStage++
+                            localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                        } else {
+                            _subStage = 0;
+                            _backGroundScanStage++;
+                            _scanFinished();
+                        }
+                        break;
+                    }
+                    case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
+                        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
+                        database.getAll().then((products) => {
+                            const _needUpdate = [];
+                            const _randCount = Math.round(Math.random() * 3);
+                            for (_prod of products) {
+                                if (_needUpdate.length < 3) {
+                                    if (!_prod.data_estimated_tax_prize) _needUpdate.push(_prod);
+                                } else {
+                                    break;
                                 }
-                                break;
-                        }   
-                            default: {
-                                cleanUpDatabase(() => {
-                                    _backGroundScanStage = 0;
-                                    _subStage = 0;
-                                    _scanFinished();
-                                })
-                                //clearInterval(backGroundScanTimeout);
-                   }
+                            }
+
+                            const _promises = [];
+
+                            for (_prod of _needUpdate) {
+                                requestProductDetails(_prod).then((_newProd) => {
+                                    _promises.push(database.update(_newProd));
+                                });
+                            }
+
+                            Promise.all(_promises).then(() => {
+                                _scanFinished();
+                                _subStage++;
+                            }).catch(() => {
+                                console.error('There was an error while updating an product in database');
+                                _scanFinished();
+                                _subStage++;
+                            });
+                        });
+
+                        if (_subStage++ >= 10)
+                        {
+                            _subStage = 0;
+                            _backGroundScanStage++;
+                            _scanFinished();
+                        }
+                        break;
                     }
-                    function _scanFinished() {
-                        if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
-                        localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
-                        localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
-                        _loopIsWorking = false;
-                        backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness));
+                    default: {
+                        cleanUpDatabase(() => {
+                            _backGroundScanStage = 0;
+                            _subStage = 0;
+                            _scanFinished();
+                        })
+                        //clearInterval(backGroundScanTimeout);
                     }
+                }
+                function _scanFinished() {
+                    if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
+                    localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
+                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
+                    _loopIsWorking = false;
+                    backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness));
+                }
             }            
         }
     }, 250);
@@ -1743,15 +1918,21 @@ function backGroundTileScanner(url, cb) {
             if (SETTINGS.DebugLevel > 10) console.log(`BackgroundsScan Querryd: ${url} and got ${_tilesLength} Tiles`);
             clearInterval(_loopDelay);
             if (_tilesLength > 0) {
-            let _returned = 0;
+                let _returned = 0;
+                const _tilesProm = []
                 for (let i = 0; i < _tilesLength; i++) {
-                    parseTileData(_tiles[i], (prod) => {
+                    _tilesProm.push(parseTileData(_tiles[i]).then((prod) => {
                         _returned++;
                         if (SETTINGS.DebugLevel > 14) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
                         if (!prod.gotFromDB) database.add(prod);
-                        if (_returned == _tilesLength) {cb(true); _iconLoading.remove()};
-                    })
+                        
+                    }))
                 }
+
+                Promise.allSettled(_tilesProm).then(() => {
+                    cb(true);
+                    _iconLoading.remove();
+                });
             } else {
                 if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => We dont have anything to do here anything => resume autoscan`);
                 cb(true); // We dont have to do here anything
@@ -1840,29 +2021,29 @@ let lastDesktopNotifikationTimestamp = 0;
 function updateNewProductsBtn() {
     if (AUTO_SCAN_IS_RUNNING) return;
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
-    database.getNewEntries((prodArr) => { 
+    database.getNewEntries().then((prodArr) => { 
         const _btnBadge = document.getElementById('ave-new-items-btn-badge');
-        const _pageTitle = document.title.replace(/^[0-9]+/, '').trim();
+        const _pageTitle = document.title.replace(/^[^\|]*\|/, '').trim();
         const _prodArrLength = prodArr.length;
         if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
 
         if (_prodArrLength > 0) {
             _btnBadge.style.display = 'inline-block';
             _btnBadge.innerText = _prodArrLength;
-            document.title = `${_prodArrLength} ${_pageTitle}`;
+            document.title = `${_prodArrLength} | ${_pageTitle}`;
         } else {
             _btnBadge.style.display = 'none';
             _btnBadge.innerText = '';
             document.title = `${_pageTitle}`;
         }
 
-        if (SETTINGS.EnableDesktopNotifikation) {
+        if (SETTINGS.EnableDesktopNotifikation && SETTINGS.DesktopNotifikationKeywords?.length > 0) {
 
             if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Insige IF`);
 
             let _notifyed = false;
             const _configKeyWords = SETTINGS.DesktopNotifikationKeywords;
-            
+
 
             for (let i = 0; i < _prodArrLength; i++) {
                 const _prod = prodArr[i];
@@ -1878,10 +2059,10 @@ function updateNewProductsBtn() {
                         desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
                         _notifyed = true;
                     }                    
-                        break;
+                    break;
                 }        
             }
-        
+
 
             if (!_notifyed && _prodArrLength > oldCountOfNewItems){ 
                 if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
@@ -1936,6 +2117,7 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
     const _btnInner = document.createElement('span');
     _btnInner.classList.add('a-button-inner');
     _btnInner.style.backgroundColor = color;
+    _btnInner.style.display = 'flex';
     _btn.append(_btnInner);
 
     const _btnInnerText = document.createElement('span');
@@ -1947,21 +2129,18 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
     if (badgeId) {
         const _btnInnerBadge = document.createElement('span');
         _btnInnerBadge.setAttribute('id', badgeId)
+        _btnInnerBadge.setAttribute('class', 'a-button-text')
         _btnInnerBadge.style.backgroundColor = 'red';
         _btnInnerBadge.style.color = 'white';
-        _btnInnerBadge.style.minWidth = '20px';
-        _btnInnerBadge.style.width =  '40px';
         _btnInnerBadge.style.display = 'inline-block';
         _btnInnerBadge.style.textAlign = 'center';
-        _btnInnerBadge.style.borderRadius = '10px';
         // _btnInnerBadge.style.transform = 'translate(-75%, -100%)';
         _btnInnerBadge.style.zIndex = '50';
         _btnInnerBadge.style.position = 'relativ';
         // _btnInnerBadge.style.padding = '5px';
-        _btnInnerBadge.style.marginLeft = '5px';
 
         _btnInnerBadge.innerText = badgeValue;
-        _btnInnerText.append(_btnInnerBadge);
+        _btnInner.append(_btnInnerBadge);
     }
 
     return _btn;
@@ -1969,26 +2148,26 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
 
 
 function addStyleToTile(_currTile, _product) {
-           
-                if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
-                    database.add(_product);
-                    _currTile.style.cssText = SETTINGS.CssProductSaved;
-                    _currTile.classList.add('ave-element-saved');
-                } else {
-                    let _style = SETTINGS.CssProductDefault;
-                    if(_product.isNew) {
-                        _style = SETTINGS.CssProductNewTag;
-                        _currTile.classList.add('ave-element-new');
-                    }
-                    if(_product.isFav) {
-                        _style = SETTINGS.CssProductFavTag;
-                        _currTile.classList.add('ave-element-fav');
-                    }
-                    _currTile.style.cssText = _style;
-                    
-                    // Update Timestamps
-                }
-                _currTile.prepend(createFavStarElement(_product));
+
+    if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
+        database.add(_product);
+        _currTile.style.cssText = SETTINGS.CssProductSaved;
+        _currTile.classList.add('ave-element-saved');
+    } else {
+        let _style = SETTINGS.CssProductDefault;
+        if(_product.isNew) {
+            _style = SETTINGS.CssProductNewTag;
+            _currTile.classList.add('ave-element-new');
+        }
+        if(_product.isFav) {
+            _style = SETTINGS.CssProductFavTag;
+            _currTile.classList.add('ave-element-fav');
+        }
+        _currTile.style.cssText = _style;
+
+        // Update Timestamps
+    }
+    _currTile.prepend(createFavStarElement(_product));
 }
 
 
@@ -2003,7 +2182,7 @@ async function requestProductDetails(prod) {
                 const _promArray = new Array();
                 prod.data_estimated_tax_prize = prod.data_estimated_tax_prize || 0;
                 for (_child of prod.data_childs) {
-                   _promArray.push(fetch(`${window.location.origin}/vine/api/recommendations/${(prod.id).replace(/#/g, '%23')}/item/${_child.asin}`.replace(/#/g, '%23')).then(r => r.json()).then((childData) => {
+                    _promArray.push(fetch(`${window.location.origin}/vine/api/recommendations/${(prod.id).replace(/#/g, '%23')}/item/${_child.asin}`.replace(/#/g, '%23')).then(r => r.json()).then((childData) => {
                         console.log('CHILD_DATA:', childData);
                         if (!childData.error) {
 
@@ -2027,9 +2206,9 @@ async function requestProductDetails(prod) {
         } else {
             fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}/item/${prod.data_asin}`.replace(/#/g, '%23')).then(r => r.json()).then(ret => {
                 console.log('RETURN:', ret);
-               if (ret.error) {
+                if (ret.error) {
                     reject(ret.error.exceptionType) // => "ITEM_NOT_IN_ENROLLMENT"
-               } else {
+                } else {
                     const data = ret.result;
                     prod.data_feature_bullets = data.featureBullets;
                     prod.data_contributors = data.byLineContributors;
@@ -2038,7 +2217,7 @@ async function requestProductDetails(prod) {
                     prod.data_estimated_tax_prize = data.taxValue;
                     prod.data_limited_quantity = data.limitedQuantity;
                     resolve(prod);
-               }
+                }
             })
         }
     })
@@ -2048,58 +2227,54 @@ async function requestProductDetails(prod) {
 
 function init(hasTiles) {
     // Get all Products on this page ;)
-    
+
 
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
-    
+
     const _aveSubpageRequest = getUrlParameter('ave-subpage');
     if (SETTINGS.DebugLevel > 10) console.log(`Got Subpage Parameter`, _aveSubpageRequest)
-    
+
     if (_aveSubpageRequest) createNewSite(parseInt(_aveSubpageRequest));
 
     if (hasTiles) {
         const _tiles = document.getElementsByClassName('vvp-item-tile');
+
         const _tilesLength = _tiles.length;
-        let _countdown = 0;
+        const _tilePorms = [];
         const _parseStartTime = Date.now();
         for (let i = 0; i < _tilesLength; i++) {
             const _currTile = _tiles[i];
             _currTile.style.cssText = "background-color: yellow;";
-            parseTileData(_currTile, (_product) => {
-                if (SETTINGS.DebugLevel > 10) console.log(`Got TileData Back: `, _product);
-                
-                _countdown++;
-                const _tilesToDoCount = _tilesLength - _countdown;
-                if (SETTINGS.DebugLevel > 10) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Waiting for ${_tilesToDoCount} more tiles to get parsed`)
-                if (SETTINGS.DebugLevel > 10 && _tilesToDoCount == 0) console.log(`==================================>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Parsing ${_tilesLength} has taken ${Date.now() - _parseStartTime} ms`);
-
+            _tilePorms.push(parseTileData(_currTile).then((_product) => {
+                if (SETTINGS.DebugLevel > 14) console.log('Come Back from parseTileData <<<<<<<<<< INIT <<<<<<<<<<<<<<<<<<<<<<<', _currTile, _product);
                 addStyleToTile(_currTile, _product);
 
-            if (_tilesToDoCount == 0) {
-                    if(INIT_AUTO_SCAN) {
-                        startAutoScan();
-                    } else if (AUTO_SCAN_IS_RUNNING) {
-                        handleAutoScan();
-                    } else {
-                        completeDelayedInit();
-                    }
+            }));
+
+            Promise.allSettled(_tilePorms).then(() => {
+                if(INIT_AUTO_SCAN) {
+                    startAutoScan();
+                } else if (AUTO_SCAN_IS_RUNNING) {
+                    handleAutoScan();
+                } else {
+                    completeDelayedInit();
                 }
-            });
+            })
         }
     } else {
         if (SETTINGS.DebugLevel > 10) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
     }
 
-    
+
     if (AUTO_SCAN_IS_RUNNING) return;
-    
-    
-    
+
+
+
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
 
-    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Alle Produkte', '', '', () => {createNewSite(PAGETYPE.ALL);}));
-    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
-    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Alle Produkte', '', SETTINGS.BtnColorAllProducts, () => {createNewSite(PAGETYPE.ALL);}));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Favoriten', '', SETTINGS.BtnColorFavorites, () => {createNewSite(PAGETYPE.FAVORITES);}));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn', SETTINGS.BtnColorNewProducts, () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
 
     updateNewProductsBtn();
 
@@ -2121,7 +2296,7 @@ function init(hasTiles) {
         if (_input.length >= 3) {
             if (searchInputTimeout) clearTimeout(searchInputTimeout);
             searchInputTimeout = setTimeout(() => {
-                database.query(_input.split(' '), (_objArr) => {
+                database.query(_input.split(' ')).then((_objArr) => {
                     if (SETTINGS.DebugLevel > 10) console.log(`Found ${_objArr.length} Items with this Search`);
                     createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
                     searchInputTimeout = null;
@@ -2130,23 +2305,23 @@ function init(hasTiles) {
         }
     });
 
-    
-        _searchBarSpan.appendChild(_searchBarInput);
-        _searchbarContainer.appendChild(_searchBarSpan);
+
+    _searchBarSpan.appendChild(_searchBarInput);
+    _searchbarContainer.appendChild(_searchBarSpan);
 
 
     // Manual Autoscan and Backgroundscan can not run together, so don´t create the button
-    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('ave-btn-updateDB', 'Update Database', 'ave-btn-updateDB-text','lime', () => {localStorage.setItem('AVE_INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
+    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('ave-btn-updateDB', 'Update Database', 'ave-btn-updateDB-text',SETTINGS.BtnColorUpdateDB, () => {localStorage.setItem('AVE_INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
 
     if (hasTiles) addLeftSideButtons();
 
     if (SETTINGS.EnableBackgroundScan) initBackgroundScan();
-    
+
     // Modify Pageination if exists
     const _pageinationContainer = document.getElementsByClassName('a-pagination')[0];
     if (_pageinationContainer) {
         if (SETTINGS.DebugLevel > 10) console.log('Manipulating Pageination');
-        
+
         const _nextBtn = _pageinationContainer.lastChild;
         const _isNextBtnDisabled = (_nextBtn.getAttribute('class') != 'a-last');
         const _nextBtnLink = _nextBtn.lastChild.getAttribute('href');
