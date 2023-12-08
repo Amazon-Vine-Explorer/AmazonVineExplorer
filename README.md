@@ -17,7 +17,7 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 ## Changelog:
 
-##### [XX.12.2023] - Version 0.10.0
+##### [08.12.2023] - Version 0.10.0
 
 * Changed DB_HANDLER from Callbacks to Promises
 * BugFix: Tile Processing was faster then tile loading from Amazon => Added delayloop until all tiles are loaded
@@ -26,6 +26,11 @@ This script enhances the experience on the Amazon Vine website. However, it does
 * Added the possibility to delete the database (USERSETTINGS)
 * Added the possibility to export the database (USERSETTINGS)
 * Added the possibility to import the database (USERSETTINGS)
+* First Implementation of a Session Detection - Distinguishable by the branding in the bottom left
+* Background Scan will not start if Session is not the Master Session
+* BugFix: addTileEventhandlers() tryed to place favStar EventHandler to early, not we will wait until Star is there.
+* Performance Improvement: Only search for keywords on New Products if there is at least one configured
+* User Settings Menu. Schow Name of Setting as tooltip if noe description is set.
 
 ##### [06.12.2023] - Version 0.9.0
 

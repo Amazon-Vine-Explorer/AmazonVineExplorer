@@ -779,7 +779,7 @@ function initTileEventHandlers() {
 }
 
 function addTileEventhandlers(_currTile) {
-    const _favStar = _currTile.querySelector('.ave-favorite-star');
+    // const _favStar = _currTile.querySelector('.ave-favorite-star');
     const _btn = _currTile.querySelector('.vvp-details-btn input');
 
     const _data = new Object()
@@ -796,7 +796,7 @@ function addTileEventhandlers(_currTile) {
     }
 
     waitForHtmlElmement('.ave-favorite-star', (elem) => {
-        _favStar.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
+        elem.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
     }, _currTile);
 }
 
@@ -844,12 +844,12 @@ function addBranding() {
     _text.style.left = '10px';
     // _text.style.transform = 'translate(-50%, -50%)';
     _text.style.color = 'blue'; // Textfarbe
-    _text.style.backgroundColor = 'rgba(218, 247, 166, .75)';
+    _text.style.backgroundColor = (AVE_IS_THIS_SESSION_MASTER) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)';
     _text.style.textAlign = 'left';
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
     _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
-    _text.innerHTML = `<p id="ave-brandig-text">${AVE_TITLE} - ${AVE_VERSION}</p>`;
+    _text.innerHTML = `<p id="ave-brandig-text">${AVE_TITLE}${(AVE_IS_THIS_SESSION_MASTER) ? ' - Master': ''} - ${AVE_VERSION}</p>`;
 
 
     document.body.appendChild(_text);
@@ -1186,7 +1186,7 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description != '') ? dat.description : dat.name}">${dat.name}</label>`
 
         _elem.appendChild(_elem_item_right);
 
@@ -1235,7 +1235,7 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description != '') ? dat.description : dat.name}">${dat.name}</label>`
 
         _elem.appendChild(_elem_item_right);
 
@@ -1247,7 +1247,7 @@ function createSettingsMenuElement(dat){
 
 
         const _elem_item_left_input_label  = document.createElement('label');
-        _elem_item_left_input_label.setAttribute('data-ave-tooltip', dat.description);
+        _elem_item_left_input_label.setAttribute('data-ave-tooltip', (dat.description && dat.description != '') ? dat.description : dat.name);
         _elem_item_left_input_label.setAttribute('class', 'a-button');
         _elem_item_left_input_label.style.width = "250px";
         if (dat.bgColor) _elem_item_left_input_label.style.backgroundColor = dat.bgColor;
@@ -1286,7 +1286,7 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${dat.description}">${dat.name}</label>`
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description != '') ? dat.description : dat.name}">${dat.name}</label>`
 
         _elem.appendChild(_elem_item_right);
 
@@ -1769,6 +1769,7 @@ function readFile(file) {
 
 function initBackgroundScan() {
     if (SETTINGS.DebugLevel > 10) console.log('Called initBackgroundScan()');
+    if (!AVE_IS_THIS_SESSION_MASTER) console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan');
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
 
     // Create iFrame if not exists
@@ -2036,7 +2037,7 @@ function updateNewProductsBtn() {
             document.title = `${_pageTitle}`;
         }
 
-        if (SETTINGS.EnableDesktopNotifikation) {
+        if (SETTINGS.EnableDesktopNotifikation && SETTINGS.DesktopNotifikationKeywords?.length > 0) {
 
             if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Insige IF`);
 

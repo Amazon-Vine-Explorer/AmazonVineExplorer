@@ -8,6 +8,12 @@ const SECONDS_PER_WEEK = 604800 / 2;
 const SECONDS_PER_DAY = 86400;
 const SITE_IS_VINE = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\//.test(window.location.href);
 const SITE_IS_SHOPPING = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/(?!vine)(?!gp\/video)(?!music)/.test(window.location.href);
+const AVE_SESSION_ID = generateSessionID();
+
+/**
+ * Is this Browser Tab / Window the Master Instance ??
+ */
+let AVE_IS_THIS_SESSION_MASTER = false;
 
 // Obsolete sobald der Backgroundscan läuft
 const INIT_AUTO_SCAN = (localStorage.getItem('AVE_INIT_AUTO_SCAN') == 'true') ? true : false;
@@ -50,6 +56,45 @@ class AVE_EVENTHANDLER {
 }
 const ave_eventhandler = new AVE_EVENTHANDLER();
 
+setTimeout(() => {
+    if (!localStorage.getItem('AVE_SESSIONS')) {
+        localStorage.setItem("AVE_SESSIONS", JSON.stringify([{id: AVE_SESSION_ID, ts: Date.now()}]));
+    } else {
+        const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
+        let _isMasterInstance = SITE_IS_VINE;
+        for (const _session of _sessions) {
+            if (_session.master) _isMasterInstance = false;
+        }
+        AVE_IS_THIS_SESSION_MASTER = _isMasterInstance;
+        _sessions.push({id: AVE_SESSION_ID, ts: Date.now(), master: _isMasterInstance});
+        localStorage.setItem('AVE_SESSIONS', JSON.stringify(_sessions));
+    }
+
+    // if (AVE_IS_THIS_SESSION_MASTER) { // Before we implement a cleanup we try how reliable the close events are
+    //     setInterval(() => { // 
+
+    //     }, 1000);
+    // }
+
+}, Math.round(Math.random() * 100));
+
+
+window.onbeforeunload = function () {
+   console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY'); 
+   const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
+   for (let i = 0; i < _sessions.length; i++) {
+        const _elem = _sessions[i];
+        if (_elem.id == AVE_SESSION_ID) {
+            _sessions.splice(i, 1);
+            localStorage.setItem('AVE_SESSIONS', JSON.stringify(_sessions));
+            console.log('SESSION ID GOT REMOVED');
+            return;
+        }
+    }
+    return 'Realy ?'
+}
+
+
 // All Config Options that should shown to the User
 const SETTINGS_USERCONFIG_DEFINES = [];
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Vine', description: 'Tooltip Description of this Setting'});
@@ -72,7 +117,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationDelay', type: 'number
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Colors and Styles', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorNewProducts', type: 'color', name: 'Button Color New Products', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorMarkCurrSiteAsSeen', type: 'color', name: 'Button Color Mark Curr Site As Seen', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorMarkCurrSiteAsSeen', type: 'color', name: 'Button Color Mark Current Site As Seen', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorMarkAllAsSeen', type: 'color', name: 'Button Color Mark All As Seen', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorBackToTop', type: 'color', name: 'Button Color Back To Top', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorUpdateDB', type: 'color', name: 'Button Color Update Database', description: ''});
@@ -90,7 +135,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', min: 0, max
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'RESET SETTINGS TO DEFAULT', bgColor: 'rgb(255,128,0)', description: 'It does what it says', btnClick: () => {SETTINGS.reset(); window.location.href = window.location.href} });
 SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DATABSE EXPORT >>>', bgColor: 'lime', description: 'Export the entire Database', btnClick: () => {exportDatabase();}});
-SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DATABSE IMPORT <<<', bgColor: 'lime', description: 'Imports Database from earlyer exported file !! ATTENTION !! At the Moment there is NO VALIDATION CHECK', btnClick: () => {importDatabase();}});
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DATABSE IMPORT <<<', bgColor: 'yellow', description: 'Imports Database from earlyer exported file !! ATTENTION !! At the Moment there is NO VALIDATION CHECK', btnClick: () => {importDatabase();}});
 SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DELETE DATABSE', bgColor: 'rgb(255,0,0)', description: 'A USER DOES NOT NEED TO DO THIS ! ITS ONLY FOR DEVELOPMENT PURPOSES', btnClick: () => {database.deleteDatabase().then(() => {window.location.href = window.location.href})}});
 
 class SETTINGS_DEFAULT {
@@ -333,12 +378,13 @@ async function fastStyleChanges() {
                 elem.style.visibility = 'hidden';
             });
         }
-
-
-        
-
-
     }
+}
 
-
+/**
+ * Generates a randomly generated Session ID to identify different Tabs and Windows
+ * @returns {string} Session ID
+ */
+function generateSessionID() {
+    return 'aaaa-aaaaa-AVE-SESSION-aaaaaaa-aaaaaaaa'.replace(/[a]/g, ( c ) => { return Math.round(Math.random() * 36).toString(36) });
 }
