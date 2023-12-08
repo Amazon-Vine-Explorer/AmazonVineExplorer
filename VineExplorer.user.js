@@ -322,13 +322,13 @@ function addLeftSideButtons(forceClean) {
 
     _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
-    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','ave-btn-allseen',  'width: 240px; background-color: lime;', () => {
+    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','ave-btn-allseen',  `width: 240px; background-color: ${SETTINGS.BtnColorMarkCurrSiteAsSeen};`, () => {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
 
-    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', 'left: 0; width: 240px; background-color: rgb(255, 162, 142);', () => {
+    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', `left: 0; width: 240px; background-color: ${SETTINGS.BtnColorMarkAllAsSeen};`, () => {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         setTimeout(() => {
@@ -343,7 +343,7 @@ function addLeftSideButtons(forceClean) {
         }, 30);
     });
 
-    const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  'width: 240px; background-color: white;', () => {
+    const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  `width: 240px; background-color: ${SETTINGS.BtnColorBackToTop};`, () => {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked back to Top Button');
         window.scrollTo(0, 0);
@@ -1312,11 +1312,11 @@ function createSettingsMenuElement(dat){
 
 
         const _elem_keyword_input_label = document.createElement('label');
-        _elem_keyword_input_label.setAttribute('data-ave-tooltip', dat.inputPlaceholder);
+        _elem_keyword_input_label.setAttribute('data-ave-tooltip', dat.description);
 
         const _elem_keyword_input_input = document.createElement('input');
         _elem_keyword_input_input.setAttribute('type', 'text');
-        _elem_keyword_input_input.setAttribute('placeholder', 'Keyword');
+        _elem_keyword_input_input.setAttribute('placeholder', dat.inputPlaceholder);
         _elem_keyword_input_input.addEventListener('change', (elm, ev) => {
             console.log('EVENTHANDLER CHANGE:', elm, 'event:', ev);
             const _value = elm.target.value.trim();
@@ -1470,7 +1470,7 @@ function colorToHex(color) {
         return rgbToHex(_cache[1], _cache[2], _cache[3]);
     } else if (_cache = /rgba\(([\d]+),([\d]+),([\d]+),([\d]+|[\d]*.[\d]+)\)/.exec(_color)){ // rgba(0,0,0,0)
         return rgbaToHex(_cache[1], _cache[2], _cache[3], _cache[4]);
-    } else if (/\#[0-9a-f]{6}|[0-9a-f]{8}$/.exec(_color)){ // #000000
+    } else if (/\#[0-9a-fA-F]{6}|[0-9a-fA-F]{8}$/.exec(_color)){ // #000000
         return _color;
     }
 
@@ -2184,9 +2184,9 @@ function init(hasTiles) {
 
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
 
-    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Alle Produkte', '', '', () => {createNewSite(PAGETYPE.ALL);}));
-    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Favoriten', '', SETTINGS.FavBtnColor, () => {createNewSite(PAGETYPE.FAVORITES);}));
-    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn','lime', () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Alle Produkte', '', SETTINGS.BtnColorAllProducts, () => {createNewSite(PAGETYPE.ALL);}));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Favoriten', '', SETTINGS.BtnColorFavorites, () => {createNewSite(PAGETYPE.FAVORITES);}));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn', SETTINGS.BtnColorNewProducts, () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
 
     updateNewProductsBtn();
 
@@ -2223,7 +2223,7 @@ function init(hasTiles) {
 
 
     // Manual Autoscan and Backgroundscan can not run together, so don´t create the button
-    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('ave-btn-updateDB', 'Update Database', 'ave-btn-updateDB-text','lime', () => {localStorage.setItem('AVE_INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
+    if (!SETTINGS.EnableBackgroundScan) _searchbarContainer.appendChild(createNavButton('ave-btn-updateDB', 'Update Database', 'ave-btn-updateDB-text',SETTINGS.BtnColorUpdateDB, () => {localStorage.setItem('AVE_INIT_AUTO_SCAN', true); window.location.href = "vine-items?queue=encore";}));
 
     if (hasTiles) addLeftSideButtons();
 

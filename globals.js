@@ -64,26 +64,26 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableTopLogoChange', type: 'bool', name
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Button All Products', description: 'Enable "All Products" Button'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Background Scan', description: 'Enables the Background scan, if disabled you will find a Button for Autoscan on the Vine Website'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Infiniti Scroll Live Querry', description: 'If enabled the Products of the All Products Page will get querryd from Amazon directls otherwise they will get loaded from Database(faster)'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikation', type: 'bool', name: 'Enable Desktop Notifikations', description: 'Enable Desktop Notifikations if new Products are detected'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notifikation Highlight Keywords', inputPlaceholder: 'Type in your highlight keyword and press [ENTER]', description: ''});
-
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikation', type: 'bool', name: 'Enable Desktop Notifications', description: 'Enable Desktop Notifications if new Products are detected'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notifickation Highlight Keywords', inputPlaceholder: 'Type in your highlight keyword and press [ENTER]', description: 'Create a List of words u want to Highlight if Product desciption containes one or more of them'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScanDelayPerPage', type: 'number', min: 2000, max: 10000, name: 'Background Scan Per Page Min Delay(Milliseconds)', description: 'Minimal Delay per Page load of Background Scan'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScannerRandomness', type: 'number', min: 100, max: 10000, name: 'Background Scan Randomness per Page(Milliseconds)', description: 'A Vale that gives the maximal range for the Randomy added delay per page load'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationDelay', type: 'number', min: 1, max: 900, name: 'Desktop Notifikation Delay(Seconds)', description: 'Minimal Time between Desktop Notifikations. exept Notifikations with hitted keywords'});
 
+SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Colors and Styles', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorNewProducts', type: 'color', name: 'Button Color New Products', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorMarkCurrSiteAsSeen', type: 'color', name: 'Button Color Mark Curr Site As Seen', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorMarkAllAsSeen', type: 'color', name: 'Button Color Mark All As Seen', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorBackToTop', type: 'color', name: 'Button Color Back To Top', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorUpdateDB', type: 'color', name: 'Button Color Update Database', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorAllProducts', type: 'color', name: 'Button Color All Products', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorFavorites', type: 'color', name: 'Button Color Favorites', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorDefault', type: 'color', name: 'Color Favorite Star unchecked', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', name: 'Color Favorite Star checked', description: ''});
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Shopping', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooterShopping', type: 'bool', name: 'Disable Footer', description: 'Disables the Footer of the Amazon Shopping Page'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestionsShopping', type: 'bool', name: 'Disable Suggestions', description: 'Disables the Suggestions of the Amazon Shopping Page'});
-
-
-SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'General', description: ''});
-
-SETTINGS_USERCONFIG_DEFINES.push({key: 'FavBtnColor', type: 'color', name: 'Button Color Favorites', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorDefault', type: 'color', name: 'Color Favorite Star unchecked', description: ''});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', name: 'Color Favorite Star checked', description: ''});
-
-
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Settings for Developers and Testers', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', min: 0, max: 15, name: 'Debuglevel', description: ''});
@@ -106,9 +106,18 @@ class SETTINGS_DEFAULT {
     EnableInfiniteScrollLiveQuerry = false;
     EnableDesktopNotifikation = false;
     EnableBtnAll = true;
-    FavBtnColor = 'rgb(255, 255, 102)';
+    
+    BtnColorFavorites = '#ffe143';
+    BtnColorNewProducts = '#00FF00';
+    BtnColorMarkCurrSiteAsSeen = '#00FF00';
+    BtnColorMarkAllAsSeen = '#FFA28E';
+    BtnColorBackToTop = '#FFFFFF'
+    BtnColorUpdateDB = '#00FF00';
+    BtnColorAllProducts = '#FFFFFF';
+
     FavStarColorDefault = 'white';
     FavStarColorChecked = '#ffe143';
+
     NotSeenMaxCount = 5;
     PageLoadMinDelay = 750;
     DebugLevel = 0;
