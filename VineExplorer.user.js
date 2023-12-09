@@ -548,7 +548,6 @@ async function createProductSite(siteType, productArray, cb) {
 
     const _tilesGrid = document.getElementById('vvp-items-grid');
     if (!_tilesGrid) reloadPageWithSubpageTarget(siteType);
-        ;
     _tilesGrid.innerHTML = '';
 
     let _index = 0;
