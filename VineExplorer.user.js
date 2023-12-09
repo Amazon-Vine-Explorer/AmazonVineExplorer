@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.1
+// @version      0.10.2
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -458,6 +458,7 @@ async function createTileFromProduct(product, btnID, cb) {
             </div>
         `;
         _tile.prepend(createFavStarElement(product, btnID));
+        // insertHtmlElementAfter((_tile.getElementsByClassName('vvp-item-product-title-container')[0]), createTaxInfoElement(product, btnID));
         if (cb) cb(_tile);
         resolve(_tile);
     })
@@ -471,6 +472,33 @@ function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
     _favElement.textContent = '★';
     if (prod.isFav) _favElement.style.color = SETTINGS.FavStarColorChecked; // SETTINGS.FavStarColorChecked = Gelb;
     return _favElement;
+}
+
+function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
+    console.log('Called createTaxInfo()');
+    const _currencySymbol = '';
+    if (prod.data_tax_currency && prod.data_tax_currency == 'EUR') _currencySymbol = '&euro;';
+
+    
+
+    const _taxElement = document.createElement('span');
+    _taxElement.setAttribute("id", `ave-taxinfo-${index}`);
+    _taxElement.style.cssText = 'position: absolute; transform: translate(0px, -30px); width: fit-content; right: 0px;';
+    
+    const _taxElement_span = document.createElement('span');
+    _taxElement_span.setAttribute("id", `ave-taxinfo-${index}-text`);
+    // const _prize = prod.data_estimated_tax_prize;
+    // console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
+    _taxElement_span.innerText = `Tax Prize: ${'--.--'} ${_currencySymbol}`;
+    console.log('createTaxInfo(): After innerText');
+
+    _taxElement.appendChild(_taxElement_span);
+    console.log('createTaxInfo(): END', _taxElement);
+    return _taxElement;
+}
+
+function insertHtmlElementAfter(referenceNode, newNode) {
+    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
 
 async function createProductSite(siteType, productArray, cb) {
@@ -713,7 +741,10 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
     })
 }
 
+let lastBtnEventhandlerClickTimeStamp = 0;
 function btnEventhandlerClick(event, data) {
+    if (lastBtnEventhandlerClickTimeStamp + 1000 >= Date.now()) return;
+    lastBtnEventhandlerClickTimeStamp = Date.now();
     if (SETTINGS.DebugLevel > 10) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
         database.get(data.recommendation_id).then(async (prod) => {
@@ -2186,6 +2217,8 @@ function addStyleToTile(_currTile, _product) {
         // Update Timestamps
     }
     _currTile.prepend(createFavStarElement(_product));
+    // insertHtmlElementAfter((_currTile.getElementsByClassName('vvp-item-product-title-container')[0]), createTaxInfoElement(_product));
+
 }
 
 

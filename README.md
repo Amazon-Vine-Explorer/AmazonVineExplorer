@@ -17,7 +17,10 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 ## Changelog:
 
-##### [08.12.2023] - Version 0.10.1
+
+
+##### [08.12.2023] - Version 0.10.2
+* BugFix: Multiple Querrys after pressing More Details Button
 * Improved reliability of Databae Cleanup
 * PutLuck Products get removed from Database after one day now
 * Added more Master Slave Session detection handling
