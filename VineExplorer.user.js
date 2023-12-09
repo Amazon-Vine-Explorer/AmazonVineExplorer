@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.2
+// @version      0.10.2.1
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -513,9 +513,28 @@ async function createProductSite(siteType, productArray, cb) {
     const _pagination = document.querySelector('.a-pagination')
     if (_pagination) _pagination.remove();
 
+    const _contentContainer = document.querySelector('.a-section.vvp-tab-content');
+    if(_contentContainer.querySelector('.vvp-no-offers-msg')){
+        _contentContainer.querySelector('.vvp-no-offers-msg').remove();
+        let _tileStructure = document.createElement('div');
+        _tileStructure.classList = 'a-section vvp-items-container';
+        _tileStructure.innerHTML = `
+        <div id="vvp-browse-nodes-container">
+        </div>
+        <div id="vvp-items-grid-container">
+        <p>
+        </p>
+        <div id="vvp-items-grid" class="a-section">
+        </div>
+        </div>`;
+
+        _contentContainer.appendChild(_tileStructure);
+    };
+
     // Cear Left Nodes Container
     const _nodesContainer = document.getElementById('vvp-browse-nodes-container');
     if (_nodesContainer) _nodesContainer.innerHTML = '';
+
 
     // Items Grid Container
     const _tilesContainer = document.getElementById('vvp-items-grid-container');
