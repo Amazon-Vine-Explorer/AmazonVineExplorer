@@ -16,6 +16,10 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 
 ## Changelog:
+
+##### [11.12.2023] - Version 0.10.3.1
+* Update TaxValue in Tile after opend details
+
 ##### [10.12.2023] - Version 0.10.3
 * Added: Show of TaxInfoPrize inside Tileview
 * BugFix: Fixed the bug that Backgroundscan didn´t request Taxdata correctly

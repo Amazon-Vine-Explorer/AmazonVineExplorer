@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.2.1
+// @version      0.10.3.1
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -477,6 +477,7 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     
     const _taxElement_span = document.createElement('span');
     _taxElement_span.setAttribute("id", `ave-taxinfo-${index}-text`);
+    _taxElement_span.classList.add('ave-taxinfo-text');
     const _prize = prod.data_estimated_tax_prize;
     console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
     _taxElement_span.innerText = `Tax Prize: ${(typeof(_prize) == 'number') ? _prize :'--.--'} ${_currencySymbol}`;
@@ -785,7 +786,11 @@ function favStarEventhandlerClick(event, data) {
     }
 }
 
-
+/**
+ * Updates Style and Text of a Product Tile
+ * @param {Product} prod
+ * @returns 
+ */
 function updateTileStyle(prod) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
     const _tiles = document.getElementsByClassName('vvp-item-tile');
@@ -802,8 +807,11 @@ function updateTileStyle(prod) {
             const _favStar = _tile.querySelector('.ave-favorite-star');
             _favStar.style.color = (prod.isFav) ? SETTINGS.FavStarColorChecked : 'white'; // SETTINGS.FavStarColorChecked = Gelb;
 
-            // UPDATE TAX VALUE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+            const _taxValue = prod.data_estimated_tax_prize;
+            if (typeof(_taxValue) == 'number') {
+                const _taxValueElem = _tile.querySelector('.ave-taxinfo-text');
+                _taxValueElem.innerText = (_taxValueElem.innerText).replace('--.--', _taxValue);
+            }
             return;
         }
     }
