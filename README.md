@@ -16,8 +16,11 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 
 ## Changelog:
+##### [10.12.2023] - Version 0.10.3
+* Added: Show of TaxInfoPrize inside Tileview
 
-
+##### [09.12.2023] - Version 0.10.2.1
+* BugFix: Fixed Endlessloop when changing from empty Potluck page to AVE internal page
 
 ##### [08.12.2023] - Version 0.10.2
 * BugFix: Multiple Querrys after pressing More Details Button

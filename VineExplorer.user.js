@@ -458,6 +458,9 @@ async function createTileFromProduct(product, btnID, cb) {
             </div>
         `;
         _tile.prepend(createFavStarElement(product, btnID));
+        waitForHtmlElmement('.vvp-item-product-title-container', (_elem) => {
+            insertHtmlElementAfter(_elem, createTaxInfoElement(product, btnID));
+        }, _tile)
         // insertHtmlElementAfter((_tile.getElementsByClassName('vvp-item-product-title-container')[0]), createTaxInfoElement(product, btnID));
         if (cb) cb(_tile);
         resolve(_tile);
@@ -476,20 +479,18 @@ function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
 
 function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     console.log('Called createTaxInfo()');
-    const _currencySymbol = '';
-    if (prod.data_tax_currency && prod.data_tax_currency == 'EUR') _currencySymbol = '&euro;';
-
-    
+    let _currencySymbol = '';
+    if (prod.data_tax_currency && prod.data_tax_currency == 'EUR') _currencySymbol = '€';
 
     const _taxElement = document.createElement('span');
     _taxElement.setAttribute("id", `ave-taxinfo-${index}`);
-    _taxElement.style.cssText = 'position: absolute; transform: translate(0px, -30px); width: fit-content; right: 0px;';
+    _taxElement.style.cssText = 'position: relative; transform: translate(0px, -30px); width: fit-content; right: 0px;';
     
     const _taxElement_span = document.createElement('span');
     _taxElement_span.setAttribute("id", `ave-taxinfo-${index}-text`);
-    // const _prize = prod.data_estimated_tax_prize;
-    // console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
-    _taxElement_span.innerText = `Tax Prize: ${'--.--'} ${_currencySymbol}`;
+    const _prize = prod.data_estimated_tax_prize;
+    console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
+    _taxElement_span.innerText = `Tax Prize: ${_prize ? _prize :'--.--'} ${_currencySymbol}`;
     console.log('createTaxInfo(): After innerText');
 
     _taxElement.appendChild(_taxElement_span);
@@ -2237,6 +2238,9 @@ function addStyleToTile(_currTile, _product) {
     }
     _currTile.prepend(createFavStarElement(_product));
     // insertHtmlElementAfter((_currTile.getElementsByClassName('vvp-item-product-title-container')[0]), createTaxInfoElement(_product));
+    waitForHtmlElmement('.vvp-item-product-title-container', (_elem) => {
+        insertHtmlElementAfter(_elem, createTaxInfoElement(_product));
+    }, _currTile)
 
 }
 
