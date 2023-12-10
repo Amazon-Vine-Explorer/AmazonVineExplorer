@@ -27,31 +27,20 @@
     Versioning: 
     a.b.c[.d]
 
-    a => Hauptversion(Major), änerdt sich nur bei breaking oder anderen gravirenden änderungen. Solle In diesem Fall also die 1 nie überschreiten.
+    a => Hauptversion(Major), ändert sich nur bei breaking oder anderen gravirenden änderungen. Solle In diesem Fall also die 1 nie überschreiten.
     b => Feature(Minor), ändert sich nur wenn neue Features hinzukommen oder gößere umstellungen im Hintergrund passiert sind
     c => Patch, kleinere Änderungen oder "größere" Bugfixes
     d => Micro(OPTIONAL), kleine Bugfixes die nur wenige Zeilen Code beinhalten. Wird normalerweise nicht an die Versionnummer angehängt und nur in ausnahmefällen verwendet. Wie z.B. 0.6.4.1 - Das war nur eine Fehlerhafte Variablendeklaration. musste aber public gehen weil es ein Breaking Bug war
 
-
-
     Sammlung der Ideen:
-    - Datenbank Import und Export, Idee von "Finding_Won_Ton_Chin" - MyDeals
     - Pageination nach oben schieben || Kopieren
     - Tooltipp mit der langen Beschreibung auf der kurzen
     - Bestellte Produkte mit Tag versehen ?
-    - Verstecken des Footers und der Producktvorschläge am Unteren Rand der Seite
     - Automatisches Bestellen via Prioliste ?!?
 
     Todo:
-
-    - Zum Löschen markierten Produkten die Information hinzufügen wann sie gelöscht werden
-
-    - Zu den TOP Buttons die Anzahl der Elemente in der jeweiligen Kategorie hinzufügen
     - Reload der Neue Produkte Seite nach einem Click auf "Alle als gesehen Markieren"
-
     - Originale Pagination auf den eigenen Seiten verstecken
-    - Last Seen Update 
-    - Changelog hinzufügen
 */
 
 'use strict';
@@ -490,7 +479,7 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     _taxElement_span.setAttribute("id", `ave-taxinfo-${index}-text`);
     const _prize = prod.data_estimated_tax_prize;
     console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
-    _taxElement_span.innerText = `Tax Prize: ${_prize ? _prize :'--.--'} ${_currencySymbol}`;
+    _taxElement_span.innerText = `Tax Prize: ${(typeof(_prize) == 'number') ? _prize :'--.--'} ${_currencySymbol}`;
     console.log('createTaxInfo(): After innerText');
 
     _taxElement.appendChild(_taxElement_span);
@@ -773,7 +762,7 @@ function btnEventhandlerClick(event, data) {
                 prod.isNew = false;
                 requestProductDetails(prod).then((_newProd) => {
                     database.update(_newProd || prod).then( () => {
-                        updateTileStyle(prod);
+                        updateTileStyle(_newProd || prod);
                     });
                 })
             }
@@ -812,6 +801,9 @@ function updateTileStyle(prod) {
             _tile.setAttribute('style', (prod.isFav) ? SETTINGS.CssProductFavTag : (prod.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
             const _favStar = _tile.querySelector('.ave-favorite-star');
             _favStar.style.color = (prod.isFav) ? SETTINGS.FavStarColorChecked : 'white'; // SETTINGS.FavStarColorChecked = Gelb;
+
+            // UPDATE TAX VALUE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
             return;
         }
     }
@@ -1720,7 +1712,9 @@ async function cleanUpDatabase(cb = () => {}) {
                     _needUpdate = true;
                 }
 
-                if (_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount && !_currEntry.isFav) {
+                
+
+                if ((_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount || _currEntry.forceRemove) && !_currEntry.isFav) {
                     if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
 
                     database.removeID(_currEntry.id).then((ret) => {
@@ -1863,7 +1857,7 @@ function initBackgroundScan() {
             clearInterval(_paginatinWaitLoop);
             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): pagination WaitLoop');
 
-            if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_IS_RUNNING') == true)) {
+            if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_IS_RUNNING') == 'true')) {
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): init localStorage Variables');
                 localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_IS_RUNNING', true);
@@ -1919,7 +1913,7 @@ function initBackgroundScan() {
                             const _randCount = Math.round(Math.random() * 3);
                             for (_prod of products) {
                                 if (_needUpdate.length < 3) {
-                                    if (!_prod.data_estimated_tax_prize) _needUpdate.push(_prod);
+                                    if (typeof(_prod.data_estimated_tax_prize) != 'number') _needUpdate.push(_prod);
                                 } else {
                                     break;
                                 }
@@ -2249,7 +2243,15 @@ async function requestProductDetails(prod) {
     return new Promise(async (resolve, reject) => {
         if (prod.data_asin_is_parent) {// Lets get the Childs first
             fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}`.replace(/#/g, '%23')).then(r => r.json()).then(async (res) => {
-                if (res.error) reject(ret.error.exceptionType);
+                if (res.error) {
+                    if (res.error.exceptionType == 'ITEM_NOT_IN_ENROLLMENT') {
+                        prod.forceRemove = true;
+                        resolve(prod);
+                    } else {
+                        console.error('requestProductDetails():ERROR:', res.error);
+                        reject(res.error.exceptionType);
+                    }
+                }
                 const _data = res.result;
                 console.log('DATA:', _data)
                 prod.data_childs = _data.variations || [];

@@ -18,6 +18,9 @@ This script enhances the experience on the Amazon Vine website. However, it does
 ## Changelog:
 ##### [10.12.2023] - Version 0.10.3
 * Added: Show of TaxInfoPrize inside Tileview
+* BugFix: Fixed the bug that Backgroundscan didn´t request Taxdata correctly
+* Added: Faster Product Removement if querry returns 'ITEM_NOT_IN_ENROLLMENT' except Favorites
+* BugFix: Backgroundscan didn´t restore last state and begun at 0 each time
 
 ##### [09.12.2023] - Version 0.10.2.1
 * BugFix: Fixed Endlessloop when changing from empty Potluck page to AVE internal page
