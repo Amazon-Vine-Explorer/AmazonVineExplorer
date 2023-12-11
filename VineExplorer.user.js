@@ -51,8 +51,11 @@ console.log(`Init Vine Voices Explorer ${AVE_VERSION}`);
  */
 let currentMainPage;
 
+let PEER;
+
 loadSettings();
 fastStyleChanges();
+initPeerToPeer();
 
 let searchInputTimeout;
 let backGroundScanTimeout;
@@ -151,6 +154,7 @@ let infiniteScrollMaxPreloadPage = 125; // Hardcoded for scrolltest, must lated 
 let inifiniteScrollBlockAppend = false;
 let infiniteScrollTilesBufferArray = [];
 
+
 function handleInfiniteScroll() {
     console.log('Called handleInfiniteScroll()');
     if (!inifiniteScrollBlockAppend) {
@@ -207,6 +211,42 @@ function detectCurrentPageType(){
     // getUrlParameter('ave-subpage');
 
 }
+
+async function initPeerToPeer(){
+    console.log('Called initPeerToPeer()');
+    if (SETTINGS.PtPUserNickname != '' && SETTINGS.PtP_UUID == '') { // We have a Nickname but no UUID => lets create it
+        SETTINGS.PtP_UUID = generate_uuid();
+        SETTINGS.save();
+    }
+
+    PEER = new Peer(SETTINGS.PtP_UUID, {
+        debug: 3,
+    });
+
+    PEER.on('error', (err) => {console.error('PEER ERROR: ', err)});
+    PEER.on('close', () => {console.log('PEER CLOSED')});
+    PEER.on('disconnected', () => {console.warn('PEER DISCONNECTED')});
+    PEER.on('connection', (conn) => {
+        PTP_CONNECTIONS.push(conn);
+        conn.on('open', () => {console.log('PEER::CONNECTION::OPEN ')})
+        conn.on('data', (data) => {console.log('PEER::CONNECTION::DATA ', data)})
+        conn.on('close', () => {console.log('PEER::CONNECTION::CLOSE')})
+        conn.on('error', (err) => {console.log('PEER::CONNECTION::ERROR ', err)})
+    });
+
+    PEER.on('open', (id) => { // WE are Connected to PtP Broker
+        console.log('PEER ID is ' + id);
+        // if (localKey != MARKUS_TEST_ID) {
+        //     console.log('We are not Markus, so lets try to connect to him ;)')
+        //     const _conMarkus = PEER.connect(MARKUS_TEST_ID);
+        //     _conMarkus.on('data', (data) => {
+        //         console.log('PEER::CONNECTION::MARKUS::DATA:', data);
+        //         alert(data);
+        //     })
+        // }
+    });
+}
+
 
 async function parseTileData(tile) {
     return new Promise((resolve, reject) => {
@@ -1178,6 +1218,10 @@ font-weight: bold;
   margin: 3px;
 }
 
+.ave-input-text {
+  margin-top: 10px !important;
+}
+
 ::-webkit-color-swatch-wrapper {
   padding: 0;
 }
@@ -1352,6 +1396,7 @@ function createSettingsMenuElement(dat){
         _elem.style.flexWrap = 'wrap';
         _elem.appendChild(_elem_spacer_horizontal);
         _elem.appendChild(_elem_spacer_title);
+
     } else if (dat.type == 'keywords') {
         _elem.classList.remove('ave-settings-item');
         _elem.classList.add('ave-keyword-wrapper');
@@ -1397,7 +1442,52 @@ function createSettingsMenuElement(dat){
         _elem_keyword_list_table.appendChild(_elem_keyword_list_table_tbody);
         _elem_keyword_list.appendChild(_elem_keyword_list_table);
         _elem.appendChild(_elem_keyword_list);
+
+    } else if (dat.type == 'text') {
+       const _elem_item_left = document.createElement('div');
+        _elem_item_left.classList.add('ave-item-left');
+        const _elem_item_left_input = document.createElement('input');
+        _elem_item_left_input.type = 'text';
+        _elem_item_left_input.classList.add('ave-input-text');
+        _elem_item_left_input.setAttribute('ave-data-key', dat.key);
+        
+        if (dat.evalValue) {
+            _elem_item_left_input.setAttribute('value', eval(dat.evalValue));
+        } else {
+            _elem_item_left_input.setAttribute('value', SETTINGS[dat.key]);
+        }
+        _elem_item_left_input.setAttribute('placeholder', dat.inputPlaceholder);
+        
+        if (dat.readonly) _elem_item_left_input.readOnly = true;
+        if (dat.deleteable) {} // ADD A DELETE BUTTON
+        
+        _elem_item_left_input.addEventListener('change', (event) => {
+            const _value = event.target.value;
+            // console.log('This is a Number Value Input', event);
+
+            if (dat.min && _value.length < dat.min) { // Minimal Length not matched
+                console.log("Eingabe Fehlerhaft");
+                alert(`Please Input a ${dat.name} with a minimum length of ${dat.min}`);
+            } else if (dat.max && _value.length > dat.max) { // Minimal Length not matched
+                console.log("Eingabe Fehlerhaft");
+                alert(`Please Input a ${dat.name} with a maximum length of ${dat.max}`);
+            } else {
+                console.log("Eingabe Valid");
+                SETTINGS[dat.key] = _value
+                SETTINGS.save();
+            }
+        })
+        _elem_item_left.appendChild(_elem_item_left_input);
+        _elem.appendChild(_elem_item_left);
+
+        const _elem_item_right = document.createElement('div');
+        _elem_item_right.classList.add('ave-item-right');
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description != '') ? dat.description : dat.name}">${dat.name}</label>`
+
+        _elem.appendChild(_elem_item_right);
     }
+
+
 
     return _elem;
 }

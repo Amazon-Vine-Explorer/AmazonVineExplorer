@@ -21,8 +21,8 @@ const AUTO_SCAN_IS_RUNNING = (localStorage.getItem('AVE_AUTO_SCAN_IS_RUNNING') =
 const AUTO_SCAN_PAGE_CURRENT = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_CURRENT')) || -1 
 const AUTO_SCAN_PAGE_MAX = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_MAX')) || -1 
 const PAGE_LOAD_TIMESTAMP = Date.now();
+const PTP_CONNECTIONS = [];
 
-// Obsolete sobald die Datenbank über Tampermonkey läuft
 const DATABASE_NAME = 'VineVoiceExplorer';
 const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
 const DATABASE_VERSION = 2;
@@ -106,7 +106,8 @@ setTimeout(() => {
 
 
 window.onbeforeunload = function () {
-   console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY'); 
+   console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY - AND DESTROY PEER CONNECTON'); 
+   if (PEER) PEER.destroy();
    const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
    for (let i = 0; i < _sessions.length; i++) {
         const _elem = _sessions[i];
@@ -117,7 +118,7 @@ window.onbeforeunload = function () {
             return;
         }
     }
-    return 'Realy ?'
+    return;
 }
 
 
@@ -136,10 +137,15 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enab
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Background Scan', description: 'Enables the Background scan, if disabled you will find a Button for Autoscan on the Vine Website'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Infiniti Scroll Live Querry', description: 'If enabled the Products of the All Products Page will get querryd from Amazon directls otherwise they will get loaded from Database(faster)'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikation', type: 'bool', name: 'Enable Desktop Notifications', description: 'Enable Desktop Notifications if new Products are detected'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notifickation Highlight Keywords', inputPlaceholder: 'Type in your highlight keyword and press [ENTER]', description: 'Create a List of words u want to Highlight if Product desciption containes one or more of them'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notification Highlight Keywords', inputPlaceholder: 'Type in your highlight keyword and press [ENTER]', description: 'Create a List of words u want to Highlight if Product desciption containes one or more of them'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScanDelayPerPage', type: 'number', min: 2000, max: 10000, name: 'Background Scan Per Page Min Delay(Milliseconds)', description: 'Minimal Delay per Page load of Background Scan'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScannerRandomness', type: 'number', min: 100, max: 10000, name: 'Background Scan Randomness per Page(Milliseconds)', description: 'A Vale that gives the maximal range for the Randomy added delay per page load'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationDelay', type: 'number', min: 1, max: 900, name: 'Desktop Notifikation Delay(Seconds)', description: 'Minimal Time between Desktop Notifikations. exept Notifikations with hitted keywords'});
+
+SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Peer To Peer - Swarm Config', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'PtPUserNickname', type: 'text', name: 'PtP Nickname',min: 5, max: 25, inputPlaceholder:'Peer To Peer - Nickname', description: 'Your PtP Nickname Shown to your Partners'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'PtP_UUID', type: 'text', evalValue: '(SETTINGS.PtP_UUID && SETTINGS.PtPUserNickname) ? SETTINGS.PtP_UUID + "==" + SETTINGS.PtPUserNickname: "CREATE A NICKNAME FIRST"', readonly: true, deleteable: true,  name: 'Your PtP UUID', description: 'Our PtP UUID used to connect with your Swarm Partners'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'PtPFriendsUUIDs', type: 'keywords', name: 'PtP Partner UUIDs', inputPlaceholder: 'Type in your Partners UUID and press [ENTER]', description: 'A List of your PtP Swarm Data Exchange Partners'});
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Colors and Styles', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorNewProducts', type: 'color', name: 'Button Color New Products', description: ''});
@@ -206,6 +212,10 @@ class SETTINGS_DEFAULT {
     CssProductFavTag = "border: 2mm ridge rgba(255, 255, 102, .6); background-color: rgba(255, 255, 102, .2)";
     CssProductRemovalTag = "border: 2mm ridge rgba(255, 87, 51, .6); background-color: rgba(255, 87, 51, .2)";
     CssProductDefault = "border: 2mm ridge rgba(173,216,230, .6); background-color: rgba(173,216,230, .2)";
+
+    PtPUserNickname = '';
+    PtP_UUID = '';
+    PtPFriendsUUIDs = [];
 
     constructor() {
         ave_eventhandler.on('ave-save-cofig', () => {
@@ -331,7 +341,21 @@ async function delay(milliseconds) {
     });
 }
 
-
+/**
+ * Creates a AVE UUID for PtP use
+ * @returns {String} AVE PtP UUID
+ */
+function generate_uuid() {
+   var dt = new Date().getTime();
+   return 'xxxxyyxxx-xxxxxxxxxx-AVE_UUID-yxxxxxxx-xxxxyx-xxyxxx'.replace(/[xy]/g,
+   function( c ) {
+      var rnd = Math.random() * 36;//random number in range 0 to 36
+      rnd = (dt + rnd)%36 | 0;
+      dt = Math.floor(dt/36);
+      rnd = (Math.random() > 0.5) ? rnd.toString(36) : rnd.toString(36).toUpperCase();
+      return (c === 'x' ? rnd : (rnd & 0x3 | 0x8)).toString(36);
+   });
+}
 
 /**
     * This Function will Monitor and fire Style Changes asap
