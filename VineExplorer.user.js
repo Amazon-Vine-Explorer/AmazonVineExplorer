@@ -2100,11 +2100,11 @@ function updateNewProductsBtn() {
             document.title = `${_pageTitle}`;
         }
 
+        let _notifyed = false;
         if (SETTINGS.EnableDesktopNotifikation && SETTINGS.DesktopNotifikationKeywords?.length > 0) {
 
             if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Insige IF`);
 
-            let _notifyed = false;
             const _configKeyWords = SETTINGS.DesktopNotifikationKeywords;
 
 
@@ -2125,16 +2125,14 @@ function updateNewProductsBtn() {
                     break;
                 }        
             }
-
-
-            if (!_notifyed && _prodArrLength > oldCountOfNewItems){ 
+        }
+        if (SETTINGS.EnableDesktopNotifikation && !_notifyed && _prodArrLength > oldCountOfNewItems){ 
                 if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
                     oldCountOfNewItems = _prodArrLength;
                     lastDesktopNotifikationTimestamp = unixTimeStamp();
 
                     desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
-                } 
-            }
+               } 
         }
     })
 }
