@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.3.3
+// @version      0.10.3.4
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -555,13 +555,31 @@ async function createProductSite(siteType, productArray, cb) {
     addLeftSideButtons(true);
 }
 
-async function createInfiniteScrollSite(cb) {
+async function createInfiniteScrollSite(siteType, cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called createInfiniteScrollSite()`);
 
     // Remove Pagination
     const _pagination = document.querySelector('.a-pagination')
     if (_pagination) _pagination.remove();
 
+    const _contentContainer = document.querySelector('.a-section.vvp-tab-content');
+    if(_contentContainer.querySelector('.vvp-no-offers-msg')){
+        _contentContainer.querySelector('.vvp-no-offers-msg').remove();
+        let _tileStructure = document.createElement('div');
+        _tileStructure.classList = 'a-section vvp-items-container';
+        _tileStructure.innerHTML = `
+        <div id="vvp-browse-nodes-container">
+        </div>
+        <div id="vvp-items-grid-container">
+        <p>
+        </p>
+        <div id="vvp-items-grid" class="a-section">
+        </div>
+        </div>`;
+
+        _contentContainer.appendChild(_tileStructure);
+    };
+    
     // Cear Left Nodes Container
     const _nodesContainer = document.getElementById('vvp-browse-nodes-container');
     if (_nodesContainer) _nodesContainer.innerHTML = '';
@@ -675,7 +693,7 @@ function createNewSite(type, data) {
         }
         case PAGETYPE.ALL:{
             currentMainPage = PAGETYPE.ALL;
-            createInfiniteScrollSite((tilesContainer) => {
+            createInfiniteScrollSite(currentMainPage,(tilesContainer) => {
                 const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
                 const _preloadPages = ['potluck', 'last_chance', 'encore']
                 infiniteScrollLastPreloadedPage = 1;
