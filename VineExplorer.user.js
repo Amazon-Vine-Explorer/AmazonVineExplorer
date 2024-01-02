@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.3.4
+// @version      0.10.3.5
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -44,6 +44,7 @@
 */
 
 'use strict';
+
 console.log(`Init Vine Voices Explorer ${AVE_VERSION}`);
 
 /**
@@ -81,7 +82,13 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
             console.log('We are on Amazon Vine'); // We are on the amazon vine site
             addAveSettingsTab();
             addAVESettingsMenu();
+            waitForHtmlElmement('.a-container.vvp-body', () => {
+                console.log('DarkMode');
+                darkMode();
+            })
             waitForHtmlElmement('.vvp-details-btn', () => {
+                console.log('Details');
+                darkMode();
                 if (_execLock) return;
                 _execLock = true;
                 addBranding();
@@ -99,6 +106,8 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 }, 100);
             });
             waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
+                console.log('No-Offer');
+                darkMode();
                 if (_execLock) return;
                 _execLock = true;
                 addBranding();
@@ -210,7 +219,7 @@ function detectCurrentPageType(){
 
 async function parseTileData(tile) {
     return new Promise((resolve, reject) => {
-                if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
+        if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
 
         const _id = tile.getAttribute('data-recommendation-id');
 
@@ -474,9 +483,10 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     const _taxElement = document.createElement('span');
     _taxElement.setAttribute("id", `ave-taxinfo-${index}`);
     _taxElement.style.cssText = 'position: relative; transform: translate(0px, -30px); width: fit-content; right: 0px;';
-    
+
     const _taxElement_span = document.createElement('span');
     _taxElement_span.setAttribute("id", `ave-taxinfo-${index}-text`);
+    _taxElement_span.classList.add('ave-taxinfo-text');
     const _prize = prod.data_estimated_tax_prize;
     console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
     _taxElement_span.innerText = `Tax Prize: ${(typeof(_prize) == 'number') ? _prize :'--.--'} ${_currencySymbol}`;
@@ -579,7 +589,7 @@ async function createInfiniteScrollSite(siteType, cb) {
 
         _contentContainer.appendChild(_tileStructure);
     };
-    
+
     // Cear Left Nodes Container
     const _nodesContainer = document.getElementById('vvp-browse-nodes-container');
     if (_nodesContainer) _nodesContainer.innerHTML = '';
@@ -803,7 +813,11 @@ function favStarEventhandlerClick(event, data) {
     }
 }
 
-
+/**
+ * Updates Style and Text of a Product Tile
+ * @param {Product} prod
+ * @returns 
+ */
 function updateTileStyle(prod) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
     const _tiles = document.getElementsByClassName('vvp-item-tile');
@@ -820,8 +834,11 @@ function updateTileStyle(prod) {
             const _favStar = _tile.querySelector('.ave-favorite-star');
             _favStar.style.color = (prod.isFav) ? SETTINGS.FavStarColorChecked : 'white'; // SETTINGS.FavStarColorChecked = Gelb;
 
-            // UPDATE TAX VALUE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+            const _taxValue = prod.data_estimated_tax_prize;
+            if (typeof(_taxValue) == 'number') {
+                const _taxValueElem = _tile.querySelector('.ave-taxinfo-text');
+                _taxValueElem.innerText = (_taxValueElem.innerText).replace('--.--', _taxValue);
+            }
             return;
         }
     }
@@ -902,7 +919,7 @@ function addBranding() {
 
     const _oldElem = document.getElementById('ave-branding-text');
     if (_oldElem) _oldElem.remove();
-    
+
     const _text = document.createElement('div');
     _text.id = 'ave-branding-text';
     _text.style.position = 'fixed';
@@ -996,6 +1013,8 @@ function addAVESettingsMenu(){
   height: 21px;
   border: var(--numberBorder) solid #888C8C;
   padding: var(--numberPadding);
+  background-color: inherit;
+  color: inherit;
 }
 
 .ave-settings-container input[type="color"] {
@@ -1004,10 +1023,14 @@ function addAVESettingsMenu(){
   border: 1px solid darfgrey;
   cursor: pointer;
   height: var(--itemHeight);
+  background-color: inherit;
+  color: inherit;
 }
 
 .ave-settings-container input[type="text"] {
   width: 500px;
+  background-color: inherit;
+  color: inherit;
 }
 
 .ave-settings-item{
@@ -1310,7 +1333,7 @@ function createSettingsMenuElement(dat){
     } else if (dat.type == 'button') { // Number Value
 
         const _elem_item_left = document.createElement('div');
-        
+
         _elem_item_left.classList.add('ave-item-left');
 
 
@@ -1322,7 +1345,7 @@ function createSettingsMenuElement(dat){
         const _elem_item_left_input = document.createElement('button');
         _elem_item_left_input.type = 'button';
         _elem_item_left_input.className = 'ave-input-button';
-        
+
         // _elem_item_left_input.setAttribute('ave-data-key', dat.key);
         _elem_item_left_input.innerText = dat.name;
         //_elem_item_left_input.setAttribute('data-ave-tooltip',dat.description);
@@ -1691,9 +1714,9 @@ function getPageinationData(localDocument = document) {
 async function cleanUpDatabase(cb = () => {}) {
     if (SETTINGS.DebugLevel > 10) console.log('Called cleanUpDatabase()');
     const _dbCleanIcon = addDBCleaningSymbol();
-    
+
     database.getAll().then((prodArr) => {
-        
+
         const _prodArrLength = prodArr.length;
         const _workersProms = [];
         if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
@@ -1724,13 +1747,13 @@ async function cleanUpDatabase(cb = () => {}) {
                 } else if (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
                     _notSeenCounter++;
                 }
-                
+
                 if (_currEntry.notSeenCounter != _notSeenCounter) {
                     _currEntry.notSeenCounter = _notSeenCounter;
                     _needUpdate = true;
                 }
 
-                
+
 
                 if ((_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount || _currEntry.forceRemove) && !_currEntry.isFav) {
                     if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
@@ -1748,9 +1771,9 @@ async function cleanUpDatabase(cb = () => {}) {
         }
 
         Promise.allSettled(_workersProms).then(() => {
-                if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
-                _dbCleanIcon.remove();
-                cb(true);
+            if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
+            _dbCleanIcon.remove();
+            cb(true);
         })
 
     });
@@ -1771,7 +1794,7 @@ function exportDatabase() {
 
         document.body.removeChild(element);
     })
-    
+
 }
 
 /**
@@ -1928,9 +1951,9 @@ function initBackgroundScan() {
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                         database.getAll().then((products) => {
                             const _needUpdate = [];
-                            const _randCount = Math.round(Math.random() * 3);
-                            for (_prod of products) {
-                                if (_needUpdate.length < 3) {
+                            const _randCount = Math.round(Math.random() * 4);
+                            for (const _prod of products) {
+                                if (_needUpdate.length < _randCount) {
                                     if (typeof(_prod.data_estimated_tax_prize) != 'number') _needUpdate.push(_prod);
                                 } else {
                                     break;
@@ -1939,7 +1962,7 @@ function initBackgroundScan() {
 
                             const _promises = [];
 
-                            for (_prod of _needUpdate) {
+                            for (const _prod of _needUpdate) {
                                 requestProductDetails(_prod).then((_newProd) => {
                                     _promises.push(database.update(_newProd));
                                 });
@@ -2006,7 +2029,7 @@ function backGroundTileScanner(url, cb) {
                         _returned++;
                         if (SETTINGS.DebugLevel > 14) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
                         if (!prod.gotFromDB) database.add(prod);
-                        
+
                     }))
                 }
 
@@ -2145,12 +2168,12 @@ function updateNewProductsBtn() {
             }
         }
         if (SETTINGS.EnableDesktopNotifikation && !_notifyed && _prodArrLength > oldCountOfNewItems){ 
-                if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
-                    oldCountOfNewItems = _prodArrLength;
-                    lastDesktopNotifikationTimestamp = unixTimeStamp();
+            if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
+                oldCountOfNewItems = _prodArrLength;
+                lastDesktopNotifikationTimestamp = unixTimeStamp();
 
-                    desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
-               } 
+                desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
+            }
         }
     })
 }
@@ -2315,11 +2338,36 @@ async function requestProductDetails(prod) {
     })
 }
 
+function darkMode() {
 
+    // Dunklen Hintergrund setzen
+    document.body.style.backgroundColor = '#191919';
+
+    // Funktion zum Umwandeln von RGB in HEX
+    function rgbToHex(rgb) {
+        let hex = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+        return hex ? `#${Number(hex[1]).toString(16).padStart(2, '0')}${Number(hex[2]).toString(16).padStart(2, '0')}${Number(hex[3]).toString(16).padStart(2, '0')}` : rgb;
+    }
+
+    // Beispiel: Ändere die Hintergrundfarbe aller Elemente auf der Seite
+    let allElements = document.querySelectorAll('.a-container.vvp-body *');
+    console.log(allElements);
+    allElements.forEach(element => {
+        let currentBackgroundColor = window.getComputedStyle(element).backgroundColor;
+        let hexBackgroundColor = rgbToHex(currentBackgroundColor);
+
+        if (hexBackgroundColor != '#fff' || hexBackgroundColor != 'white') {
+            if (!element.matches('.a-tab-heading, .a-tab-heading a')) {
+                element.style.backgroundColor = '#191919'; // Setze die gewünschte Hintergrundfarbe für weiß
+            }
+            element.style.color = 'rgba(255,255,255,0.75)'; // Setze die Textfarbe entsprechend
+        }
+        console.log(element);
+    });
+}
 
 function init(hasTiles) {
     // Get all Products on this page ;)
-
 
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
 
@@ -2327,7 +2375,6 @@ function init(hasTiles) {
     if (SETTINGS.DebugLevel > 10) console.log(`Got Subpage Parameter`, _aveSubpageRequest)
 
     if (_aveSubpageRequest) createNewSite(parseInt(_aveSubpageRequest));
-
     if (hasTiles) {
         const _tiles = document.getElementsByClassName('vvp-item-tile');
 
