@@ -6,6 +6,7 @@
 // @author       MarkusSR1984, Christof121
 // @match        *://www.amazon.de/*
 // @match        *://www.amazon.com/*
+// @match        *://www.amazon.co.uk/*
 // @license      MIT
 // @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
 // @run-at       document-start
