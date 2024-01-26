@@ -49,6 +49,7 @@ console.log(`Init Vine Voices Explorer ${AVE_VERSION}`);
 
 /**
  * On witch page are we atm ? PAGETYPE
+ * @type {PAGETYPE}
  */
 let currentMainPage;
 
@@ -643,7 +644,11 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
     // },100);
 }
 
-
+/**
+ * AVE PAGETYPE ENUM
+ * @readonly
+ * @enum {number}
+ */
 const PAGETYPE = {
     NEW_ITEMS: 0,
     FAVORITES: 1,
