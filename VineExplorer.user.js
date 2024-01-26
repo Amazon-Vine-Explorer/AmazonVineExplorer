@@ -173,7 +173,7 @@ function handleInfiniteScroll() {
             blockHandleInfiniteScroll = false;  
             return;
         } else if (infiniteScrollTilesBufferArray.length < 1000 && infiniteScrollLastPreloadedPage < infiniteScrollMaxPreloadPage) {
-            const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+            const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
             infiniteScrollLastPreloadedPage++;
             getTilesFromURL(`${_baseUrl}?queue=encore&pn=&cn=&page=${infiniteScrollLastPreloadedPage}`, (tiles) =>{
                 infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles);
@@ -194,7 +194,7 @@ function getUrlParameter(name) {
 }
 
 function detectCurrentPageType(){
-    if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items$/.test(window.location.href)) {
+    if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items$/.test(window.location.href)) {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
     } else if (getUrlParameter('queue') == 'last_chance') {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
@@ -700,7 +700,7 @@ function createNewSite(type, data) {
         case PAGETYPE.ALL:{
             currentMainPage = PAGETYPE.ALL;
             createInfiniteScrollSite(currentMainPage,(tilesContainer) => {
-                const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+                const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
                 const _preloadPages = ['potluck', 'last_chance', 'encore']
                 infiniteScrollLastPreloadedPage = 1;
                 infiniteScrollMaxPreloadPage = 100;
@@ -1857,7 +1857,7 @@ function initBackgroundScan() {
     if  (!SETTINGS.EnableBackgroundScan) {console.warn('initBackgroundScan(): Backgroundscan is disabled => Exit');return;}
     if (!AVE_IS_THIS_SESSION_MASTER) {console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan'); return;}
     BackGroundScanIsRunning = true;
-    const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+    const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
 
     // Create iFrame if not exists
     if (!document.querySelector('#ave-iframe-backgroundloader')) {
