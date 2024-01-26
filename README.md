@@ -17,6 +17,9 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 ## Changelog:
 
+##### [26.01.2024] - Version 0.10.3.5
+* BugFix: Fixed Bug where only lower letters would work in the SearchBar
+
 ##### [11.12.2023] - Version 0.10.3.1
 * Update TaxValue in Tile after opend details
 
