@@ -1727,9 +1727,9 @@ async function cleanUpDatabase(cb = () => {}) {
 
 
                 let _notSeenCounter = _currEntry.notSeenCounter;
-                if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
+                if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen < (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
                     _notSeenCounter++;
-                } else if (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
+                } else if (_currEntry.ts_lastSeen < (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
                     _notSeenCounter++;
                 }
                 
