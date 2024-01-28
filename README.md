@@ -17,10 +17,11 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 ## Changelog:
 
-##### [27.01.2024] - Version 0.10.3.7
+##### [28.01.2024] - Version 0.10.3.8
 * BugFix: Fixed Bug where only lower letters would work in the SearchBar
 * BugFix: Outdated Products didn't increase the notSeenCounter while Database Cleanup
 * BugFix: Products got removed by db cleanup because the timespamp check was wrong
+* BugFix: LastSeen Timestanp got not saved if Product was existing in Database
 
 ##### [11.12.2023] - Version 0.10.3.1
 * Update TaxValue in Tile after opend details

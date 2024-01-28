@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.3.7
+// @version      0.10.3.8
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -219,6 +219,7 @@ async function parseTileData(tile) {
                 _ret.gotFromDB = true;
                 _ret.ts_lastSeen = unixTimeStamp();
                 if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): got DB Entry`);
+                database.update(_ret);
                 resolve(_ret);
             } else {
                 //We have to wait for a lot of Stuff
@@ -1718,22 +1719,27 @@ async function cleanUpDatabase(cb = () => {}) {
                 if (!_currEntry.ts_firstSeen){
                     _currEntry.ts_firstSeen = (unixTimeStamp() - Math.round(Math.random() * (SECONDS_PER_WEEK / 2)));
                     _needUpdate = true;
+                    if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} had no valid firstseen timestamp. fixed`);
                 }
 
                 if (!_currEntry.ts_lastSeen) {
                     _currEntry.ts_lastSeen = (_currEntry.ts_firstSeen + SECONDS_PER_DAY);
                     _needUpdate = true;
+                    if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} had no valid lastseen timestamp. fixed`);
                 }
 
 
                 let _notSeenCounter = _currEntry.notSeenCounter;
                 if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen < (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
                     _notSeenCounter++;
+                    if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} increased notSeenCounter to ${_notSeenCounter}`);
                 } else if (_currEntry.ts_lastSeen < (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
                     _notSeenCounter++;
+                    if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} increased notSeenCounter to ${_notSeenCounter}`);
                 }
                 
                 if (_currEntry.notSeenCounter != _notSeenCounter) {
+                    if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} update notSeenCounter from ${_currEntry.notSeenCounter} to ${_notSeenCounter}`);
                     _currEntry.notSeenCounter = _notSeenCounter;
                     _needUpdate = true;
                 }
@@ -1763,6 +1769,8 @@ async function cleanUpDatabase(cb = () => {}) {
 
     });
 }
+
+unsafeWindow.ave.dbCleanup = cleanUpDatabase;
 
 function exportDatabase() {
     console.log('Create Database Dump...');
