@@ -108,7 +108,11 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
             waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
                 if (_execLock) return;
                 _execLock = true;
-                injectDarkMode();
+                if(SETTINGS.DarkMode){
+                    waitForHtmlElmement('body', () => {
+                        injectDarkMode();
+                    })
+                }
                 addBranding();
                 init(false);
             });
