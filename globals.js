@@ -195,7 +195,7 @@ class SETTINGS_DEFAULT {
     FavStarColorChecked = '#ffe143';
 
     DarkModeBackgroundColor = '#191919';
-    DarkModeColor = '#FFF';
+    DarkModeColor = '#FFFFFF';
 
     NotSeenMaxCount = 5;
     PageLoadMinDelay = 750;
