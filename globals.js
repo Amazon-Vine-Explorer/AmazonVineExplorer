@@ -152,6 +152,8 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorAllProducts', type: 'color', nam
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorFavorites', type: 'color', name: 'Button Color Favorites', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorDefault', type: 'color', name: 'Color Favorite Star unchecked', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', name: 'Color Favorite Star checked', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DarkModeBackgroundColor', type: 'color', name: 'Dark Mode Background Color', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DarkModeColor', type: 'color', name: 'Dark Mode Text Color', description: ''});
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Shopping', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooterShopping', type: 'bool', name: 'Disable Footer', description: 'Disables the Footer of the Amazon Shopping Page'});
@@ -167,6 +169,7 @@ SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DELETE DATABSE', bgColo
 
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;
+    DarkMode = false;
     DisableFooter = true;
     DisableSuggestions = true;
     DisableFooterShopping = false;
@@ -190,6 +193,9 @@ class SETTINGS_DEFAULT {
 
     FavStarColorDefault = 'white';
     FavStarColorChecked = '#ffe143';
+
+    DarkModeBackgroundColor = #191919;
+    DarkModeColor = #fff;
 
     NotSeenMaxCount = 5;
     PageLoadMinDelay = 750;
