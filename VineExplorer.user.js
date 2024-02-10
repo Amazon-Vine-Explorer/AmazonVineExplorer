@@ -1,13 +1,14 @@
 // ==UserScript==
-// @name         Amazon Vine Explorer
+// @name         Amazon Vine Explorer - Local Dev - Dark Mode
 // @namespace    http://tampermonkey.net/
-// @version      0.10.3.5
+// @version      0.10.4
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
 // @author       MarkusSR1984, Christof121
 // @match        *://www.amazon.de/*
 // @match        *://www.amazon.com/*
+// @match        *://www.amazon.co.uk/*
 // @license      MIT
 // @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
 // @run-at       document-start
@@ -17,14 +18,14 @@
 // @grant        GM.setValue
 // @grant        GM.xmlHttpRequest
 // @grant        unsafeWindow
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/globals.js
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_db_handler.js
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_product.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/Dark-Mode/globals.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/Dark-Mode/class_db_handler.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/Dark-Mode/class_product.js
 
 // ==/UserScript==
 
-/* 
-    Versioning: 
+/*
+    Versioning:
     a.b.c[.d]
 
     a => Hauptversion(Major), ändert sich nur bei breaking oder anderen gravirenden änderungen. Solle In diesem Fall also die 1 nie überschreiten.
@@ -44,11 +45,11 @@
 */
 
 'use strict';
-
 console.log(`Init Vine Voices Explorer ${AVE_VERSION}`);
 
 /**
  * On witch page are we atm ? PAGETYPE
+ * @type {PAGETYPE}
  */
 let currentMainPage;
 
@@ -80,15 +81,14 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
         console.log('Lets Check where we are....');
         if (SITE_IS_VINE){
             console.log('We are on Amazon Vine'); // We are on the amazon vine site
+            if(SETTINGS.DarkMode){
+                waitForHtmlElmement('body', () => {
+                    injectDarkMode();
+                })
+            }
             addAveSettingsTab();
             addAVESettingsMenu();
-            waitForHtmlElmement('.a-container.vvp-body', () => {
-                console.log('DarkMode');
-                darkMode();
-            })
             waitForHtmlElmement('.vvp-details-btn', () => {
-                console.log('Details');
-                darkMode();
                 if (_execLock) return;
                 _execLock = true;
                 addBranding();
@@ -106,10 +106,9 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 }, 100);
             });
             waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
-                console.log('No-Offer');
-                darkMode();
                 if (_execLock) return;
                 _execLock = true;
+                injectDarkMode();
                 addBranding();
                 init(false);
             });
@@ -160,6 +159,91 @@ let infiniteScrollMaxPreloadPage = 125; // Hardcoded for scrolltest, must lated 
 let inifiniteScrollBlockAppend = false;
 let infiniteScrollTilesBufferArray = [];
 
+
+function injectDarkMode() {
+
+    const _darkModeIgnoreBackgroundColor = `
+    i,
+    span.a-declarative *,
+    #navbar-main *,
+    #ave-btn-allseen *,
+    #ave-btn-db-allseen *,
+    #ave-btn-backtotop *,
+    #ave-branding-text,
+    #ave-brandig-text,
+    .animated-progress *,
+    .a-switch.a-declarative,
+    .vvp-reviews-table--actions-col *,
+    .a-tab-heading,
+    .a-tab-heading a,
+    .ave-favorite-star,
+    .vvp-item-tile,
+    .vvp-item-tile-content,
+    .vvp-item-tile-content *,
+    .a-popover-lgtbox,
+    .a-modal-scroller.a-declarative,
+    #ave-btn-favorites *,
+    #ave-btn-list-new *,
+    .ave-settings-label-switch *,
+    .a-last *
+    `
+    const _darkModeIgnoreColor = `
+    span.a-declarative *,
+    #navbar-main *,
+    #ave-btn-allseen *,
+    #ave-btn-db-allseen *,
+    #ave-btn-backtotop *,
+    #ave-branding-text,
+    #ave-brandig-text,
+    .a-switch.a-declarative,
+    .vvp-reviews-table--actions-col *,
+    .vvp-details-btn *,
+    .vvp-header-link *,
+    .a-link-normal,
+    #ave-btn-favorites *,
+    #ave-btn-list-new *,
+    .a-last *
+    `
+
+    const _darkModeIgnoreIcons = `
+    #vvp-feedback-star-rating
+    `
+
+    const darkCSS = `
+    :root{
+      --primary-color: ${SETTINGS.DarkModeColor};
+      --secondary-color: ${SETTINGS.DarkModeBackgroundColor};
+    }
+
+    .ave-color, .ave-color *:not(${_darkModeIgnoreColor}){
+      color: var(--primary-color) !important;
+    }
+    .ave-background-color, .ave-background-color *:not(${_darkModeIgnoreBackgroundColor}){
+      background-color: var(--secondary-color) !important;
+    }
+    .a-expander-content-fade,
+    .a-popover-footer::before,
+    .a-popover-wrapper::after
+    {
+      background: none !important;
+    }
+    i:not(${_darkModeIgnoreIcons}){
+      background-color: transparent !important;
+      filter: invert(1) !important;
+    }
+    `
+    // Erstelle ein neues Style-Element
+    var styleElement = document.createElement('style');
+    styleElement.type = 'text/css';
+
+    // Füge die CSS-Variable und den Wert am Anfang des Style-Elements hinzu
+    styleElement.textContent = darkCSS;
+
+    // Füge das Style-Element am Anfang des <head>-Tags hinzu
+    document.head.insertBefore(styleElement, document.head.firstChild);
+    document.body.classList.add('ave-color','ave-background-color');
+}
+
 function handleInfiniteScroll() {
     console.log('Called handleInfiniteScroll()');
     if (!inifiniteScrollBlockAppend) {
@@ -177,19 +261,19 @@ function handleInfiniteScroll() {
         console.log(`handleInfiniteScroll(): _maxScrollHeight: ${_maxScrollHeight} window.scrollY+inner: ${window.scrollY + window.innerHeight}`);
 
         if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))){
-            blockHandleInfiniteScroll = false;  
+            blockHandleInfiniteScroll = false;
             return;
         } else if (infiniteScrollTilesBufferArray.length < 1000 && infiniteScrollLastPreloadedPage < infiniteScrollMaxPreloadPage) {
-            const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+            const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
             infiniteScrollLastPreloadedPage++;
             getTilesFromURL(`${_baseUrl}?queue=encore&pn=&cn=&page=${infiniteScrollLastPreloadedPage}`, (tiles) =>{
                 infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles);
 
-                blockHandleInfiniteScroll = false;  
+                blockHandleInfiniteScroll = false;
                 if (infiniteScrollTilesBufferArray.length < 500) handleInfiniteScroll();
             });
         } else {
-            blockHandleInfiniteScroll = false;  
+            blockHandleInfiniteScroll = false;
         }
     }
 }
@@ -201,7 +285,7 @@ function getUrlParameter(name) {
 }
 
 function detectCurrentPageType(){
-    if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items$/.test(window.location.href)) {
+    if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items$/.test(window.location.href)) {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
     } else if (getUrlParameter('queue') == 'last_chance') {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
@@ -219,7 +303,7 @@ function detectCurrentPageType(){
 
 async function parseTileData(tile) {
     return new Promise((resolve, reject) => {
-        if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
+                if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
 
         const _id = tile.getAttribute('data-recommendation-id');
 
@@ -486,7 +570,6 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
 
     const _taxElement_span = document.createElement('span');
     _taxElement_span.setAttribute("id", `ave-taxinfo-${index}-text`);
-    _taxElement_span.classList.add('ave-taxinfo-text');
     const _prize = prod.data_estimated_tax_prize;
     console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
     _taxElement_span.innerText = `Tax Prize: ${(typeof(_prize) == 'number') ? _prize :'--.--'} ${_currencySymbol}`;
@@ -652,7 +735,11 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
     // },100);
 }
 
-
+/**
+ * AVE PAGETYPE ENUM
+ * @readonly
+ * @enum {number}
+ */
 const PAGETYPE = {
     NEW_ITEMS: 0,
     FAVORITES: 1,
@@ -704,7 +791,7 @@ function createNewSite(type, data) {
         case PAGETYPE.ALL:{
             currentMainPage = PAGETYPE.ALL;
             createInfiniteScrollSite(currentMainPage,(tilesContainer) => {
-                const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+                const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
                 const _preloadPages = ['potluck', 'last_chance', 'encore']
                 infiniteScrollLastPreloadedPage = 1;
                 infiniteScrollMaxPreloadPage = 100;
@@ -758,7 +845,7 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
         method: "GET",
         url: url,
         onload: function(response) {
-            const _parser = new DOMParser();   
+            const _parser = new DOMParser();
             const _doc = _parser.parseFromString(response.responseText, "text/html");
             lastGetTilesFromURLQuerry = Date.now();
             waitForHtmlElmement('#vvp-items-grid', (itemsContainer) => {
@@ -813,11 +900,7 @@ function favStarEventhandlerClick(event, data) {
     }
 }
 
-/**
- * Updates Style and Text of a Product Tile
- * @param {Product} prod
- * @returns 
- */
+
 function updateTileStyle(prod) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
     const _tiles = document.getElementsByClassName('vvp-item-tile');
@@ -834,11 +917,8 @@ function updateTileStyle(prod) {
             const _favStar = _tile.querySelector('.ave-favorite-star');
             _favStar.style.color = (prod.isFav) ? SETTINGS.FavStarColorChecked : 'white'; // SETTINGS.FavStarColorChecked = Gelb;
 
-            const _taxValue = prod.data_estimated_tax_prize;
-            if (typeof(_taxValue) == 'number') {
-                const _taxValueElem = _tile.querySelector('.ave-taxinfo-text');
-                _taxValueElem.innerText = (_taxValueElem.innerText).replace('--.--', _taxValue);
-            }
+            // UPDATE TAX VALUE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
             return;
         }
     }
@@ -854,7 +934,7 @@ function initTileEventHandlers() {
         if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Tile ${i}`);
         const _currTile = _tiles[i];
         addTileEventhandlers(_currTile);
-    }        
+    }
 }
 
 function addTileEventhandlers(_currTile) {
@@ -1013,8 +1093,6 @@ function addAVESettingsMenu(){
   height: 21px;
   border: var(--numberBorder) solid #888C8C;
   padding: var(--numberPadding);
-  background-color: inherit;
-  color: inherit;
 }
 
 .ave-settings-container input[type="color"] {
@@ -1023,14 +1101,10 @@ function addAVESettingsMenu(){
   border: 1px solid darfgrey;
   cursor: pointer;
   height: var(--itemHeight);
-  background-color: inherit;
-  color: inherit;
 }
 
 .ave-settings-container input[type="text"] {
   width: 500px;
-  background-color: inherit;
-  color: inherit;
 }
 
 .ave-settings-item{
@@ -1553,9 +1627,9 @@ function colorToHex(color) {
     const _color = color.replace(/\s/g,''); // Remove all spaces
     let _cache;
 
-    if (_color == 'white'){ 
+    if (_color == 'white'){
         return '#ffffff';
-    } else if (_color == 'black'){ 
+    } else if (_color == 'black'){
         return '#000000';
     } else if (_cache = /rgb\(([\d]+),([\d]+),([\d]+)\)/.exec(_color)){ // rgb(0,0,0)
         return rgbToHex(_cache[1], _cache[2], _cache[3]);
@@ -1771,9 +1845,9 @@ async function cleanUpDatabase(cb = () => {}) {
         }
 
         Promise.allSettled(_workersProms).then(() => {
-            if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
-            _dbCleanIcon.remove();
-            cb(true);
+                if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
+                _dbCleanIcon.remove();
+                cb(true);
         })
 
     });
@@ -1874,7 +1948,7 @@ function initBackgroundScan() {
     if  (!SETTINGS.EnableBackgroundScan) {console.warn('initBackgroundScan(): Backgroundscan is disabled => Exit');return;}
     if (!AVE_IS_THIS_SESSION_MASTER) {console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan'); return;}
     BackGroundScanIsRunning = true;
-    const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+    const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
 
     // Create iFrame if not exists
     if (!document.querySelector('#ave-iframe-backgroundloader')) {
@@ -1890,7 +1964,7 @@ function initBackgroundScan() {
         iframe.style.display = 'none';
         iframe.style.zIndex = '100';
         document.body.appendChild(iframe);
-    } 
+    }
 
     const _paginatinWaitLoop = setInterval(() => {
         const _pageinationData = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
@@ -1904,7 +1978,7 @@ function initBackgroundScan() {
                 localStorage.setItem('AVE_BACKGROUND_SCAN_IS_RUNNING', true);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 1);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
-            } 
+            }
 
             let _loopIsWorking = false;
             let _subStage = 0;
@@ -1951,9 +2025,9 @@ function initBackgroundScan() {
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                         database.getAll().then((products) => {
                             const _needUpdate = [];
-                            const _randCount = Math.round(Math.random() * 4);
-                            for (const _prod of products) {
-                                if (_needUpdate.length < _randCount) {
+                            const _randCount = Math.round(Math.random() * 3);
+                            for (_prod of products) {
+                                if (_needUpdate.length < 3) {
                                     if (typeof(_prod.data_estimated_tax_prize) != 'number') _needUpdate.push(_prod);
                                 } else {
                                     break;
@@ -1962,7 +2036,7 @@ function initBackgroundScan() {
 
                             const _promises = [];
 
-                            for (const _prod of _needUpdate) {
+                            for (_prod of _needUpdate) {
                                 requestProductDetails(_prod).then((_newProd) => {
                                     _promises.push(database.update(_newProd));
                                 });
@@ -2002,10 +2076,10 @@ function initBackgroundScan() {
                     _loopIsWorking = false;
                     backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness));
                 }
-            }            
+            }
         }
     }, 250);
-}   
+}
 
 function backGroundTileScanner(url, cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called backgroundTileScanner(${url})`);
@@ -2098,11 +2172,11 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
     const _elem = document.getElementById(elemID);
     if (_elem) {
         const maxScrollHeight = Math.max(
-            document.body.scrollHeight - window.innerHeight, 
+            document.body.scrollHeight - window.innerHeight,
             document.documentElement.scrollHeight - window.innerHeight
         );
 
-        requestAnimationFrame(() => { 
+        requestAnimationFrame(() => {
             const _elemRect = _elem.getBoundingClientRect();
 
             const _elemInitialTop = parseInt(_elem.getAttribute('ave-data-default-top'));
@@ -2125,7 +2199,7 @@ let lastDesktopNotifikationTimestamp = 0;
 function updateNewProductsBtn() {
     if (AUTO_SCAN_IS_RUNNING) return;
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
-    database.getNewEntries().then((prodArr) => { 
+    database.getNewEntries().then((prodArr) => {
         const _btnBadge = document.getElementById('ave-new-items-btn-badge');
         const _pageTitle = document.title.replace(/^[^\|]*\|/, '').trim();
         const _prodArrLength = prodArr.length;
@@ -2157,33 +2231,33 @@ function updateNewProductsBtn() {
                 const _configkeyWordsLength = _configKeyWords.length;
 
                 for (let j = 0; j < _configkeyWordsLength; j++) {
-                    const _currKey = _configKeyWords[j].toLowerCase(); 
+                    const _currKey = _configKeyWords[j].toLowerCase();
                     if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Deescription for Keyword: ${_currKey}`);
                     if (_descFull.includes(_currKey)) {
                         desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
                         _notifyed = true;
-                    }                    
+                    }
                     break;
-                }        
+                }
             }
         }
-        if (SETTINGS.EnableDesktopNotifikation && !_notifyed && _prodArrLength > oldCountOfNewItems){ 
-            if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
-                oldCountOfNewItems = _prodArrLength;
-                lastDesktopNotifikationTimestamp = unixTimeStamp();
+        if (SETTINGS.EnableDesktopNotifikation && !_notifyed && _prodArrLength > oldCountOfNewItems){
+                if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
+                    oldCountOfNewItems = _prodArrLength;
+                    lastDesktopNotifikationTimestamp = unixTimeStamp();
 
-                desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
-            }
+                    desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
+               }
         }
     })
 }
 
 /**
  * Send a Desktop Notifikation
- * @param {string} title 
- * @param {string} message 
- * @param {string} icon 
- * 
+ * @param {string} title
+ * @param {string} message
+ * @param {string} icon
+ *
  */
 function desktopNotifikation(title, message, image = null, requireInteraction = null, onClick = () => {}) {
     const _vineLogo = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png';
@@ -2338,36 +2412,11 @@ async function requestProductDetails(prod) {
     })
 }
 
-function darkMode() {
 
-    // Dunklen Hintergrund setzen
-    document.body.style.backgroundColor = '#191919';
-
-    // Funktion zum Umwandeln von RGB in HEX
-    function rgbToHex(rgb) {
-        let hex = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-        return hex ? `#${Number(hex[1]).toString(16).padStart(2, '0')}${Number(hex[2]).toString(16).padStart(2, '0')}${Number(hex[3]).toString(16).padStart(2, '0')}` : rgb;
-    }
-
-    // Beispiel: Ändere die Hintergrundfarbe aller Elemente auf der Seite
-    let allElements = document.querySelectorAll('.a-container.vvp-body *');
-    console.log(allElements);
-    allElements.forEach(element => {
-        let currentBackgroundColor = window.getComputedStyle(element).backgroundColor;
-        let hexBackgroundColor = rgbToHex(currentBackgroundColor);
-
-        if (hexBackgroundColor != '#fff' || hexBackgroundColor != 'white') {
-            if (!element.matches('.a-tab-heading, .a-tab-heading a')) {
-                element.style.backgroundColor = '#191919'; // Setze die gewünschte Hintergrundfarbe für weiß
-            }
-            element.style.color = 'rgba(255,255,255,0.75)'; // Setze die Textfarbe entsprechend
-        }
-        console.log(element);
-    });
-}
 
 function init(hasTiles) {
     // Get all Products on this page ;)
+
 
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
 
@@ -2375,6 +2424,7 @@ function init(hasTiles) {
     if (SETTINGS.DebugLevel > 10) console.log(`Got Subpage Parameter`, _aveSubpageRequest)
 
     if (_aveSubpageRequest) createNewSite(parseInt(_aveSubpageRequest));
+
     if (hasTiles) {
         const _tiles = document.getElementsByClassName('vvp-item-tile');
 
@@ -2439,7 +2489,7 @@ function init(hasTiles) {
                     if (SETTINGS.DebugLevel > 10) console.log(`Found ${_objArr.length} Items with this Search`);
                     createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
                     searchInputTimeout = null;
-                }) 
+                })
             }, 250);
         }
     });
@@ -2485,5 +2535,4 @@ function init(hasTiles) {
         _pageinationContainer.appendChild(_btn);
     }
 }
-
 
