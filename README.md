@@ -16,6 +16,10 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 
 ## Changelog:
+##### [10.12.2023] - Version 0.10.4
+* Added: Support for amazon.co.uk
+* Change: Changed website detection to be able to handle double dot domain names like amazon.co.uk
+
 ##### [10.12.2023] - Version 0.10.3
 * Added: Show of TaxInfoPrize inside Tileview
 * BugFix: Fixed the bug that Backgroundscan didn´t request Taxdata correctly
