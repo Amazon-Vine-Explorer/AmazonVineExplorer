@@ -125,6 +125,7 @@ window.onbeforeunload = function () {
 const SETTINGS_USERCONFIG_DEFINES = [];
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Vine', description: 'Tooltip Description of this Setting'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableFullWidth', type: 'bool', name: 'Enable Full Width', description: 'Uses the full width of the display'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DarkMode', type: 'bool', name: 'Enable Dark Mode', description: 'Switches between Amazon Light Theme and AVE Dark Mode'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooter', type: 'bool', name: 'Disable Footer', description: 'Disables the Footer of the Amazon Vine Page'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestions', type: 'bool', name: 'Disable Suggestions', description: 'Disables Suggestions on the Amazon Vine Page'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnPotLuck', type: 'bool', name: 'Disable Button Potluck', description: 'Disables the Section Button PotLuck(FSE)'});
