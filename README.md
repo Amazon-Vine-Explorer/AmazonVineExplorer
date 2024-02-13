@@ -13,13 +13,13 @@ This script enhances the experience on the Amazon Vine website. However, it does
 * Install Tampermonkex: [https://www.tampermonkey.net/](https://www.tampermonkey.net/)
 * Install Amazon Vine Explorer: [https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js](https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js)
 
+## Changelog:
 ##### [13.02.2024] - Version 0.10.6
 * Added: Ability to hide Amazon Navbar
 
 ##### [10.02.2024] - Version 0.10.5
 * Added: DarkMode (AVE Settings Menu)
 
-## Changelog:
 ##### [10.12.2023] - Version 0.10.4
 * Added: Support for amazon.co.uk
 * Change: Changed website detection to be able to handle double dot domain names like amazon.co.uk
