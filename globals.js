@@ -372,7 +372,7 @@ async function fastStyleChanges() {
     		       // elem.style.visibility = 'hidden';
     	    });
     	
-        waitForHtmlElmement('#vvp-header > .a-section', (elem) => {
+        waitForHtmlElmement('.a-container.vvp-body > .a-section', (elem) => {
     	       elem.style.display = 'none';
             // elem.style.visibility = 'hidden';
         });
