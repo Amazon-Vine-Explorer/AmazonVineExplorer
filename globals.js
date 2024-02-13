@@ -1,4 +1,4 @@
- 'use strict';
+'use strict';
 if (window.top != window.self) return; //don't run on frames or iframes
 
 // Constants Needed for some things
@@ -28,15 +28,15 @@ const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
 const DATABASE_VERSION = 2;
 
 class AVE_EVENTHANDLER {
-    
-     /**
+
+    /**
     * AVE Eventhandler
     * A very basic and simple eventhandler/wrapper
     * @constructor
     * @return {AVE_EVENTHANDLER} AVE_EVENTHANDLER Object
     */ 
     constructor(){}
-    
+
     /**
     * Fire out an Event
     * @param {string} eventName Thats the Name of the Event u want to fire
@@ -106,9 +106,9 @@ setTimeout(() => {
 
 
 window.onbeforeunload = function () {
-   console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY'); 
-   const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
-   for (let i = 0; i < _sessions.length; i++) {
+    console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY'); 
+    const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
+    for (let i = 0; i < _sessions.length; i++) {
         const _elem = _sessions[i];
         if (_elem.id == AVE_SESSION_ID) {
             _sessions.splice(i, 1);
@@ -184,7 +184,7 @@ class SETTINGS_DEFAULT {
     EnableInfiniteScrollLiveQuerry = false;
     EnableDesktopNotifikation = false;
     EnableBtnAll = true;
-    
+
     BtnColorFavorites = '#ffe143';
     BtnColorNewProducts = '#00FF00';
     BtnColorMarkCurrSiteAsSeen = '#00FF00';
@@ -226,7 +226,7 @@ class SETTINGS_DEFAULT {
     CssProductFavStar() {
         return `float: right; display: flex; margin: 0px; color: ${this.FavStarColorDefault}; height: 0px; font-size: 25px; text-shadow: black -1px 0px, black 0px 1px, black 1px 0px, black 0px -1px; cursor: pointer;`;
     }
-    
+
     save(local) {
         if (local) {
             console.warn('Saving Config:', this);
@@ -346,7 +346,7 @@ async function delay(milliseconds) {
     * This Function will Monitor and fire Style Changes asap
     */ 
 async function fastStyleChanges() {
-  
+
     if (SITE_IS_VINE) {
         if (SETTINGS.EnableFullWidth) {
             waitForHtmlElmement('.vvp-body', (elem) => {
@@ -354,38 +354,38 @@ async function fastStyleChanges() {
             });
         }
 
-    if (SETTINGS.DisableAmazonNavbar) {
-        waitForHtmlElmement('#navbar-main', (elem) => {
-            elem.style.display = 'none';
-            // elem.style.visibility = 'hidden';
-        });
-     
-    	    waitForHtmlElmement('#vvp-logo-link > img', (elem) => {
-    	        elem.style.display = 'none';
-    	        // elem.style.visibility = 'hidden';
-    	    });
-    	
-         waitForHtmlElmement('#vvp-header', (elem) => {
-    	        elem.style.marginTop = '0';
-    	        elem.style.marginBottom = '0';
-             //elem.style.display = 'none';
-    		       // elem.style.visibility = 'hidden';
-    	    });
-    	
-        waitForHtmlElmement('.a-container.vvp-body > .a-section', (elem) => {
-    	       elem.style.display = 'none';
-            // elem.style.visibility = 'hidden';
-        });
-    	
-        waitForHtmlElmement('.a-tab-container.vvp-tab-set-container', (elem) => {
-            elem.style.marginTop = '0';
-            //elem.style.display = 'none';
-            // elem.style.visibility = 'hidden';
-        });
-    }
-     
+        if (SETTINGS.DisableAmazonNavbar) {
+            waitForHtmlElmement('#navbar-main', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+
+            waitForHtmlElmement('#vvp-logo-link > img', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+
+            waitForHtmlElmement('#vvp-header', (elem) => {
+                elem.style.marginTop = '0';
+                elem.style.marginBottom = '0';
+                //elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+
+            waitForHtmlElmement('.a-container.vvp-body > .a-section:not(#vvp-header)', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+
+            waitForHtmlElmement('.a-tab-container.vvp-tab-set-container', (elem) => {
+                elem.style.marginTop = '0';
+                //elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+        }
+
         if (SETTINGS.DisableSuggestions) {
-                        //rhf-frame
+            //rhf-frame
             waitForHtmlElmement('.copilot-secure-display', (elem) => {
                 elem.style.display = 'none';
                 // elem.style.visibility = 'hidden';
@@ -405,7 +405,7 @@ async function fastStyleChanges() {
                 // elem.style.visibility = 'hidden';
             });
         }
-    
+
         if (SETTINGS.DisableBtnLastChance) {
             waitForHtmlElmement('#vvp-items-button--all', (elem) => {
                 elem.style.display = 'none';
@@ -430,7 +430,7 @@ async function fastStyleChanges() {
     } else if (SITE_IS_SHOPPING) {
 
         if (SETTINGS.DisableSuggestionsShopping) {
-                        //rhf-frame
+            //rhf-frame
             waitForHtmlElmement('#rhf', (elem) => {
                 elem.style.display = 'none';
                 // elem.style.visibility = 'hidden';
