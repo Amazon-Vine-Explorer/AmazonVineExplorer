@@ -366,8 +366,8 @@ async function fastStyleChanges() {
     	    });
     	
          waitForHtmlElmement('#vvp-header', (elem) => {
-    	        elem.style.marginTop = 0;
-    	        elem.style.marginBottom = 0;
+    	        elem.style.marginTop = '0';
+    	        elem.style.marginBottom = '0';
              //elem.style.display = 'none';
     		       // elem.style.visibility = 'hidden';
     	    });
@@ -378,7 +378,7 @@ async function fastStyleChanges() {
         });
     	
         waitForHtmlElmement('.a-tab-container.vvp-tab-set-container', (elem) => {
-            elem.style.marginTop = 0;
+            elem.style.marginTop = '0';
             //elem.style.display = 'none';
             // elem.style.visibility = 'hidden';
         });
