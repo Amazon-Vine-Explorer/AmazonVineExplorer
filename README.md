@@ -14,6 +14,10 @@ This script enhances the experience on the Amazon Vine website. However, it does
 * Install Amazon Vine Explorer: [https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js](https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js)
 
 ## Changelog:
+##### [14.02.2024] - Version 0.10.7
+* Added: Ability to hide Amazon Categories
+* Bugfix: Object "Skip to Main Content" Button in Navbar was not hidden
+
 ##### [13.02.2024] - Version 0.10.6
 * Added: Ability to hide Amazon Navbar
 
