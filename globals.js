@@ -362,6 +362,11 @@ async function fastStyleChanges() {
                 // elem.style.visibility = 'hidden';
             });
 
+            waitForHtmlElmement('#skiplink', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+            
             waitForHtmlElmement('#vvp-logo-link > img', (elem) => {
                 elem.style.display = 'none';
                 // elem.style.visibility = 'hidden';
