@@ -127,6 +127,7 @@ SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Vine', descriptio
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableFullWidth', type: 'bool', name: 'Enable Full Width', description: 'Uses the full width of the display'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DarkMode', type: 'bool', name: 'Enable Dark Mode (reload required atm)', description: 'Switches between Amazon Light Theme and AVE Dark Mode (reload required atm)'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableAmazonNavbar', type: 'bool', name: 'Disable Amazon Navbar', description: 'Disables the Amazon Navbar'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableCategories', type: 'bool', name: 'Disable Categories', description: 'Disables the Categories of the Amazon Vine Page'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooter', type: 'bool', name: 'Disable Footer', description: 'Disables the Footer of the Amazon Vine Page'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestions', type: 'bool', name: 'Disable Suggestions', description: 'Disables Suggestions on the Amazon Vine Page'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnPotLuck', type: 'bool', name: 'Disable Button Potluck', description: 'Disables the Section Button PotLuck(FSE)'});
@@ -172,6 +173,7 @@ class SETTINGS_DEFAULT {
     EnableFullWidth = true;
     DarkMode = false;
     DisableAmazonNavbar = false;
+    DisableCategories = false;
     DisableFooter = true;
     DisableSuggestions = true;
     DisableFooterShopping = false;
@@ -381,6 +383,13 @@ async function fastStyleChanges() {
                 elem.style.marginTop = '0';
                 //elem.style.display = 'none';
                 // elem.style.visibility = 'hidden';
+            });
+        }
+
+        if (SETTINGS.DisableCategories) {
+            waitForHtmlElmement('#vvp-browse-nodes-container', (elem) => {
+                elem.style.display = 'none';
+                //elem.style.visibility = 'hidden';
             });
         }
 
