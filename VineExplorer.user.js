@@ -2516,27 +2516,52 @@ function init(hasTiles) {
         if (SETTINGS.DebugLevel > 10) console.log('Manipulating Pageination');
 
         const _nextBtn = _pageinationContainer.lastChild;
-        const _isNextBtnDisabled = (_nextBtn.getAttribute('class') != 'a-last');
+        const _isNextBtnDisabled = _nextBtn.classList.contains('a-disabled');
         const _nextBtnLink = _nextBtn.lastChild.getAttribute('href');
+        const _btn = _nextBtn.cloneNode(true);
+        const anchorTag = _btn.querySelector('a');
+
+        //const _aveNextPageButtonText = 'Alle als gesehen markieren und Nächste <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+        const _aveNextPageButtonText = 'Gelesen <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+
+        const _AveNextArrow = document.createElement('style');
+        _AveNextArrow.type = 'text/css';
+        _AveNextArrow.innerHTML = `.ave-arrow::after{border-style: solid; border-width: 2px 2px 0 0; content: ''; padding: 2.5px; visibility: visible; display: inline-block; position: relative; left: -9px; top: -1px; transform: rotate(45deg);}`;
+
 
         if (!_isNextBtnDisabled) {
             _nextBtn.setAttribute('class', 'a-normal');
+            _nextBtn.querySelector('span.larr').style.visibility = 'hidden';
+            _nextBtn.querySelector('span.larr').classList.add('ave-arrow');
         }
 
-        const _btn = document.createElement('li');
-        _btn.setAttribute('class', 'a-last');
-        _btn.addEventListener('click', () => {
-            markAllCurrentSiteProductsAsSeen(() => {
-                window.location.href = (_nextBtnLink);
-            });
-        })
+        if (anchorTag) {
+            anchorTag.innerHTML = _aveNextPageButtonText;
+        }
+        else {
+            _btn.innerHTML = _aveNextPageButtonText;
+        }
 
-        const _btn_a = document.createElement('a');
-        _btn_a.setAttribute('style', 'background-color: lime');
-        _btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+        _btn.style.backgroundColor = 'lime';
+        _btn.style.borderRadius = '8px';
 
-        _btn.appendChild(_btn_a);
+        if(!_nextBtn.classList.contains('a-disabled')){
+            _btn.setAttribute('class', 'a-last');
+            _btn.style.cursor = 'pointer';
+            _btn.addEventListener('click', () => {
+                markAllCurrentSiteProductsAsSeen(() => {
+                    window.location.href = (_nextBtnLink);
+                });
+            })
+        }
+
+        //const _btn_a = document.createElement('a');
+        //_btn_a.setAttribute('style', 'background-color: lime');
+        //_btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+
+        //_btn.appendChild(_btn_a);
         _pageinationContainer.appendChild(_btn);
+        _pageinationContainer.appendChild(_AveNextArrow);
     }
 }
 
