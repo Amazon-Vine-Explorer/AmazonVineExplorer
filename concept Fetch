@@ -1,0 +1,76 @@
+// ==UserScript==
+// @name         Amazon Fetch test
+// @namespace    http://tampermonkey.net/
+// @version      2024-02-23
+// @description  try to take over the world!
+// @author       You
+// @match        *://www.amazon.de/*
+// @match        *://www.amazon.com/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=amazon.de
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Your code here...
+
+
+    function getDataFromUrl(url, callback) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                callback(null, xhr.responseText);
+            } else {
+                callback(new Error(`Request failed with status ${xhr.status}`));
+            }
+        };
+        xhr.onerror = () => {
+            callback(new Error('Request failed'));
+        };
+        xhr.send();
+    }
+
+    const url = 'https://www.amazon.de/vine/vine-items?queue=encore&pn=&cn=&page=3';
+
+    getDataFromUrl(url, (error, data) => {
+        if (error) {
+            console.error(error);
+        } else {
+            // Hier kannst du den geladenen Inhalt auswerten
+            //console.log(data);
+            const fragment = document.createRange().createContextualFragment(data);
+            const vvpItems = fragment.querySelectorAll('#vvp-items-grid > div');
+
+            // Füge hier weitere Operationen zur Auswertung hinzu, falls erforderlich
+            const _div = document.createElement('div');
+
+            // Iteriere über jedes gefundene DIV-Element
+            vvpItems.forEach(product => {
+                // Übergebe jedes DIV-Element an eine Funktion
+                //verarbeiteDiv(div);
+                console.log(product);
+
+            });
+            console.log(`Found ${vvpItems.length} Products`);
+
+            const _span = document.createElement('span');
+            _span.innerHTML = `Fetched: ${url}`;
+            _span.style.margin = '10px';
+            _span.style.padding = '5px';
+            _span.style.border = '5px solid red';
+            _span.style.borderRadius = '5px';
+            _span.style.display = 'flex';
+            _span.style.justifyContent = 'center';
+
+            document.body.appendChild(_span);
+
+            document.body.appendChild(_div);
+
+        }
+    });
+
+
+
+})();
