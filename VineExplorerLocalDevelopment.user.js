@@ -17,10 +17,10 @@
 // @grant        GM.xmlHttpRequest
 // @grant        GM.openInTab
 // @grant        unsafeWindow
-// @require      file://D:\Nextcloud New\SourceTree\AmazonVineExplorer\globals.js
-// @require      file://D:\Nextcloud New\SourceTree\AmazonVineExplorer\class_product.js
-// @require      file://D:\Nextcloud New\SourceTree\AmazonVineExplorer\class_db_handler.js
-// @require      file://D:\Nextcloud New\SourceTree\AmazonVineExplorer\VineExplorer.user.js
+// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\globals.js
+// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\class_product.js
+// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\class_db_handler.js
+// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\VineExplorer.user.js
 // ==/UserScript==
 
 /**

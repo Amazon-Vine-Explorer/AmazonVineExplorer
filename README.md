@@ -14,11 +14,29 @@ This script enhances the experience on the Amazon Vine website. However, it does
 * Install Amazon Vine Explorer: [https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js](https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js)
 
 ## Notice:
-
 The Script has currently some issues processing the Tax Value.
 We are aware of the issue and are working on a fix.
 
 ## Changelog:
+##### [25.02.2024] - Version 0.10.8.1
+* Bugfix: Disabled the Tax Scan due to issues fetching the value
+
+##### [22.02.2024] - Version 0.10.8
+* Bugfix: Next Page Button is now diasbled on last page, also changed the Text to make it more comapct (maybe changeable in the Settings later)
+
+##### [14.02.2024] - Version 0.10.7
+* Added: Ability to hide Amazon Categories
+* Bugfix: Object "Skip to Main Content" Button in Navbar was not hidden
+
+##### [13.02.2024] - Version 0.10.6
+* Added: Ability to hide Amazon Navbar
+
+##### [10.02.2024] - Version 0.10.5
+* Added: DarkMode (AVE Settings Menu)
+
+##### [10.12.2023] - Version 0.10.4
+* Added: Support for amazon.co.uk
+* Change: Changed website detection to be able to handle double dot domain names like amazon.co.uk
 
 ##### [28.01.2024] - Version 0.10.3.8
 * BugFix: Fixed Bug where only lower letters would work in the SearchBar

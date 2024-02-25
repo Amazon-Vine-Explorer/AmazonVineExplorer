@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.3.8
+// @version      0.10.8.1
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
 // @author       MarkusSR1984, Christof121
 // @match        *://www.amazon.de/*
 // @match        *://www.amazon.com/*
+// @match        *://www.amazon.co.uk/*
 // @license      MIT
 // @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
 // @run-at       document-start
@@ -23,8 +24,8 @@
 
 // ==/UserScript==
 
-/* 
-    Versioning: 
+/*
+    Versioning:
     a.b.c[.d]
 
     a => Hauptversion(Major), ändert sich nur bei breaking oder anderen gravirenden änderungen. Solle In diesem Fall also die 1 nie überschreiten.
@@ -48,6 +49,7 @@ console.log(`Init Vine Voices Explorer ${AVE_VERSION}`);
 
 /**
  * On witch page are we atm ? PAGETYPE
+ * @type {PAGETYPE}
  */
 let currentMainPage;
 
@@ -79,6 +81,11 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
         console.log('Lets Check where we are....');
         if (SITE_IS_VINE){
             console.log('We are on Amazon Vine'); // We are on the amazon vine site
+            if(SETTINGS.DarkMode){
+                waitForHtmlElmement('body', () => {
+                    injectDarkMode();
+                })
+            }
             addAveSettingsTab();
             addAVESettingsMenu();
             waitForHtmlElmement('.vvp-details-btn', () => {
@@ -101,6 +108,11 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
             waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
                 if (_execLock) return;
                 _execLock = true;
+                if(SETTINGS.DarkMode){
+                    waitForHtmlElmement('body', () => {
+                        injectDarkMode();
+                    })
+                }
                 addBranding();
                 init(false);
             });
@@ -151,6 +163,91 @@ let infiniteScrollMaxPreloadPage = 125; // Hardcoded for scrolltest, must lated 
 let inifiniteScrollBlockAppend = false;
 let infiniteScrollTilesBufferArray = [];
 
+
+function injectDarkMode() {
+
+    const _darkModeIgnoreBackgroundColor = `
+    i,
+    span.a-declarative *,
+    #navbar-main *,
+    #ave-btn-allseen *,
+    #ave-btn-db-allseen *,
+    #ave-btn-backtotop *,
+    #ave-branding-text,
+    #ave-brandig-text,
+    .animated-progress *,
+    .a-switch.a-declarative,
+    .vvp-reviews-table--actions-col *,
+    .a-tab-heading,
+    .a-tab-heading a,
+    .ave-favorite-star,
+    .vvp-item-tile,
+    .vvp-item-tile-content,
+    .vvp-item-tile-content *,
+    .a-popover-lgtbox,
+    .a-modal-scroller.a-declarative,
+    #ave-btn-favorites *,
+    #ave-btn-list-new *,
+    .ave-settings-label-switch *,
+    .a-last *
+    `
+    const _darkModeIgnoreColor = `
+    span.a-declarative *,
+    #navbar-main *,
+    #ave-btn-allseen *,
+    #ave-btn-db-allseen *,
+    #ave-btn-backtotop *,
+    #ave-branding-text,
+    #ave-brandig-text,
+    .a-switch.a-declarative,
+    .vvp-reviews-table--actions-col *,
+    .vvp-details-btn *,
+    .vvp-header-link *,
+    .a-link-normal,
+    #ave-btn-favorites *,
+    #ave-btn-list-new *,
+    .a-last *
+    `
+
+    const _darkModeIgnoreIcons = `
+    #vvp-feedback-star-rating
+    `
+
+    const darkCSS = `
+    :root{
+      --primary-color: ${SETTINGS.DarkModeColor};
+      --secondary-color: ${SETTINGS.DarkModeBackgroundColor};
+    }
+
+    .ave-color, .ave-color *:not(${_darkModeIgnoreColor}){
+      color: var(--primary-color) !important;
+    }
+    .ave-background-color, .ave-background-color *:not(${_darkModeIgnoreBackgroundColor}){
+      background-color: var(--secondary-color) !important;
+    }
+    .a-expander-content-fade,
+    .a-popover-footer::before,
+    .a-popover-wrapper::after
+    {
+      background: none !important;
+    }
+    i:not(${_darkModeIgnoreIcons}){
+      background-color: transparent !important;
+      filter: invert(1) !important;
+    }
+    `
+    // Erstelle ein neues Style-Element
+    var styleElement = document.createElement('style');
+    styleElement.type = 'text/css';
+
+    // Füge die CSS-Variable und den Wert am Anfang des Style-Elements hinzu
+    styleElement.textContent = darkCSS;
+
+    // Füge das Style-Element am Anfang des <head>-Tags hinzu
+    document.head.insertBefore(styleElement, document.head.firstChild);
+    document.body.classList.add('ave-color','ave-background-color');
+}
+
 function handleInfiniteScroll() {
     console.log('Called handleInfiniteScroll()');
     if (!inifiniteScrollBlockAppend) {
@@ -168,19 +265,19 @@ function handleInfiniteScroll() {
         console.log(`handleInfiniteScroll(): _maxScrollHeight: ${_maxScrollHeight} window.scrollY+inner: ${window.scrollY + window.innerHeight}`);
 
         if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))){
-            blockHandleInfiniteScroll = false;  
+            blockHandleInfiniteScroll = false;
             return;
         } else if (infiniteScrollTilesBufferArray.length < 1000 && infiniteScrollLastPreloadedPage < infiniteScrollMaxPreloadPage) {
-            const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+            const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
             infiniteScrollLastPreloadedPage++;
             getTilesFromURL(`${_baseUrl}?queue=encore&pn=&cn=&page=${infiniteScrollLastPreloadedPage}`, (tiles) =>{
                 infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles);
 
-                blockHandleInfiniteScroll = false;  
+                blockHandleInfiniteScroll = false;
                 if (infiniteScrollTilesBufferArray.length < 500) handleInfiniteScroll();
             });
         } else {
-            blockHandleInfiniteScroll = false;  
+            blockHandleInfiniteScroll = false;
         }
     }
 }
@@ -192,7 +289,7 @@ function getUrlParameter(name) {
 }
 
 function detectCurrentPageType(){
-    if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items$/.test(window.location.href)) {
+    if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items$/.test(window.location.href)) {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
     } else if (getUrlParameter('queue') == 'last_chance') {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
@@ -475,7 +572,7 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     const _taxElement = document.createElement('span');
     _taxElement.setAttribute("id", `ave-taxinfo-${index}`);
     _taxElement.style.cssText = 'position: relative; transform: translate(0px, -30px); width: fit-content; right: 0px;';
-    
+
     const _taxElement_span = document.createElement('span');
     _taxElement_span.setAttribute("id", `ave-taxinfo-${index}-text`);
     _taxElement_span.classList.add('ave-taxinfo-text');
@@ -581,7 +678,7 @@ async function createInfiniteScrollSite(siteType, cb) {
 
         _contentContainer.appendChild(_tileStructure);
     };
-    
+
     // Cear Left Nodes Container
     const _nodesContainer = document.getElementById('vvp-browse-nodes-container');
     if (_nodesContainer) _nodesContainer.innerHTML = '';
@@ -644,7 +741,11 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
     // },100);
 }
 
-
+/**
+ * AVE PAGETYPE ENUM
+ * @readonly
+ * @enum {number}
+ */
 const PAGETYPE = {
     NEW_ITEMS: 0,
     FAVORITES: 1,
@@ -696,7 +797,7 @@ function createNewSite(type, data) {
         case PAGETYPE.ALL:{
             currentMainPage = PAGETYPE.ALL;
             createInfiniteScrollSite(currentMainPage,(tilesContainer) => {
-                const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+                const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
                 const _preloadPages = ['potluck', 'last_chance', 'encore']
                 infiniteScrollLastPreloadedPage = 1;
                 infiniteScrollMaxPreloadPage = 100;
@@ -750,7 +851,7 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
         method: "GET",
         url: url,
         onload: function(response) {
-            const _parser = new DOMParser();   
+            const _parser = new DOMParser();
             const _doc = _parser.parseFromString(response.responseText, "text/html");
             lastGetTilesFromURLQuerry = Date.now();
             waitForHtmlElmement('#vvp-items-grid', (itemsContainer) => {
@@ -846,7 +947,7 @@ function initTileEventHandlers() {
         if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Tile ${i}`);
         const _currTile = _tiles[i];
         addTileEventhandlers(_currTile);
-    }        
+    }
 }
 
 function addTileEventhandlers(_currTile) {
@@ -911,7 +1012,7 @@ function addBranding() {
 
     const _oldElem = document.getElementById('ave-branding-text');
     if (_oldElem) _oldElem.remove();
-    
+
     const _text = document.createElement('div');
     _text.id = 'ave-branding-text';
     _text.style.position = 'fixed';
@@ -1319,7 +1420,7 @@ function createSettingsMenuElement(dat){
     } else if (dat.type == 'button') { // Number Value
 
         const _elem_item_left = document.createElement('div');
-        
+
         _elem_item_left.classList.add('ave-item-left');
 
 
@@ -1331,7 +1432,7 @@ function createSettingsMenuElement(dat){
         const _elem_item_left_input = document.createElement('button');
         _elem_item_left_input.type = 'button';
         _elem_item_left_input.className = 'ave-input-button';
-        
+
         // _elem_item_left_input.setAttribute('ave-data-key', dat.key);
         _elem_item_left_input.innerText = dat.name;
         //_elem_item_left_input.setAttribute('data-ave-tooltip',dat.description);
@@ -1539,9 +1640,9 @@ function colorToHex(color) {
     const _color = color.replace(/\s/g,''); // Remove all spaces
     let _cache;
 
-    if (_color == 'white'){ 
+    if (_color == 'white'){
         return '#ffffff';
-    } else if (_color == 'black'){ 
+    } else if (_color == 'black'){
         return '#000000';
     } else if (_cache = /rgb\(([\d]+),([\d]+),([\d]+)\)/.exec(_color)){ // rgb(0,0,0)
         return rgbToHex(_cache[1], _cache[2], _cache[3]);
@@ -1700,9 +1801,9 @@ function getPageinationData(localDocument = document) {
 async function cleanUpDatabase(cb = () => {}) {
     if (SETTINGS.DebugLevel > 10) console.log('Called cleanUpDatabase()');
     const _dbCleanIcon = addDBCleaningSymbol();
-    
+
     database.getAll().then((prodArr) => {
-        
+
         const _prodArrLength = prodArr.length;
         const _workersProms = [];
         if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Checking ${_prodArrLength} Entrys`);
@@ -1737,14 +1838,14 @@ async function cleanUpDatabase(cb = () => {}) {
                     _notSeenCounter++;
                     if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} increased notSeenCounter to ${_notSeenCounter}`);
                 }
-                
+
                 if (_currEntry.notSeenCounter != _notSeenCounter) {
                     if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} update notSeenCounter from ${_currEntry.notSeenCounter} to ${_notSeenCounter}`);
                     _currEntry.notSeenCounter = _notSeenCounter;
                     _needUpdate = true;
                 }
 
-                
+
 
                 if ((_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount || _currEntry.forceRemove) && !_currEntry.isFav) {
                     if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
@@ -1787,7 +1888,7 @@ function exportDatabase() {
 
         document.body.removeChild(element);
     })
-    
+
 }
 
 /**
@@ -1867,7 +1968,7 @@ function initBackgroundScan() {
     if  (!SETTINGS.EnableBackgroundScan) {console.warn('initBackgroundScan(): Backgroundscan is disabled => Exit');return;}
     if (!AVE_IS_THIS_SESSION_MASTER) {console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan'); return;}
     BackGroundScanIsRunning = true;
-    const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\/vine-items)/.exec(window.location.href))[1];
+    const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
 
     // Create iFrame if not exists
     if (!document.querySelector('#ave-iframe-backgroundloader')) {
@@ -1883,7 +1984,7 @@ function initBackgroundScan() {
         iframe.style.display = 'none';
         iframe.style.zIndex = '100';
         document.body.appendChild(iframe);
-    } 
+    }
 
     const _paginatinWaitLoop = setInterval(() => {
         const _pageinationData = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
@@ -1897,7 +1998,7 @@ function initBackgroundScan() {
                 localStorage.setItem('AVE_BACKGROUND_SCAN_IS_RUNNING', true);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 1);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
-            } 
+            }
 
             let _loopIsWorking = false;
             let _subStage = 0;
@@ -1941,6 +2042,15 @@ function initBackgroundScan() {
                         break;
                     }
                     case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
+
+
+                        //Disaled due to Bugs fetching the Tax
+                        _backGroundScanStage++;
+                        _scanFinished();
+                        break;
+
+
+                        
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                         database.getAll().then((products) => {
                             const _needUpdate = [];
@@ -1995,10 +2105,10 @@ function initBackgroundScan() {
                     _loopIsWorking = false;
                     backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness));
                 }
-            }            
+            }
         }
     }, 250);
-}   
+}
 
 function backGroundTileScanner(url, cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called backgroundTileScanner(${url})`);
@@ -2022,7 +2132,7 @@ function backGroundTileScanner(url, cb) {
                         _returned++;
                         if (SETTINGS.DebugLevel > 14) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
                         if (!prod.gotFromDB) database.add(prod);
-                        
+
                     }))
                 }
 
@@ -2091,11 +2201,11 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
     const _elem = document.getElementById(elemID);
     if (_elem) {
         const maxScrollHeight = Math.max(
-            document.body.scrollHeight - window.innerHeight, 
+            document.body.scrollHeight - window.innerHeight,
             document.documentElement.scrollHeight - window.innerHeight
         );
 
-        requestAnimationFrame(() => { 
+        requestAnimationFrame(() => {
             const _elemRect = _elem.getBoundingClientRect();
 
             const _elemInitialTop = parseInt(_elem.getAttribute('ave-data-default-top'));
@@ -2118,7 +2228,7 @@ let lastDesktopNotifikationTimestamp = 0;
 function updateNewProductsBtn() {
     if (AUTO_SCAN_IS_RUNNING) return;
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
-    database.getNewEntries().then((prodArr) => { 
+    database.getNewEntries().then((prodArr) => {
         const _btnBadge = document.getElementById('ave-new-items-btn-badge');
         const _pageTitle = document.title.replace(/^[^\|]*\|/, '').trim();
         const _prodArrLength = prodArr.length;
@@ -2150,33 +2260,33 @@ function updateNewProductsBtn() {
                 const _configkeyWordsLength = _configKeyWords.length;
 
                 for (let j = 0; j < _configkeyWordsLength; j++) {
-                    const _currKey = _configKeyWords[j].toLowerCase(); 
+                    const _currKey = _configKeyWords[j].toLowerCase();
                     if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Deescription for Keyword: ${_currKey}`);
                     if (_descFull.includes(_currKey)) {
                         desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
                         _notifyed = true;
-                    }                    
+                    }
                     break;
-                }        
+                }
             }
         }
-        if (SETTINGS.EnableDesktopNotifikation && !_notifyed && _prodArrLength > oldCountOfNewItems){ 
+        if (SETTINGS.EnableDesktopNotifikation && !_notifyed && _prodArrLength > oldCountOfNewItems){
                 if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
                     oldCountOfNewItems = _prodArrLength;
                     lastDesktopNotifikationTimestamp = unixTimeStamp();
 
                     desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
-               } 
+               }
         }
     })
 }
 
 /**
  * Send a Desktop Notifikation
- * @param {string} title 
- * @param {string} message 
- * @param {string} icon 
- * 
+ * @param {string} title
+ * @param {string} message
+ * @param {string} icon
+ *
  */
 function desktopNotifikation(title, message, image = null, requireInteraction = null, onClick = () => {}) {
     const _vineLogo = 'https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png';
@@ -2408,7 +2518,7 @@ function init(hasTiles) {
                     if (SETTINGS.DebugLevel > 10) console.log(`Found ${_objArr.length} Items with this Search`);
                     createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
                     searchInputTimeout = null;
-                }) 
+                })
             }, 250);
         }
     });
@@ -2431,28 +2541,52 @@ function init(hasTiles) {
         if (SETTINGS.DebugLevel > 10) console.log('Manipulating Pageination');
 
         const _nextBtn = _pageinationContainer.lastChild;
-        const _isNextBtnDisabled = (_nextBtn.getAttribute('class') != 'a-last');
+        const _isNextBtnDisabled = _nextBtn.classList.contains('a-disabled');
         const _nextBtnLink = _nextBtn.lastChild.getAttribute('href');
+        const _btn = _nextBtn.cloneNode(true);
+        const anchorTag = _btn.querySelector('a');
+
+        //const _aveNextPageButtonText = 'Alle als gesehen markieren und Nächste <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+        const _aveNextPageButtonText = 'Gelesen <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+
+        const _AveNextArrow = document.createElement('style');
+        _AveNextArrow.type = 'text/css';
+        _AveNextArrow.innerHTML = `.ave-arrow::after{border-style: solid; border-width: 2px 2px 0 0; content: ''; padding: 2.5px; visibility: visible; display: inline-block; position: relative; left: -9px; top: -1px; transform: rotate(45deg);}`;
+
 
         if (!_isNextBtnDisabled) {
             _nextBtn.setAttribute('class', 'a-normal');
+            _nextBtn.querySelector('span.larr').style.visibility = 'hidden';
+            _nextBtn.querySelector('span.larr').classList.add('ave-arrow');
         }
 
-        const _btn = document.createElement('li');
-        _btn.setAttribute('class', 'a-last');
-        _btn.addEventListener('click', () => {
-            markAllCurrentSiteProductsAsSeen(() => {
-                window.location.href = (_nextBtnLink);
-            });
-        })
+        if (anchorTag) {
+            anchorTag.innerHTML = _aveNextPageButtonText;
+        }
+        else {
+            _btn.innerHTML = _aveNextPageButtonText;
+        }
 
-        const _btn_a = document.createElement('a');
-        _btn_a.setAttribute('style', 'background-color: lime');
-        _btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+        _btn.style.backgroundColor = 'lime';
+        _btn.style.borderRadius = '8px';
 
-        _btn.appendChild(_btn_a);
+        if(!_nextBtn.classList.contains('a-disabled')){
+            _btn.setAttribute('class', 'a-last');
+            _btn.style.cursor = 'pointer';
+            _btn.addEventListener('click', () => {
+                markAllCurrentSiteProductsAsSeen(() => {
+                    window.location.href = (_nextBtnLink);
+                });
+            })
+        }
+
+        //const _btn_a = document.createElement('a');
+        //_btn_a.setAttribute('style', 'background-color: lime');
+        //_btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+
+        //_btn.appendChild(_btn_a);
         _pageinationContainer.appendChild(_btn);
+        _pageinationContainer.appendChild(_AveNextArrow);
     }
 }
-
 

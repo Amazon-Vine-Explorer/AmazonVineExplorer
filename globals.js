@@ -5,9 +5,8 @@ if (window.top != window.self) return; //don't run on frames or iframes
 const AVE_VERSION = (GM_info?.script?.version)
 const AVE_TITLE = (GM_info?.script?.name);
 const SECONDS_PER_DAY = 86400;
-const SECONDS_PER_WEEK = SECONDS_PER_DAY * 7;
-const SITE_IS_VINE = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/vine\//.test(window.location.href);
-const SITE_IS_SHOPPING = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}\/(?!vine)(?!gp\/video)(?!music)/.test(window.location.href);
+const SITE_IS_VINE = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\//.test(window.location.href);
+const SITE_IS_SHOPPING = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/(?!vine)(?!gp\/video)(?!music)/.test(window.location.href);
 const AVE_SESSION_ID = generateSessionID();
 
 /**
@@ -28,15 +27,15 @@ const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
 const DATABASE_VERSION = 2;
 
 class AVE_EVENTHANDLER {
-    
-     /**
+
+    /**
     * AVE Eventhandler
     * A very basic and simple eventhandler/wrapper
     * @constructor
     * @return {AVE_EVENTHANDLER} AVE_EVENTHANDLER Object
     */ 
     constructor(){}
-    
+
     /**
     * Fire out an Event
     * @param {string} eventName Thats the Name of the Event u want to fire
@@ -106,9 +105,9 @@ setTimeout(() => {
 
 
 window.onbeforeunload = function () {
-   console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY'); 
-   const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
-   for (let i = 0; i < _sessions.length; i++) {
+    console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY'); 
+    const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
+    for (let i = 0; i < _sessions.length; i++) {
         const _elem = _sessions[i];
         if (_elem.id == AVE_SESSION_ID) {
             _sessions.splice(i, 1);
@@ -125,6 +124,9 @@ window.onbeforeunload = function () {
 const SETTINGS_USERCONFIG_DEFINES = [];
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Vine', description: 'Tooltip Description of this Setting'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableFullWidth', type: 'bool', name: 'Enable Full Width', description: 'Uses the full width of the display'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DarkMode', type: 'bool', name: 'Enable Dark Mode (reload required atm)', description: 'Switches between Amazon Light Theme and AVE Dark Mode (reload required atm)'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableAmazonNavbar', type: 'bool', name: 'Disable Amazon Navbar', description: 'Disables the Amazon Navbar'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableCategories', type: 'bool', name: 'Disable Categories', description: 'Disables the Categories of the Amazon Vine Page'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooter', type: 'bool', name: 'Disable Footer', description: 'Disables the Footer of the Amazon Vine Page'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableSuggestions', type: 'bool', name: 'Disable Suggestions', description: 'Disables Suggestions on the Amazon Vine Page'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnPotLuck', type: 'bool', name: 'Disable Button Potluck', description: 'Disables the Section Button PotLuck(FSE)'});
@@ -151,6 +153,8 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorAllProducts', type: 'color', nam
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorFavorites', type: 'color', name: 'Button Color Favorites', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorDefault', type: 'color', name: 'Color Favorite Star unchecked', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'FavStarColorChecked', type: 'color', name: 'Color Favorite Star checked', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DarkModeBackgroundColor', type: 'color', name: 'Dark Mode Background Color', description: ''});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DarkModeColor', type: 'color', name: 'Dark Mode Text Color', description: ''});
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Amazon Shopping', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableFooterShopping', type: 'bool', name: 'Disable Footer', description: 'Disables the Footer of the Amazon Shopping Page'});
@@ -166,6 +170,9 @@ SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DELETE DATABSE', bgColo
 
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;
+    DarkMode = false;
+    DisableAmazonNavbar = false;
+    DisableCategories = false;
     DisableFooter = true;
     DisableSuggestions = true;
     DisableFooterShopping = false;
@@ -178,7 +185,7 @@ class SETTINGS_DEFAULT {
     EnableInfiniteScrollLiveQuerry = false;
     EnableDesktopNotifikation = false;
     EnableBtnAll = true;
-    
+
     BtnColorFavorites = '#ffe143';
     BtnColorNewProducts = '#00FF00';
     BtnColorMarkCurrSiteAsSeen = '#00FF00';
@@ -189,6 +196,9 @@ class SETTINGS_DEFAULT {
 
     FavStarColorDefault = 'white';
     FavStarColorChecked = '#ffe143';
+
+    DarkModeBackgroundColor = '#191919';
+    DarkModeColor = '#FFFFFF';
 
     NotSeenMaxCount = 5;
     PageLoadMinDelay = 750;
@@ -217,7 +227,7 @@ class SETTINGS_DEFAULT {
     CssProductFavStar() {
         return `float: right; display: flex; margin: 0px; color: ${this.FavStarColorDefault}; height: 0px; font-size: 25px; text-shadow: black -1px 0px, black 0px 1px, black 1px 0px, black 0px -1px; cursor: pointer;`;
     }
-    
+
     save(local) {
         if (local) {
             console.warn('Saving Config:', this);
@@ -337,7 +347,7 @@ async function delay(milliseconds) {
     * This Function will Monitor and fire Style Changes asap
     */ 
 async function fastStyleChanges() {
-  
+
     if (SITE_IS_VINE) {
         if (SETTINGS.EnableFullWidth) {
             waitForHtmlElmement('.vvp-body', (elem) => {
@@ -345,8 +355,50 @@ async function fastStyleChanges() {
             });
         }
 
+        if (SETTINGS.DisableAmazonNavbar) {
+            waitForHtmlElmement('#navbar-main', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+
+            waitForHtmlElmement('#skiplink', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+            
+            waitForHtmlElmement('#vvp-logo-link > img', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+
+            waitForHtmlElmement('#vvp-header', (elem) => {
+                elem.style.marginTop = '0';
+                elem.style.marginBottom = '0';
+                //elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+
+            waitForHtmlElmement('.a-container.vvp-body > .a-section:not(#vvp-header)', (elem) => {
+                elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+
+            waitForHtmlElmement('.a-tab-container.vvp-tab-set-container', (elem) => {
+                elem.style.marginTop = '0';
+                //elem.style.display = 'none';
+                // elem.style.visibility = 'hidden';
+            });
+        }
+
+        if (SETTINGS.DisableCategories) {
+            waitForHtmlElmement('#vvp-browse-nodes-container', (elem) => {
+                elem.style.display = 'none';
+                //elem.style.visibility = 'hidden';
+            });
+        }
+
         if (SETTINGS.DisableSuggestions) {
-                        //rhf-frame
+            //rhf-frame
             waitForHtmlElmement('.copilot-secure-display', (elem) => {
                 elem.style.display = 'none';
                 // elem.style.visibility = 'hidden';
@@ -366,7 +418,7 @@ async function fastStyleChanges() {
                 // elem.style.visibility = 'hidden';
             });
         }
-    
+
         if (SETTINGS.DisableBtnLastChance) {
             waitForHtmlElmement('#vvp-items-button--all', (elem) => {
                 elem.style.display = 'none';
@@ -391,7 +443,7 @@ async function fastStyleChanges() {
     } else if (SITE_IS_SHOPPING) {
 
         if (SETTINGS.DisableSuggestionsShopping) {
-                        //rhf-frame
+            //rhf-frame
             waitForHtmlElmement('#rhf', (elem) => {
                 elem.style.display = 'none';
                 // elem.style.visibility = 'hidden';
