@@ -316,6 +316,7 @@ async function parseTileData(tile) {
                 _ret.gotFromDB = true;
                 _ret.ts_lastSeen = unixTimeStamp();
                 if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): got DB Entry`);
+                database.update(_ret);
                 resolve(_ret);
             } else {
                 //We have to wait for a lot of Stuff
@@ -574,6 +575,7 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
 
     const _taxElement_span = document.createElement('span');
     _taxElement_span.setAttribute("id", `ave-taxinfo-${index}-text`);
+    _taxElement_span.classList.add('ave-taxinfo-text');
     const _prize = prod.data_estimated_tax_prize;
     console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
     _taxElement_span.innerText = `Tax Prize: ${(typeof(_prize) == 'number') ? _prize :'--.--'} ${_currencySymbol}`;
@@ -904,7 +906,11 @@ function favStarEventhandlerClick(event, data) {
     }
 }
 
-
+/**
+ * Updates Style and Text of a Product Tile
+ * @param {Product} prod
+ * @returns 
+ */
 function updateTileStyle(prod) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
     const _tiles = document.getElementsByClassName('vvp-item-tile');
@@ -921,8 +927,11 @@ function updateTileStyle(prod) {
             const _favStar = _tile.querySelector('.ave-favorite-star');
             _favStar.style.color = (prod.isFav) ? SETTINGS.FavStarColorChecked : 'white'; // SETTINGS.FavStarColorChecked = Gelb;
 
-            // UPDATE TAX VALUE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+            const _taxValue = prod.data_estimated_tax_prize;
+            if (typeof(_taxValue) == 'number') {
+                const _taxValueElem = _tile.querySelector('.ave-taxinfo-text');
+                _taxValueElem.innerText = (_taxValueElem.innerText).replace('--.--', _taxValue);
+            }
             return;
         }
     }
@@ -1811,22 +1820,27 @@ async function cleanUpDatabase(cb = () => {}) {
                 if (!_currEntry.ts_firstSeen){
                     _currEntry.ts_firstSeen = (unixTimeStamp() - Math.round(Math.random() * (SECONDS_PER_WEEK / 2)));
                     _needUpdate = true;
+                    if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} had no valid firstseen timestamp. fixed`);
                 }
 
                 if (!_currEntry.ts_lastSeen) {
                     _currEntry.ts_lastSeen = (_currEntry.ts_firstSeen + SECONDS_PER_DAY);
                     _needUpdate = true;
+                    if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} had no valid lastseen timestamp. fixed`);
                 }
 
 
-                let _notSeenCounter = 0;
-                if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
+                let _notSeenCounter = _currEntry.notSeenCounter;
+                if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen < (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
                     _notSeenCounter++;
-                } else if (_currEntry.ts_lastSeen > (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
+                    if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} increased notSeenCounter to ${_notSeenCounter}`);
+                } else if (_currEntry.ts_lastSeen < (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
                     _notSeenCounter++;
+                    if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} increased notSeenCounter to ${_notSeenCounter}`);
                 }
 
                 if (_currEntry.notSeenCounter != _notSeenCounter) {
+                    if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} update notSeenCounter from ${_currEntry.notSeenCounter} to ${_notSeenCounter}`);
                     _currEntry.notSeenCounter = _notSeenCounter;
                     _needUpdate = true;
                 }
@@ -1856,6 +1870,8 @@ async function cleanUpDatabase(cb = () => {}) {
 
     });
 }
+
+unsafeWindow.ave.dbCleanup = cleanUpDatabase;
 
 function exportDatabase() {
     console.log('Create Database Dump...');
@@ -2038,9 +2054,9 @@ function initBackgroundScan() {
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                         database.getAll().then((products) => {
                             const _needUpdate = [];
-                            const _randCount = Math.round(Math.random() * 3);
-                            for (_prod of products) {
-                                if (_needUpdate.length < 3) {
+                            const _randCount = Math.round(Math.random() * 4);
+                            for (const _prod of products) {
+                                if (_needUpdate.length < _randCount) {
                                     if (typeof(_prod.data_estimated_tax_prize) != 'number') _needUpdate.push(_prod);
                                 } else {
                                     break;
@@ -2049,7 +2065,7 @@ function initBackgroundScan() {
 
                             const _promises = [];
 
-                            for (_prod of _needUpdate) {
+                            for (const _prod of _needUpdate) {
                                 requestProductDetails(_prod).then((_newProd) => {
                                     _promises.push(database.update(_newProd));
                                 });
@@ -2493,7 +2509,7 @@ function init(hasTiles) {
     _searchBarInput.setAttribute('name', 'ave-search');
     _searchBarInput.style.cssText = `width: 30em;`;
     _searchBarInput.addEventListener('keyup', (ev) => {
-        const _input = _searchBarInput.value
+        const _input = _searchBarInput.value.toLowerCase();
         if (SETTINGS.DebugLevel > 10) console.log(`Updated Input: ${_input}`);
         if (_input.length >= 3) {
             if (searchInputTimeout) clearTimeout(searchInputTimeout);

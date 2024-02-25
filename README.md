@@ -13,6 +13,10 @@ This script enhances the experience on the Amazon Vine website. However, it does
 * Install Tampermonkex: [https://www.tampermonkey.net/](https://www.tampermonkey.net/)
 * Install Amazon Vine Explorer: [https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js](https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js)
 
+## Notice:
+The Script has currently some issues processing the Tax Value.
+We are aware of the issue and are working on a fix.
+
 ## Changelog:
 ##### [25.02.2024] - Version 0.10.8.1
 * Bugfix: Disabled the Tax Scan due to issues fetching the value
@@ -33,6 +37,15 @@ This script enhances the experience on the Amazon Vine website. However, it does
 ##### [10.12.2023] - Version 0.10.4
 * Added: Support for amazon.co.uk
 * Change: Changed website detection to be able to handle double dot domain names like amazon.co.uk
+
+##### [28.01.2024] - Version 0.10.3.8
+* BugFix: Fixed Bug where only lower letters would work in the SearchBar
+* BugFix: Outdated Products didn't increase the notSeenCounter while Database Cleanup
+* BugFix: Products got removed by db cleanup because the timespamp check was wrong
+* BugFix: LastSeen Timestanp got not saved if Product was existing in Database
+
+##### [11.12.2023] - Version 0.10.3.1
+* Update TaxValue in Tile after opend details
 
 ##### [10.12.2023] - Version 0.10.3
 * Added: Show of TaxInfoPrize inside Tileview
