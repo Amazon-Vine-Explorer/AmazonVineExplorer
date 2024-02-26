@@ -1917,6 +1917,7 @@ function initBackgroundScan() {
                         if (_stageZeroSites[_subStage]) {
                             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
                             backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
+                            //bgTileScan(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
                             _subStage++
                         } else {
                             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
@@ -1930,7 +1931,8 @@ function initBackgroundScan() {
                         _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
                         if (_subStage < (parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
-                            backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
+                            //backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
+                            bgTileScan(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
                             _subStage++
                             localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                         } else {
@@ -1999,6 +2001,73 @@ function initBackgroundScan() {
         }
     }, 250);
 }   
+
+function bgTileScan(url, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.onload = () => {
+        if (xhr.status === 200) {
+            //callback(null, xhr.responseText);
+
+            const data = xhr.responseText;
+
+            //ehemals aus dem CB
+
+            const fragment = document.createRange().createContextualFragment(data);
+            const vvpItems = fragment.querySelectorAll('#vvp-items-grid > div');
+
+            // Füge hier weitere Operationen zur Auswertung hinzu, falls erforderlich
+            const _div = document.createElement('div');
+
+
+                        const _span = document.createElement('span');
+            _span.innerHTML = `Fetched: ${url}`;
+            _span.style.margin = '10px';
+            _span.style.padding = '5px';
+            _span.style.border = '5px solid red';
+            _span.style.borderRadius = '5px';
+            _span.style.display = 'flex';
+            _span.style.justifyContent = 'center';
+
+            document.body.appendChild(_span);
+
+            console.log(`Found ${vvpItems.length} Products - URL ${url}`);
+
+            // Iteriere über jedes gefundene DIV-Element
+            const _tilesPromNew = [];
+            vvpItems.forEach(product => {
+                // Übergebe jedes DIV-Element an eine Funktion
+                //verarbeiteDiv(div);
+
+                _tilesPromNew.push(parseTileData(product).then((prod) => {
+                    //console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${product}/${vvpItems.length} =>`, prod);
+                    if (!prod.gotFromDB) database.add(prod);
+                    console.log('Add to DB');
+                }))
+
+                //console.log(product);
+                //document.body.appendChild(product);
+
+            });
+
+            Promise.allSettled(_tilesPromNew).then(() => {
+                callback(true);
+                console.log('DB finish');
+            });
+
+            //document.body.appendChild(_div);
+            //callback(true);
+        } else {
+            //callback(new Error(`Request failed with status ${xhr.status}`));
+            console.error(new Error('Request failed'));
+        }
+    };
+    xhr.onerror = () => {
+        //callback(new Error('Request failed'));
+        console.error(new Error('Request failed'));
+    };
+    xhr.send();
+}
 
 function backGroundTileScanner(url, cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called backgroundTileScanner(${url})`);
