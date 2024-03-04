@@ -1111,7 +1111,8 @@ function addAVESettingsMenu(){
 .ave-settings-container input[type="color"] {
   width: 30px;
   padding: 0;
-  border: 1px solid darfgrey;
+  border: 1px solid darkgrey;
+  border-radius: 6px;
   cursor: pointer;
   height: var(--itemHeight);
 }
