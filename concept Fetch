@@ -15,24 +15,139 @@
 
     // Your code here...
 
+    const dcbtn = document.createElement('span');
+    dcbtn.textContent = "Stop Fetch";
 
-    function getDataFromUrl(url, callback) {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', url);
-        xhr.onload = () => {
-            if (xhr.status === 200) {
-                callback(null, xhr.responseText);
-            } else {
-                callback(new Error(`Request failed with status ${xhr.status}`));
+    document.body.appendChild(dcbtn);
+
+    dcbtn.addEventListener('click', function() {
+        stopInterval();
+        console.log('Stop Fetch');
+    });
+
+    const dcbtn2 = document.createElement('span');
+    dcbtn2.textContent = "Start Fetch";
+
+    document.body.appendChild(dcbtn2);
+
+    dcbtn2.addEventListener('click', function() {
+        startInterval(1000);
+        console.log('Start Fetch');
+    });
+
+
+    let url = 'https://www.amazon.de/vine';
+    let _inter;
+    let stage = 0;
+
+    let potluckPage = 1;
+    let lastChancePage = 1;
+    let encorePage = 1;
+
+    let _potluckMaxPage = 2;
+    let _lastChanceMaxPage = 8;
+    let _encoreMaxPage = 125;
+
+    let potluckStartPage = 0;
+    let lastChanceStartPage = 0;
+    let encoreStartPage = 0;
+
+    let cyclePotluck = 5;
+    let cycleLastChance = 5;
+    let cycelEncore = 10;
+
+
+
+    function startInterval(duration){
+        _inter = setInterval(() => {
+            switch(stage){
+                    // Stage 0 Scan FSE
+                case 0:
+                    console.log('Enter Stage 0');
+                    if((potluckPage <= _potluckMaxPage) && (potluckPage <= (potluckStartPage + cyclePotluck))){
+                        url = 'https://www.amazon.de/vine/vine-items?queue=potluck';
+                        console.log(`Scanning Page: ${potluckPage}`);
+                        if(potluckPage === _potluckMaxPage){
+                            stage++;
+                            potluckStartPage = 1;
+                            potluckPage + 1;
+                            break;
+                        }
+                        if(potluckPage === (potluckStartPage + cyclePotluck)){
+                            stage++;
+                            potluckStartPage = potluckPage + 1;
+                        }
+                        potluckPage++;
+                    } else {
+                        stage++;
+                        potluckPage = 1;
+                        potluckStartPage = 1;
+                    }
+                    break;
+                    // Stage 1 Scan VFA
+                case 1:
+                    console.log('Enter Stage 1');
+                    if((lastChancePage <= _lastChanceMaxPage) && (lastChancePage <= (lastChanceStartPage + cycleLastChance))){
+                        url = 'https://www.amazon.de/vine/vine-items?queue=last_chance';
+                        console.log(`Scanning Page: ${lastChancePage}`);
+                        if(lastChancePage === _lastChanceMaxPage){
+                            stage++;
+                            lastChanceStartPage = 1;
+                            lastChancePage = 1;
+                            break;
+                        }
+                        if(lastChancePage === (lastChanceStartPage + cycleLastChance)){
+                            stage++;
+                            lastChanceStartPage = lastChancePage + 1;
+                        }
+                        lastChancePage++;
+                    } else {
+                        stage++;
+                        lastChancePage = 1;
+                        lastChanceStartPage = 1;
+                    }
+                    break;
+                    // Stage 2 Scan ZA
+                case 2:
+                    console.log('Enter Stage 2');
+                    if((encorePage <= _encoreMaxPage) && (encorePage <= (encoreStartPage + cycelEncore))){
+                        url = 'https://www.amazon.de/vine/vine-items?queue=encore';
+                        console.log(`Scanning Page: ${encorePage}`);
+                        if(encorePage === _encoreMaxPage){
+                            stage++;
+                            encoreStartPage = 1;
+                            encorePage = 1;
+                            break;
+                        }
+                        if(encorePage === (encoreStartPage + cycelEncore)){
+                            stage++;
+                            encoreStartPage = encorePage + 1;
+                        }
+                        encorePage++;
+                    } else {
+                        stage++;
+                        encorePage = 1;
+                        encoreStartPage = 1;
+                    }
+                    break;
+                    // Stage 3 Scan Tax
+                case 3:
+                    console.log('Enter Stage 3');
+                    console.log('Scanning Tax (Amazon API)');
+                    stage++;
+                    break;
+                default:
+                    console.log('Stage Reset');
+                    stage = 0;
+                    break;
             }
-        };
-        xhr.onerror = () => {
-            callback(new Error('Request failed'));
-        };
-        xhr.send();
-    }
 
-    const url = 'https://www.amazon.de/vine/vine-items?queue=encore&pn=&cn=&page=3';
+        }, duration);
+    };
+
+    function stopInterval(){
+        clearInterval(_inter);
+    };
 
     getDataFromUrl(url, (error, data) => {
         if (error) {
@@ -72,12 +187,24 @@
     });
 
 
-
 })();
 
 
-
-// Test Function
+function getDataFromUrl(url, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.onload = () => {
+        if (xhr.status === 200) {
+            callback(null, xhr.responseText);
+        } else {
+            callback(new Error(`Request failed with status ${xhr.status}`));
+        }
+    };
+    xhr.onerror = () => {
+        callback(new Error('Request failed'));
+    };
+    xhr.send();
+}
 
 function bgTileScan(url, callback) {
     const xhr = new XMLHttpRequest();
@@ -97,7 +224,7 @@ function bgTileScan(url, callback) {
             const _div = document.createElement('div');
 
 
-                        const _span = document.createElement('span');
+            const _span = document.createElement('span');
             _span.innerHTML = `Fetched: ${url}`;
             _span.style.margin = '10px';
             _span.style.padding = '5px';
@@ -145,4 +272,3 @@ function bgTileScan(url, callback) {
     };
     xhr.send();
 }
-
