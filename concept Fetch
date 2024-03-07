@@ -31,7 +31,7 @@
     document.body.appendChild(dcbtn2);
 
     dcbtn2.addEventListener('click', function() {
-        startInterval(1000);
+        startInterval(10);
         console.log('Start Fetch');
     });
 
@@ -46,7 +46,7 @@
 
     let _potluckMaxPage = 2;
     let _lastChanceMaxPage = 8;
-    let _encoreMaxPage = 125;
+    let _encoreMaxPage = 25;
 
     let potluckStartPage = 0;
     let lastChanceStartPage = 0;
@@ -56,89 +56,156 @@
     let cycleLastChance = 5;
     let cycelEncore = 10;
 
+    let categoriesPage = 1;
+    let categoriesMaxPage = 3;
+    let categoriesStartPage = 0;
+    let cycleCategories = 0;
 
+    let settings = {
+        scanPotluck: true,
+        scanlastChance: false,
+        scanEncore: false,
+        scanCustomCategories: true,
+        scanTax: false
+    };
+
+    let customCategorieMaxPage = [];
+
+    let customCategories = [
+        '&pn=562066&cn=',
+        '&pn=3167641&cn=',
+        '&pn=11961464031&cn='
+    ]
+
+    let cycle = false;
 
     function startInterval(duration){
         _inter = setInterval(() => {
+
+            //Checks if an Scan Stage is diasbled and automaticcally switches to the next active one.
+            let x = 0;
+            for(let key in settings){
+                if(x === stage){
+                    if(settings[key] == true){
+                        // Stage is active
+                        //console.log(`[AVE] Scan Stage ${stage}`);
+                        break;
+                    }else{
+                        //Stage is not active
+                        stage++;
+                    }
+                }
+                x++;
+            }
+
             switch(stage){
                     // Stage 0 Scan FSE
                 case 0:
-                    console.log('Enter Stage 0');
+                    //console.log('Enter Stage 0');
                     if((potluckPage <= _potluckMaxPage) && (potluckPage <= (potluckStartPage + cyclePotluck))){
                         url = 'https://www.amazon.de/vine/vine-items?queue=potluck';
-                        console.log(`Scanning Page: ${potluckPage}`);
+                        console.log(`Stage ${stage} Scanning Page: ${potluckPage}`);
                         if(potluckPage === _potluckMaxPage){
                             stage++;
-                            potluckStartPage = 1;
-                            potluckPage + 1;
+                            potluckStartPage = 0;
+                            potluckPage = 1;
                             break;
                         }
                         if(potluckPage === (potluckStartPage + cyclePotluck)){
                             stage++;
-                            potluckStartPage = potluckPage + 1;
+                            potluckStartPage = potluckPage;
                         }
                         potluckPage++;
                     } else {
                         stage++;
                         potluckPage = 1;
-                        potluckStartPage = 1;
+                        potluckStartPage = 0;
                     }
                     break;
                     // Stage 1 Scan VFA
                 case 1:
-                    console.log('Enter Stage 1');
+                    //console.log('Enter Stage 1');
                     if((lastChancePage <= _lastChanceMaxPage) && (lastChancePage <= (lastChanceStartPage + cycleLastChance))){
                         url = 'https://www.amazon.de/vine/vine-items?queue=last_chance';
-                        console.log(`Scanning Page: ${lastChancePage}`);
+                        console.log(`Stage ${stage} Scanning Page: ${lastChancePage}`);
                         if(lastChancePage === _lastChanceMaxPage){
                             stage++;
-                            lastChanceStartPage = 1;
+                            lastChanceStartPage = 0;
                             lastChancePage = 1;
                             break;
                         }
                         if(lastChancePage === (lastChanceStartPage + cycleLastChance)){
                             stage++;
-                            lastChanceStartPage = lastChancePage + 1;
+                            lastChanceStartPage = lastChancePage;
                         }
                         lastChancePage++;
                     } else {
                         stage++;
                         lastChancePage = 1;
-                        lastChanceStartPage = 1;
+                        lastChanceStartPage = 0;
                     }
                     break;
                     // Stage 2 Scan ZA
                 case 2:
-                    console.log('Enter Stage 2');
+                    //console.log('Enter Stage 2');
+                    //console.log(`EP-${encorePage} | ESP+CE ${(encoreStartPage + cycelEncore)}`);
                     if((encorePage <= _encoreMaxPage) && (encorePage <= (encoreStartPage + cycelEncore))){
                         url = 'https://www.amazon.de/vine/vine-items?queue=encore';
-                        console.log(`Scanning Page: ${encorePage}`);
+                        console.log(`Stage ${stage} Scanning Page: ${encorePage}`);
                         if(encorePage === _encoreMaxPage){
                             stage++;
-                            encoreStartPage = 1;
+                            encoreStartPage = 0;
                             encorePage = 1;
                             break;
                         }
                         if(encorePage === (encoreStartPage + cycelEncore)){
                             stage++;
-                            encoreStartPage = encorePage + 1;
+                            encoreStartPage = encorePage;
                         }
                         encorePage++;
                     } else {
                         stage++;
                         encorePage = 1;
-                        encoreStartPage = 1;
+                        encoreStartPage = 0;
                     }
                     break;
                     // Stage 3 Scan Tax
                 case 3:
-                    console.log('Enter Stage 3');
-                    console.log('Scanning Tax (Amazon API)');
+
+                    //console.log('Enter Stage 3');
+
+                    if((categoriesPage <= categoriesMaxPage) && (categoriesPage <= (categoriesStartPage + cycleCategories))){
+                        url = 'https://www.amazon.de/vine/vine-items?queue=encore';
+                        console.log(`Stage ${stage} Scanning Page: ${categoriesPage}`);
+                        if(categoriesPage === categoriesMaxPage){
+                            stage++;
+                            categoriesStartPage = 0;
+                            categoriesPage = 1;
+                            break;
+                        }
+                        if(categoriesPage === (categoriesStartPage + cycleCategories)){
+                            stage++;
+                            categoriesStartPage = categoriesPage;
+                        }
+                        categoriesPage++;
+                    } else {
+                        stage++;
+                        categoriesPage = 1;
+                        categoriesStartPage = 0;
+                    }
+                    break;
+                case 4:
+                    //console.log('Enter Stage 3');
+                    console.log(`Stage ${stage} Scanning Tax (Amazon API)`);
                     stage++;
                     break;
                 default:
-                    console.log('Stage Reset');
+                    console.log(`Stage ${stage} Stage Reset`);
                     stage = 0;
+                    if(cycle === 3){
+                        stopInterval();
+                    }
+                    cycle++;
                     break;
             }
 
@@ -149,42 +216,42 @@
         clearInterval(_inter);
     };
 
-    getDataFromUrl(url, (error, data) => {
-        if (error) {
-            console.error(error);
-        } else {
-            // Hier kannst du den geladenen Inhalt auswerten
-            //console.log(data);
-            const fragment = document.createRange().createContextualFragment(data);
-            const vvpItems = fragment.querySelectorAll('#vvp-items-grid > div');
-
-            // Füge hier weitere Operationen zur Auswertung hinzu, falls erforderlich
-            const _div = document.createElement('div');
-
-            // Iteriere über jedes gefundene DIV-Element
-            vvpItems.forEach(product => {
-                // Übergebe jedes DIV-Element an eine Funktion
-                //verarbeiteDiv(div);
-                console.log(product);
-
-            });
-            console.log(`Found ${vvpItems.length} Products`);
-
-            const _span = document.createElement('span');
-            _span.innerHTML = `Fetched: ${url}`;
-            _span.style.margin = '10px';
-            _span.style.padding = '5px';
-            _span.style.border = '5px solid red';
-            _span.style.borderRadius = '5px';
-            _span.style.display = 'flex';
-            _span.style.justifyContent = 'center';
-
-            document.body.appendChild(_span);
-
-            document.body.appendChild(_div);
-
-        }
-    });
+    //     getDataFromUrl(url, (error, data) => {
+    //         if (error) {
+    //             console.error(error);
+    //         } else {
+    //             // Hier kannst du den geladenen Inhalt auswerten
+    //             //console.log(data);
+    //             const fragment = document.createRange().createContextualFragment(data);
+    //             const vvpItems = fragment.querySelectorAll('#vvp-items-grid > div');
+    //
+    //             // Füge hier weitere Operationen zur Auswertung hinzu, falls erforderlich
+    //             const _div = document.createElement('div');
+    //
+    //             // Iteriere über jedes gefundene DIV-Element
+    //             vvpItems.forEach(product => {
+    //                 // Übergebe jedes DIV-Element an eine Funktion
+    //                 //verarbeiteDiv(div);
+    //                 console.log(product);
+    //
+    //             });
+    //             console.log(`Found ${vvpItems.length} Products`);
+    //
+    //             const _span = document.createElement('span');
+    //             _span.innerHTML = `Fetched: ${url}`;
+    //             _span.style.margin = '10px';
+    //             _span.style.padding = '5px';
+    //             _span.style.border = '5px solid red';
+    //             _span.style.borderRadius = '5px';
+    //             _span.style.display = 'flex';
+    //             _span.style.justifyContent = 'center';
+    //
+    //             document.body.appendChild(_span);
+    //
+    //             document.body.appendChild(_div);
+    //
+    //         }
+    //     });
 
 
 })();
@@ -196,6 +263,8 @@ function getDataFromUrl(url, callback) {
     xhr.onload = () => {
         if (xhr.status === 200) {
             callback(null, xhr.responseText);
+        } else if(xhr.status === 503){
+            console.log(`Limit reached, Stop Background Scan. Time: ${new Date().getTime()}`);
         } else {
             callback(new Error(`Request failed with status ${xhr.status}`));
         }
