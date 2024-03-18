@@ -1013,8 +1013,44 @@ function addBranding() {
     const _oldElem = document.getElementById('ave-branding-text');
     if (_oldElem) _oldElem.remove();
 
+    const _brandingStyle = document.createElement('style');
+    _brandingStyle.innerHTML = `
+  .ave-x-wrapper {
+    width: 100%;
+    position: absolute;
+    top: -20px;
+    right: 0px;
+    display: none;
+  }
+
+  .ave-close-x {
+    cursor: pointer;
+    width: fit-content;
+    height: fit-content;
+    margin-left: auto;
+    background-color: ${(AVE_IS_THIS_SESSION_MASTER) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)'};
+    justify-content: center;
+    display: flex;
+    padding: 3px;
+    border: 1px solid black;
+    border-radius: 5px;
+  }
+
+  .ave-branding-wrapper:hover .ave-x-wrapper {
+    display: flex;
+  }
+
+  #ave-brandig-text {
+    padding: 0;
+    margin: 0;
+  }
+
+    `;
+    document.body.appendChild(_brandingStyle);
+
     const _text = document.createElement('div');
     _text.id = 'ave-branding-text';
+    _text.classList.add('ave-branding-wrapper');
     _text.style.position = 'fixed';
     _text.style.bottom = '10px';
     _text.style.left = '10px';
@@ -1025,10 +1061,26 @@ function addBranding() {
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
     _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
-    _text.innerHTML = `<p id="ave-brandig-text">${AVE_TITLE}${(AVE_IS_THIS_SESSION_MASTER) ? ' - Master': ''} - ${AVE_VERSION}</p>`;
+    _text.innerHTML = `
+    <p id="ave-brandig-text">
+      ${AVE_TITLE}${(AVE_IS_THIS_SESSION_MASTER) ? ' - Master': ''} - ${AVE_VERSION}
+    </p>
+    <div class="ave-x-wrapper">
+      <div class="ave-close-x" id="ave-branding-x">
+        <i class="a-icon a-icon-close"></i>
+      </div>
+    </div>
+    `;
 
 
     document?.body?.appendChild(_text);
+
+    const _brandingClose = document.getElementById('ave-branding-x');
+
+    _brandingClose.addEventListener('click', function() {
+        var brandingWrapper = document.getElementById('ave-branding-text');
+        brandingWrapper.style.display = 'none';
+    });
 }
 
 unsafeWindow.ave.addBranding = addBranding;
