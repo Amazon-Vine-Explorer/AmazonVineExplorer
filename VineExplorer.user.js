@@ -307,7 +307,7 @@ function detectCurrentPageType(){
 
 async function parseTileData(tile) {
     return new Promise((resolve, reject) => {
-                if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
+        if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
 
         const _id = tile.getAttribute('data-recommendation-id');
 
@@ -1916,9 +1916,9 @@ async function cleanUpDatabase(cb = () => {}) {
         }
 
         Promise.allSettled(_workersProms).then(() => {
-                if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
-                _dbCleanIcon.remove();
-                cb(true);
+            if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
+            _dbCleanIcon.remove();
+            cb(true);
         })
 
     });
@@ -2081,6 +2081,12 @@ function initBackgroundScan() {
                         break;
                     }
                     case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
+
+                        _backGroundScanStage++;
+                        _scanFinished();
+                        break;
+
+
                         _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
                         if (_subStage < (parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
@@ -2103,7 +2109,7 @@ function initBackgroundScan() {
                         break;
 
 
-                        
+
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                         database.getAll().then((products) => {
                             const _needUpdate = [];
@@ -2324,12 +2330,12 @@ function updateNewProductsBtn() {
             }
         }
         if (SETTINGS.EnableDesktopNotifikation && !_notifyed && _prodArrLength > oldCountOfNewItems){
-                if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
-                    oldCountOfNewItems = _prodArrLength;
-                    lastDesktopNotifikationTimestamp = unixTimeStamp();
+            if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
+                oldCountOfNewItems = _prodArrLength;
+                lastDesktopNotifikationTimestamp = unixTimeStamp();
 
-                    desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
-               }
+                desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
+            }
         }
     })
 }
@@ -2507,37 +2513,108 @@ function init(hasTiles) {
 
     if (_aveSubpageRequest) createNewSite(parseInt(_aveSubpageRequest));
 
-    if (hasTiles) {
-        const _tiles = document.getElementsByClassName('vvp-item-tile');
+    getTiles();
 
-        const _tilesLength = _tiles.length;
-        const _tilePorms = [];
-        const _parseStartTime = Date.now();
-        for (let i = 0; i < _tilesLength; i++) {
-            const _currTile = _tiles[i];
-            _currTile.style.cssText = "background-color: yellow;";
-            _tilePorms.push(parseTileData(_currTile).then((_product) => {
-                if (SETTINGS.DebugLevel > 14) console.log('Come Back from parseTileData <<<<<<<<<< INIT <<<<<<<<<<<<<<<<<<<<<<<', _currTile, _product);
-                addStyleToTile(_currTile, _product);
+    function getTiles() {
+        if (hasTiles) {
+            const _tiles = document.getElementsByClassName('vvp-item-tile');
 
-            }));
+            const _tilesLength = _tiles.length;
+            const _tilePorms = [];
+            const _parseStartTime = Date.now();
+            for (let i = 0; i < _tilesLength; i++) {
+                const _currTile = _tiles[i];
+                _currTile.style.cssText = "background-color: yellow;";
+                _tilePorms.push(parseTileData(_currTile).then((_product) => {
+                    if (SETTINGS.DebugLevel > 14) console.log('Come Back from parseTileData <<<<<<<<<< INIT <<<<<<<<<<<<<<<<<<<<<<<', _currTile, _product);
+                    addStyleToTile(_currTile, _product);
 
-            Promise.allSettled(_tilePorms).then(() => {
-                if(INIT_AUTO_SCAN) {
-                    startAutoScan();
-                } else if (AUTO_SCAN_IS_RUNNING) {
-                    handleAutoScan();
-                } else {
-                    completeDelayedInit();
-                }
-            })
+                }));
+
+                Promise.allSettled(_tilePorms).then(() => {
+                    if(INIT_AUTO_SCAN) {
+                        startAutoScan();
+                    } else if (AUTO_SCAN_IS_RUNNING) {
+                        handleAutoScan();
+                    } else {
+                        completeDelayedInit();
+                    }
+                })
+            }
+        } else {
+            if (SETTINGS.DebugLevel > 10) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
         }
-    } else {
-        if (SETTINGS.DebugLevel > 10) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
     }
 
 
     if (AUTO_SCAN_IS_RUNNING) return;
+
+
+    const _btnVppItemsRecom = document.getElementById('vvp-items-button--recommended');
+    const _btnVppItemsAll = document.getElementById('vvp-items-button--all');
+    const _btnVppItemsSeller = document.getElementById('vvp-items-button--seller');
+
+    //_btnVppItemsRecom.querySelector('a').removeAttribute('href');
+    //_btnVppItemsAll.querySelector('a').removeAttribute('href');
+    //_btnVppItemsSeller.querySelector('a').removeAttribute('href');
+
+//     _btnVppItemsRecom.addEventListener('click', (ev) => {
+//         asyncFetch('potluck');
+//         //Need to set aria-checked="true"
+//     })
+//     _btnVppItemsAll.addEventListener('click', (ev) => {
+//         asyncFetch('last_chance');
+//     })
+//     _btnVppItemsSeller.addEventListener('click', (ev) => {
+//         asyncFetch('encore');
+//     })
+
+    addAsyncLinks();
+    function addAsyncLinks(){
+        //const bereich = document.querySelector('.vvp-items-container');
+        const bereich = document.querySelector('.vvp-tab-content');
+        bereich.addEventListener('click', function(event) {
+            console.log('Click Event Fired');
+            // Überprüfen, ob das geklickte Element ein Link ist
+            if (event.target.tagName === 'A') {
+                // Den Standard-Aktion des Links unterbrechen
+                event.preventDefault();
+
+                // Den Link-URL auslesen
+                const linkURL = event.target.href;
+                console.log('Der geklickte Link:', linkURL);
+                asyncFetch(linkURL);
+
+                // Hier können Sie weitere Aktionen basierend auf dem ausgelesenen Link durchführen
+            }
+        });
+    }
+
+    function asyncFetch(url) {
+        GM.xmlHttpRequest({
+            method: "GET",
+            url: url,
+            onload: function(response) {
+                const _parser = new DOMParser();
+                const _doc = _parser.parseFromString(response.responseText, "text/html");
+                waitForHtmlElmement('.vvp-items-container', (itemsContainer) => {
+                    const _oldElem = document.querySelector('.vvp-items-container');
+                    const _newElem = _doc.querySelector('.vvp-items-container');
+
+                    if (_newElem) {
+                        _oldElem.replaceWith(_newElem);
+                        //addAsyncLinks();
+                        addLeftSideButtons();
+                        getTiles();
+                        modifyPagination();
+                    }
+
+                }, _doc);
+            }
+        })
+    }
+
+
 
 
 
@@ -2588,58 +2665,61 @@ function init(hasTiles) {
 
     if (SETTINGS.EnableBackgroundScan) initBackgroundScan();
 
-    // Modify Pageination if exists
-    const _pageinationContainer = document.getElementsByClassName('a-pagination')[0];
-    if (_pageinationContainer) {
-        if (SETTINGS.DebugLevel > 10) console.log('Manipulating Pageination');
+    modifyPagination();
+    function modifyPagination() {
+        // Modify Pageination if exists
+        const _pageinationContainer = document.getElementsByClassName('a-pagination')[0];
+        if (_pageinationContainer) {
+            if (SETTINGS.DebugLevel > 10) console.log('Manipulating Pageination');
 
-        const _nextBtn = _pageinationContainer.lastChild;
-        const _isNextBtnDisabled = _nextBtn.classList.contains('a-disabled');
-        const _nextBtnLink = _nextBtn.lastChild.getAttribute('href');
-        const _btn = _nextBtn.cloneNode(true);
-        const anchorTag = _btn.querySelector('a');
+            const _nextBtn = _pageinationContainer.lastChild;
+            const _isNextBtnDisabled = _nextBtn.classList.contains('a-disabled');
+            const _nextBtnLink = _nextBtn.lastChild.getAttribute('href');
+            const _btn = _nextBtn.cloneNode(true);
+            const anchorTag = _btn.querySelector('a');
 
-        //const _aveNextPageButtonText = 'Alle als gesehen markieren und Nächste <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
-        const _aveNextPageButtonText = 'Gelesen <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+            //const _aveNextPageButtonText = 'Alle als gesehen markieren und Nächste <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+            const _aveNextPageButtonText = 'Gelesen <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
 
-        const _AveNextArrow = document.createElement('style');
-        _AveNextArrow.type = 'text/css';
-        _AveNextArrow.innerHTML = `.ave-arrow::after{border-style: solid; border-width: 2px 2px 0 0; content: ''; padding: 2.5px; visibility: visible; display: inline-block; position: relative; left: -9px; top: -1px; transform: rotate(45deg);}`;
+            const _AveNextArrow = document.createElement('style');
+            _AveNextArrow.type = 'text/css';
+            _AveNextArrow.innerHTML = `.ave-arrow::after{border-style: solid; border-width: 2px 2px 0 0; content: ''; padding: 2.5px; visibility: visible; display: inline-block; position: relative; left: -9px; top: -1px; transform: rotate(45deg);}`;
 
 
-        if (!_isNextBtnDisabled) {
-            _nextBtn.setAttribute('class', 'a-normal');
-            _nextBtn.querySelector('span.larr').style.visibility = 'hidden';
-            _nextBtn.querySelector('span.larr').classList.add('ave-arrow');
+            if (!_isNextBtnDisabled) {
+                _nextBtn.setAttribute('class', 'a-normal');
+                _nextBtn.querySelector('span.larr').style.visibility = 'hidden';
+                _nextBtn.querySelector('span.larr').classList.add('ave-arrow');
+            }
+
+            if (anchorTag) {
+                anchorTag.innerHTML = _aveNextPageButtonText;
+            }
+            else {
+                _btn.innerHTML = _aveNextPageButtonText;
+            }
+
+            _btn.style.backgroundColor = 'lime';
+            _btn.style.borderRadius = '8px';
+
+            if(!_nextBtn.classList.contains('a-disabled')){
+                _btn.setAttribute('class', 'a-last');
+                _btn.style.cursor = 'pointer';
+                _btn.addEventListener('click', () => {
+                    markAllCurrentSiteProductsAsSeen(() => {
+                        window.location.href = (_nextBtnLink);
+                    });
+                })
+            }
+
+            //const _btn_a = document.createElement('a');
+            //_btn_a.setAttribute('style', 'background-color: lime');
+            //_btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+
+            //_btn.appendChild(_btn_a);
+            _pageinationContainer.appendChild(_btn);
+            _pageinationContainer.appendChild(_AveNextArrow);
         }
-
-        if (anchorTag) {
-            anchorTag.innerHTML = _aveNextPageButtonText;
-        }
-        else {
-            _btn.innerHTML = _aveNextPageButtonText;
-        }
-
-        _btn.style.backgroundColor = 'lime';
-        _btn.style.borderRadius = '8px';
-
-        if(!_nextBtn.classList.contains('a-disabled')){
-            _btn.setAttribute('class', 'a-last');
-            _btn.style.cursor = 'pointer';
-            _btn.addEventListener('click', () => {
-                markAllCurrentSiteProductsAsSeen(() => {
-                    window.location.href = (_nextBtnLink);
-                });
-            })
-        }
-
-        //const _btn_a = document.createElement('a');
-        //_btn_a.setAttribute('style', 'background-color: lime');
-        //_btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
-
-        //_btn.appendChild(_btn_a);
-        _pageinationContainer.appendChild(_btn);
-        _pageinationContainer.appendChild(_AveNextArrow);
     }
 }
 
