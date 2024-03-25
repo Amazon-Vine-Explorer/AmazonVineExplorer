@@ -17,10 +17,16 @@
 // @grant        GM.xmlHttpRequest
 // @grant        GM.openInTab
 // @grant        unsafeWindow
-// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\globals.js
-// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\class_product.js
-// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\class_db_handler.js
-// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\VineExplorer.user.js
+//-------------------------------------//
+// Since TamperMonkey can't access local files any more, use a tiny Nginx all-in-one web server app
+// bundle to serve up the files as HTTP from localhost
+//    https://github.com/r3c/winp
+//-------------------------------------
+// @require      http://127.0.0.1/globals.js
+// @require      http://127.0.0.1/class_product.js
+// @require      http://127.0.0.1/class_db_handler.js
+// @require      http://127.0.0.1/VineExplorer.user.js
+// @require      http://127.0.0.1/translations.js
 // ==/UserScript==
 
 /**
