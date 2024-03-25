@@ -410,13 +410,13 @@ function addLeftSideButtons(forceClean) {
 
     _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
-    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','ave-btn-allseen',  `width: 240px; background-color: ${SETTINGS.BtnColorMarkCurrSiteAsSeen};`, () => {
+    const _setAllSeenBtn = createButton(TRANSLATION.mrkCurrPgSeenBtn,'ave-btn-allseen',  `width: 240px; background-color: ${SETTINGS.BtnColorMarkCurrSiteAsSeen};`, () => {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
     });
 
-    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', `left: 0; width: 240px; background-color: ${SETTINGS.BtnColorMarkAllAsSeen};`, () => {
+    const _setAllSeenDBBtn = createButton(TRANSLATION.mrkAllSeenBtn,'ave-btn-db-allseen', `left: 0; width: 240px; background-color: ${SETTINGS.BtnColorMarkAllAsSeen};`, () => {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         setTimeout(() => {
@@ -431,7 +431,7 @@ function addLeftSideButtons(forceClean) {
         }, 30);
     });
 
-    const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  `width: 240px; background-color: ${SETTINGS.BtnColorBackToTop};`, () => {
+    const _backToTopBtn = createButton(TRANSLATION.backToTopBtn,'ave-btn-backtotop',  `width: 240px; background-color: ${SETTINGS.BtnColorBackToTop};`, () => {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked back to Top Button');
         window.scrollTo(0, 0);
@@ -539,7 +539,7 @@ async function createTileFromProduct(product, btnID, cb) {
                 <span class="a-button a-button-primary vvp-details-btn" id="a-autoid-${_btnAutoID}">
                     <span class="a-button-inner">
                         <input data-asin="${product.data_asin}" data-is-parent-asin="${product.data_asin_is_parent}" data-recommendation-id="${product.data_recommendation_id}" data-recommendation-type="${product.data_recommendation_type}" class="a-button-input" type="submit" aria-labelledby="a-autoid-${_btnAutoID}-announce">
-                        <span class="a-button-text" aria-hidden="true" id="a-autoid-${_btnAutoID}-announce">Weitere Details</span>
+	<span class="a-button-text" aria-hidden="true" id="a-autoid-${_btnAutoID}-announce">${TRANSLATION.prodDetails}</span>
                     </span>
                 </span>
             </div>
@@ -578,7 +578,7 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     _taxElement_span.classList.add('ave-taxinfo-text');
     const _prize = prod.data_estimated_tax_prize;
     console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
-    _taxElement_span.innerText = `Tax Prize: ${(typeof(_prize) == 'number') ? _prize :'--.--'} ${_currencySymbol}`;
+    _taxElement_span.innerText = `${TRANSLATION.taxAmt}: ${(typeof(_prize) == 'number') ? _prize :'--.--'} ${_currencySymbol}`;
     console.log('createTaxInfo(): After innerText');
 
     _taxElement.appendChild(_taxElement_span);
@@ -632,7 +632,7 @@ async function createProductSite(siteType, productArray, cb) {
     // Edit Top Line
     if (_tilesContainer) {
         const _topLine = _tilesContainer.getElementsByTagName('p')[0];
-        _topLine.innerHTML = `<p>Anzeigen von <strong>${_fastCount}</strong> von <strong>${_productArrayLength}</strong> Ergebnissen</p>`
+        _topLine.innerHTML = `<p>${TRANSLATION.displayingResults} <strong>${_fastCount}</strong> ${TRANSLATION.displayingResultsOf} <strong>${_productArrayLength}</strong> ${TRANSLATION.results}</p>`
     }
 
     const _tilesGrid = document.getElementById('vvp-items-grid');
@@ -1092,7 +1092,7 @@ function addAveSettingsTab(){
         _upperSettingsButton.id = 'vvp-ave-settings-tab';
         _upperSettingsButton.classList = 'a-tab-heading';
         _upperSettingsButton.role = 'presentation';
-        _upperSettingsButton.innerHTML += `<a role="tab" aria-selected="false" tabindex="-1">AVE Einstellungen</a>`;
+        _upperSettingsButton.innerHTML += `<a role="tab" aria-selected="false" tabindex="-1">${TRANSLATION.settings}</a>`;
 
         _upperSettingsButton.addEventListener('click',function(){
             const _upperButtons = document.body.querySelectorAll('.a-tab-container.vvp-tab-set-container > ul > li');
@@ -1378,7 +1378,7 @@ font-weight: bold;
 }
     </style>
 
-    <div id="ave-settings-header" style="margin-bottom: 10px"><h3>Einstellungen ${AVE_TITLE} - Version ${AVE_VERSION}</h3></div>
+    <div id="ave-settings-header" style="margin-bottom: 10px"><h3>${TRANSLATION.settings} ${AVE_TITLE} - Version ${AVE_VERSION}</h3></div>
     <div id="ave-settings-container" class="ave-settings-container">
 
 
@@ -1640,7 +1640,7 @@ function addOverlays() { // Old Settings Code
     <div style="background-color: white;border-radius: 8px;width: 50%;min-width: 250px;height: 75%;overflow: hidden;">
       <div id="settingsInner"width: 100%; height: 100%;"> <!--- Inner Start -->
         <div id="settingsNav" style="background-color: #F0F2F2;border-bottom: 1px solid #D5D9D9;display: flex;height: 50px;align-items: center;padding: 0 24px;"> <!--- Nav Start -->
-         <div style="color: #444;font-size: 16px;font-weight: 700;">Amazon Vine Explorer Einstellungen</div>
+         <div style="color: #444;font-size: 16px;font-weight: 700;">${TRANSLATION.settings}</div>
          <div style="color: #444;margin-left: auto;width: 50px;height: 50px;display: flex;justify-content: center;align-items: center;font-weight: 600;font-size: larger;cursor: pointer;transform: translate(50%, 0);">
            <i class="a-icon a-icon-close"></i>
          </div>
@@ -2543,9 +2543,9 @@ function init(hasTiles) {
 
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
 
-    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Alle Produkte', '', SETTINGS.BtnColorAllProducts, () => {createNewSite(PAGETYPE.ALL);}));
-    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Favoriten', '', SETTINGS.BtnColorFavorites, () => {createNewSite(PAGETYPE.FAVORITES);}));
-    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn', SETTINGS.BtnColorNewProducts, () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', TRANSLATION.allItemsBtn, '', SETTINGS.BtnColorAllProducts, () => {createNewSite(PAGETYPE.ALL);}));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', TRANSLATION.favorites, '', SETTINGS.BtnColorFavorites, () => {createNewSite(PAGETYPE.FAVORITES);}));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', TRANSLATION.newItems, 'ave-new-items-btn', SETTINGS.BtnColorNewProducts, () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
 
     updateNewProductsBtn();
 
@@ -2558,7 +2558,7 @@ function init(hasTiles) {
 
     const _searchBarInput = document.createElement('input');
     _searchBarInput.setAttribute('type', 'search');
-    _searchBarInput.setAttribute('placeholder', 'Suche Vine Produkte');
+    _searchBarInput.setAttribute('placeholder', TRANSLATION.searchVineProducts);
     _searchBarInput.setAttribute('name', 'ave-search');
     _searchBarInput.style.cssText = `width: 30em;`;
     _searchBarInput.addEventListener('keyup', (ev) => {
@@ -2600,7 +2600,7 @@ function init(hasTiles) {
         const anchorTag = _btn.querySelector('a');
 
         //const _aveNextPageButtonText = 'Alle als gesehen markieren und Nächste <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
-        const _aveNextPageButtonText = 'Gelesen <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
+        const _aveNextPageButtonText = `${TRANSLATION.read} <span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>`;
 
         const _AveNextArrow = document.createElement('style');
         _AveNextArrow.type = 'text/css';
