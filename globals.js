@@ -1,6 +1,12 @@
 'use strict';
 if (window.top != window.self) return; //don't run on frames or iframes
 
+console.log('globals.js script execution started');
+
+//Set the display language for user
+const DISPLAY_LANGUAGE = 'en' //There is *DEFINITELY* a better way to do this, but works for now...
+let TRANSLATION;              //Our local phrase translation will be populated later by a require
+
 // Constants Needed for some things
 const AVE_VERSION = (GM_info?.script?.version)
 const AVE_TITLE = (GM_info?.script?.name);
