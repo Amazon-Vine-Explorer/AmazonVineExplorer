@@ -26,6 +26,8 @@ const DATABASE_NAME = 'VineVoiceExplorer';
 const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
 const DATABASE_VERSION = 2;
 
+let langCode = 'en';
+
 class AVE_EVENTHANDLER {
 
     /**
@@ -119,6 +121,46 @@ window.onbeforeunload = function () {
     return 'Realy ?'
 }
 
+const translation = {
+    "en":{
+        "ave-btn-allseen":"Mark this Page as read",
+        "ave-btn-db-allseen":"Mark all as read",
+        "ave-btn-backtotop":"Go to Top",
+        "ave-more-details":"See Details",
+        "ave-tax-prize":"Tax Amt:",
+        "ave-show-results":{
+          1:"Displaying",
+          2:"of",
+          3:"results"
+        },
+        "ave-settings":"AVE Settings",
+        "ave-version":"Version",
+        "ave-btn-all-products":"All Products",
+        "ave-btn-favorites":"Favorites",
+        "ave-btn-list-new":"New Products",
+        "ave-input-search-placeholder":"Search Products",
+        "ave-btn-next-page":"Read"
+    },
+    "de":{
+        "ave-btn-allseen":"Aktuelle Seite als gelesen markieren",
+        "ave-btn-db-allseen":"Alle als gelesen markieren",
+        "ave-btn-backtotop":"Zum Seitenanfang",
+        "ave-more-details":"Weitere Details",
+        "ave-tax-prize":"Tax:",
+        "ave-show-results":{
+          1:"Anzeigen",
+          2:"von",
+          3:"Ergebnissen"
+        },
+        "ave-settings":"AVE Einstellungen",
+        "ave-version":"Version",
+        "ave-btn-all-products":"Alle Produkte",
+        "ave-btn-favorites":"Favoriten",
+        "ave-btn-list-new":"Neue Produkte",
+        "ave-input-search-placeholder":"Produkt Suchen",
+        "ave-btn-next-page":"Gelesen"
+    }
+}
 
 // All Config Options that should shown to the User
 const SETTINGS_USERCONFIG_DEFINES = [];
