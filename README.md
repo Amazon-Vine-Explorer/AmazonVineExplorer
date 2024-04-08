@@ -18,6 +18,10 @@ The Script has currently some issues processing the Tax Value.
 We are aware of the issue and are working on a fix.
 
 ## Changelog:
+
+##### [18.03.2024] - Version 0.10.8.1
+* Added: Added Closing Button on Branding on hover. Fixing https://github.com/Amazon-Vine-Explorer/AmazonVineExplorer/issues/19
+
 ##### [25.02.2024] - Version 0.10.8.1
 * Bugfix: Disabled the Tax Scan due to issues fetching the value
 
