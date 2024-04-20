@@ -17,10 +17,19 @@
 // @grant        GM.xmlHttpRequest
 // @grant        GM.openInTab
 // @grant        unsafeWindow
-// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\globals.js
-// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\class_product.js
-// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\class_db_handler.js
-// @require      file://C:\Users\Markus\Documents\AmazonVineExplorer\VineExplorer.user.js
+// @grant        GM_download
+//-------------------------------------//
+// Since TamperMonkey can't access local files any more, use a tiny Nginx all-in-one web server app
+// bundle to serve up the files as HTTP from localhost
+//    https://github.com/r3c/winp
+//-------------------------------------
+// @require      http://127.0.0.1/globals.js
+// @require      http://127.0.0.1/class_product.js
+// @require      http://127.0.0.1/class_db_handler.js
+// @require      http://127.0.0.1/VineExplorer.user.js
+// @require      http://127.0.0.1/translations.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js
+
 // ==/UserScript==
 
 /**
@@ -28,15 +37,15 @@
  * - Abhängig voneurem Browser ind die Erweiterungsverwaltung gehen
  * - Bei Tampermonkey auf Details klicken
  * - Auf der Seite die Option "Zugriff auf Datei-URLs zulassen" aktivieren
- * 
+ *
  * Dieses Template als eigenes script in Tampermonkey hinzufügen oder mit dem link istallieren
  * - https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/VineExplorerLocalDevelopment.user.js
  * - Die Pfade der Dateien bei @require and eure localen Pfade anpassen
- * 
+ *
  * NICHT VERGESSEN die Onlineversion deaktivieren wenn ihr mit dieser arbeitet
- * 
+ *
  * Die @grant Einstellungen immer gegenchecken, da die Header des Hauptscripts nicht beachtet werden und Tampermonkey nur die hier gesetzten Optionen verwendet
- * 
+ *
  * Vorteil: Lokale Dateiänderungen werden sofort nach Websitereload angewendet, das macht das entwickeln leichter und effektiver
  */
 
