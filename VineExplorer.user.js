@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.8.4
+// @version      0.10.8.5
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2620,27 +2620,23 @@ function init(hasTiles) {
             anchorTag.innerHTML = _aveNextPageButtonText;
         }
         else {
-            _btn.innerHTML = _aveNextPageButtonText;
+            //_btn.innerHTML = _aveNextPageButtonText;
+            _btn.innerHTML = 'Gelesen'
         }
 
+        _btn.style.color = 'unset';
         _btn.style.backgroundColor = 'lime';
         _btn.style.borderRadius = '8px';
+        _btn.style.cursor = 'pointer';
 
-        if(!_nextBtn.classList.contains('a-disabled')){
-            _btn.setAttribute('class', 'a-last');
-            _btn.style.cursor = 'pointer';
-            _btn.addEventListener('click', () => {
-                markAllCurrentSiteProductsAsSeen(() => {
+        _btn.addEventListener('click', () => {
+            markAllCurrentSiteProductsAsSeen(() => {
+                if(!_nextBtn.classList.contains('a-disabled')){
                     window.location.href = (_nextBtnLink);
-                });
-            })
-        }
-
-        //const _btn_a = document.createElement('a');
-        //_btn_a.setAttribute('style', 'background-color: lime');
-        //_btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
-
-        //_btn.appendChild(_btn_a);
+                }
+            });
+        })
+        
         _pageinationContainer.appendChild(_btn);
         _pageinationContainer.appendChild(_AveNextArrow);
     }
