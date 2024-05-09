@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog:
 
+##### [09.05.2024] - Version 0.10.8.5
+* Changed functionality of the "mark as read" Button on the bottom of the Page https://github.com/Amazon-Vine-Explorer/AmazonVineExplorer/issues/28
+
 ##### [09.05.2024] - Version 0.10.8.4
 * Added external Resource to Fix Amazon Loading Bug
 
