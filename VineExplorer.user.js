@@ -21,6 +21,7 @@
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/globals.js
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_db_handler.js
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_product.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js
 
 // ==/UserScript==
 
@@ -1930,18 +1931,18 @@ function exportDatabase() {
     console.log('Create Database Dump...');
 
     database.getAll().then((db) => {
-        const element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(db, null, 4)));
-        element.setAttribute('download', 'AmazonVineExplorerDatabase.json');
+        try{
+            console.log("Creating db export JSON as BLOB (uncompressed)");
+            const dbBlob = new Blob([JSON.stringify(db, null, 4)], {type: "application/json;charset=utf-8"});
 
-        element.style.display = 'none';
-        document.body.appendChild(element);
+            console.log("Emulating download file using saveAs script to export JSON file (uncompressed)");
+            saveAs(dbBlob, "AmazonVineExplorerDatabase.json");
 
-        element.click();
-
-        document.body.removeChild(element);
-    })
-
+        } catch (error) {
+            console.log("Oops, there was an error exporting AVE user database");
+            console.log(error);
+        }
+    });
 }
 
 /**
