@@ -27,13 +27,7 @@ const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
 const DATABASE_VERSION = 2;
 
 // Make some things accessable from console
-unsafeWindow.ave = {
-    classes: [
-        DB_HANDLER = DB_HANDLER
-    ],
-    config: SETTINGS,
-    event: ave_eventhandler,
-};
+unsafeWindow.ave = {};
 
 class AVE_EVENTHANDLER {
 
