@@ -130,7 +130,7 @@ function addBranding() {
     });
 }
 
-unsafeWindow.ave.addBranding = addBranding;
+unsafeWindow.ave.addBranding = addBranding();
 
 setTimeout(() => {
     if (!localStorage.getItem('AVE_SESSIONS')) {
