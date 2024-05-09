@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.8.5
-// @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main-violentmonkey-fix/VineExplorer.user.js
-// @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main-violentmonkey-fix/VineExplorer.user.js
+// @version      0.10.8.6
+// @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
+// @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
 // @author       MarkusSR1984, Christof121
 // @match        *://www.amazon.de/*
@@ -18,9 +18,9 @@
 // @grant        GM.setValue
 // @grant        GM.xmlHttpRequest
 // @grant        unsafeWindow
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main-violentmonkey-fix/globals.js
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main-violentmonkey-fix/class_db_handler.js
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main-violentmonkey-fix/class_product.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/globals.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_db_handler.js
+// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_product.js
 
 // External Source
 // @require      https://raw.githubusercontent.com/eligrey/FileSaver.js/v2.0.4/src/FileSaver.js
