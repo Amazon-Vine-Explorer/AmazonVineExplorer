@@ -65,6 +65,15 @@ let backGroundScanTimeout;
 let TimeouteScrollTilesBufferArray = [];
 let BackGroundScanIsRunning = false;
 
+// Make some things accessable from console
+unsafeWindow.ave = {
+    classes: [
+        DB_HANDLER = DB_HANDLER
+    ],
+    config: SETTINGS,
+    event: ave_eventhandler,
+};
+
 const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATABASE_VERSION, (res, err) => {
     if (err) {
         console.error(`Somithing was going wrong while init database :'(`);
