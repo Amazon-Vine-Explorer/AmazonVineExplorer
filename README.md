@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog:
 
+##### [12.05.2024] - Version 0.10.8.7
+* Changed minimum required Symbols in Search Field from 3 to 2
+
 ##### [09.05.2024] - Version 0.10.8.6
 * Changed some Code due to @require loading in Violentmonkey
 
