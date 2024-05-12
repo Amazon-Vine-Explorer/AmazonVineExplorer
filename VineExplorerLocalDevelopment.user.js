@@ -28,7 +28,9 @@
 // @require      http://127.0.0.1/class_db_handler.js
 // @require      http://127.0.0.1/VineExplorer.user.js
 // @require      http://127.0.0.1/translations.js
-// @require      https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js
+// External Source
+// @require      https://raw.githubusercontent.com/eligrey/FileSaver.js/v2.0.4/src/FileSaver.js
+// @require      https://raw.githubusercontent.com/Christof121/VineFetchFix/main/fetchfix.js
 
 // ==/UserScript==
 
