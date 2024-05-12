@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.8.2
+// @version      0.10.8.7
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -22,6 +22,9 @@
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_db_handler.js
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_product.js
 
+// External Source
+// @require      https://raw.githubusercontent.com/eligrey/FileSaver.js/v2.0.4/src/FileSaver.js
+// @require      https://raw.githubusercontent.com/Christof121/VineFetchFix/main/fetchfix.js
 // ==/UserScript==
 
 /*
@@ -70,7 +73,6 @@ unsafeWindow.ave = {
     config: SETTINGS,
     event: ave_eventhandler,
 };
-
 
 const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATABASE_VERSION, (res, err) => {
     if (err) {
@@ -1008,84 +1010,6 @@ function updateAutoScanScreenText(text = '') {
     _elem.textContent = text;
 }
 
-function addBranding() {
-
-    const _oldElem = document.getElementById('ave-branding-text');
-    if (_oldElem) _oldElem.remove();
-
-    const _brandingStyle = document.createElement('style');
-    _brandingStyle.innerHTML = `
-  .ave-x-wrapper {
-    width: 100%;
-    position: absolute;
-    top: -20px;
-    right: 0px;
-    display: none;
-  }
-
-  .ave-close-x {
-    cursor: pointer;
-    width: fit-content;
-    height: fit-content;
-    margin-left: auto;
-    background-color: ${(AVE_IS_THIS_SESSION_MASTER) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)'};
-    justify-content: center;
-    display: flex;
-    padding: 3px;
-    border: 1px solid black;
-    border-radius: 5px;
-  }
-
-  .ave-branding-wrapper:hover .ave-x-wrapper {
-    display: flex;
-  }
-
-  #ave-brandig-text {
-    padding: 0;
-    margin: 0;
-  }
-
-    `;
-    document.body.appendChild(_brandingStyle);
-
-    const _text = document.createElement('div');
-    _text.id = 'ave-branding-text';
-    _text.classList.add('ave-branding-wrapper');
-    _text.style.position = 'fixed';
-    _text.style.bottom = '10px';
-    _text.style.left = '10px';
-    // _text.style.transform = 'translate(-50%, -50%)';
-    _text.style.color = 'blue'; // Textfarbe
-    _text.style.backgroundColor = (AVE_IS_THIS_SESSION_MASTER) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)';
-    _text.style.textAlign = 'left';
-    _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
-    _text.style.zIndex = '2000';
-    _text.style.borderRadius = '3px';
-    _text.innerHTML = `
-    <p id="ave-brandig-text">
-      ${AVE_TITLE}${(AVE_IS_THIS_SESSION_MASTER) ? ' - Master': ''} - ${AVE_VERSION}
-    </p>
-    <div class="ave-x-wrapper">
-      <div class="ave-close-x" id="ave-branding-x">
-        <i class="a-icon a-icon-close"></i>
-      </div>
-    </div>
-    `;
-
-
-    document?.body?.appendChild(_text);
-
-    const _brandingClose = document.getElementById('ave-branding-x');
-
-    _brandingClose.addEventListener('click', function() {
-        var brandingWrapper = document.getElementById('ave-branding-text');
-        brandingWrapper.style.display = 'none';
-    });
-}
-
-unsafeWindow.ave.addBranding = addBranding;
-
-
 function addAveSettingsTab(){
     waitForHtmlElmement('.vvp-tab-set-container > ul', (_upperButtonsContainer) => {
         const _upperSettingsButton = document.createElement('li');
@@ -1930,18 +1854,18 @@ function exportDatabase() {
     console.log('Create Database Dump...');
 
     database.getAll().then((db) => {
-        const element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(db, null, 4)));
-        element.setAttribute('download', 'AmazonVineExplorerDatabase.json');
+        try{
+            console.log("Creating db export JSON as BLOB (uncompressed)");
+            const dbBlob = new Blob([JSON.stringify(db, null, 4)], {type: "application/json;charset=utf-8"});
 
-        element.style.display = 'none';
-        document.body.appendChild(element);
+            console.log("Emulating download file using saveAs script to export JSON file (uncompressed)");
+            saveAs(dbBlob, "AmazonVineExplorerDatabase.json");
 
-        element.click();
-
-        document.body.removeChild(element);
-    })
-
+        } catch (error) {
+            console.log("Oops, there was an error exporting AVE user database");
+            console.log(error);
+        }
+    });
 }
 
 /**
@@ -2564,7 +2488,7 @@ function init(hasTiles) {
     _searchBarInput.addEventListener('keyup', (ev) => {
         const _input = _searchBarInput.value.toLowerCase();
         if (SETTINGS.DebugLevel > 10) console.log(`Updated Input: ${_input}`);
-        if (_input.length >= 3) {
+        if (_input.length >= 2) {
             if (searchInputTimeout) clearTimeout(searchInputTimeout);
             searchInputTimeout = setTimeout(() => {
                 database.query(_input.split(' ')).then((_objArr) => {
@@ -2617,27 +2541,23 @@ function init(hasTiles) {
             anchorTag.innerHTML = _aveNextPageButtonText;
         }
         else {
-            _btn.innerHTML = _aveNextPageButtonText;
+            //_btn.innerHTML = _aveNextPageButtonText;
+            _btn.innerHTML = 'Gelesen'
         }
 
+        _btn.style.color = 'unset';
         _btn.style.backgroundColor = 'lime';
         _btn.style.borderRadius = '8px';
+        _btn.style.cursor = 'pointer';
 
-        if(!_nextBtn.classList.contains('a-disabled')){
-            _btn.setAttribute('class', 'a-last');
-            _btn.style.cursor = 'pointer';
-            _btn.addEventListener('click', () => {
-                markAllCurrentSiteProductsAsSeen(() => {
+        _btn.addEventListener('click', () => {
+            markAllCurrentSiteProductsAsSeen(() => {
+                if(!_nextBtn.classList.contains('a-disabled')){
                     window.location.href = (_nextBtnLink);
-                });
-            })
-        }
-
-        //const _btn_a = document.createElement('a');
-        //_btn_a.setAttribute('style', 'background-color: lime');
-        //_btn_a.innerHTML = 'Alle als gesehen markieren und Nächste<span class="a-letter-space"></span><span class="a-letter-space"></span><span class="larr">→</span>';
-
-        //_btn.appendChild(_btn_a);
+                }
+            });
+        })
+        
         _pageinationContainer.appendChild(_btn);
         _pageinationContainer.appendChild(_AveNextArrow);
     }

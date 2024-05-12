@@ -20,5 +20,8 @@
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/class_db_handler.js
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/class_product.js
 // @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/dev-main/VineExplorer.user.js
+// External Source
+// @require      https://raw.githubusercontent.com/eligrey/FileSaver.js/v2.0.4/src/FileSaver.js
+// @require      https://raw.githubusercontent.com/Christof121/VineFetchFix/main/fetchfix.js
 
 // ==/UserScript==
