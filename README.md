@@ -10,7 +10,9 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 ## How to install:
 
-* Install Tampermonkex: [https://www.tampermonkey.net/](https://www.tampermonkey.net/)
+* Install one of the Following Extensions
+* Tampermonkey: [https://www.tampermonkey.net/](https://www.tampermonkey.net/)
+Violentmonkey: [https://violentmonkey.github.io](https://violentmonkey.github.io)
 * Install Amazon Vine Explorer: [https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js](https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js)
 
 ## Notice:
@@ -31,7 +33,7 @@ We are aware of the issue and are working on a fix.
 ##### [09.05.2024] - Version 0.10.8.4
 * Added external Resource to Fix Amazon Loading Bug
 
-##### [09.05.2024] - Version 0.10.8.3
+##### [18.03.2024] - Version 0.10.8.3
 * Merged https://github.com/Amazon-Vine-Explorer/AmazonVineExplorer/pull/31 (Changed Resource to readable GitHub Source)
 
 ##### [18.03.2024] - Version 0.10.8.2
