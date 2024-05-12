@@ -12,7 +12,6 @@ This script enhances the experience on the Amazon Vine website. However, it does
 
 * Install one of the Following Extensions
 * Tampermonkey: [https://www.tampermonkey.net/](https://www.tampermonkey.net/)
-Violentmonkey: [https://violentmonkey.github.io](https://violentmonkey.github.io)
 * Install Amazon Vine Explorer: [https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js](https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js)
 
 ## Notice:
