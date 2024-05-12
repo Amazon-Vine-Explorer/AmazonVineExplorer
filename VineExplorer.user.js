@@ -74,59 +74,6 @@ unsafeWindow.ave = {
     event: ave_eventhandler,
 };
 
-const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATABASE_VERSION, (res, err) => {
-    if (err) {
-        console.error(`Somithing was going wrong while init database :'(`);
-        return;
-    } else {
-        let _execLock = false;
-        console.log('Lets Check where we are....');
-        if (SITE_IS_VINE){
-            console.log('We are on Amazon Vine'); // We are on the amazon vine site
-            if(SETTINGS.DarkMode){
-                waitForHtmlElmement('body', () => {
-                    injectDarkMode();
-                })
-            }
-            addAveSettingsTab();
-            addAVESettingsMenu();
-            waitForHtmlElmement('.vvp-details-btn', () => {
-                if (_execLock) return;
-                _execLock = true;
-                addBranding();
-                detectCurrentPageType();
-
-                let _tileCount = 0;
-                const _initialWaitForAllTiles = setInterval(() => {
-                    const _count = document.getElementsByClassName('vvp-details-btn').length // Buttons take a bit more time as tiles
-                    if (_count > _tileCount) {
-                        _tileCount = _count;
-                    } else {
-                        clearInterval(_initialWaitForAllTiles);
-                        init(true);
-                    }
-                }, 100);
-            });
-            waitForHtmlElmement('.vvp-no-offers-msg', () => { // Empty Page ?!?!
-                if (_execLock) return;
-                _execLock = true;
-                if(SETTINGS.DarkMode){
-                    waitForHtmlElmement('body', () => {
-                        injectDarkMode();
-                    })
-                }
-                addBranding();
-                init(false);
-            });
-        } else if (SITE_IS_SHOPPING) {
-            console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
-            _execLock = true;
-            addBranding(); // For now, olny show that the script is active
-        }
-    }
-});
-
-unsafeWindow.ave.database = database;
 
 let oldCountOfNewItems = 0;
 
