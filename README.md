@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog:
 
+##### [23.05.2024] - Version 0.10.8.7
+* Disabled the Manual Scan due to Bugs
+
 ##### [12.05.2024] - Version 0.10.8.7
 * Changed minimum required Symbols in Search Field from 3 to 2
 
