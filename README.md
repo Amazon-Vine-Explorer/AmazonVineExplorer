@@ -13,20 +13,20 @@ This script enhances the experience on the Amazon Vine website. However, it does
 * Install Tampermonkey: [https://www.tampermonkey.net/](https://www.tampermonkey.net/)
 * Install Amazon Vine Explorer: [https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js](https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js)
 
-## Notice:
-The Script has currently some issues processing the Tax Value.
-We are aware of the issue and are working on a fix.
+> [!NOTE]
+> The Script has currently some issues processing the Tax Value.
+> We are aware of the issue and are working on a fix.
 
 ## Changelog:
 <details open>
-  <summary>Click mich</summary>
+  <summary>Show Changelog</summary>
   
 <details open>
-<summary><b>[23.05.2024] - Version 0.10.8.8</b></summary>
+<summary>[23.05.2024] - Version 0.10.8.8</summary>
   * Disabled the Manual Scan due to Bugs
 </details>
 <details>
-<summary><b>[12.05.2024] - Version 0.10.8.7</b></summary>
+<summary>[12.05.2024] - Version 0.10.8.7</summary>
   * Changed minimum required Symbols in Search Field from 3 to 2
 </details>
 <details>
