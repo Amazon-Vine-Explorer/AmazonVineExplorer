@@ -20,10 +20,10 @@ We are aware of the issue and are working on a fix.
 ## Changelog:
 <details open>
   <summary>Click mich</summary>
-<deatails open>
+<details open>
 <summary>[23.05.2024] - Version 0.10.8.8</summary>
 * Disabled the Manual Scan due to Bugs
-</deatails>
+</details>
 <details>
 <summary>[12.05.2024] - Version 0.10.8.7</summary>
 * Changed minimum required Symbols in Search Field from 3 to 2
