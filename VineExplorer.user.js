@@ -88,6 +88,36 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                     injectDarkMode();
                 })
             }
+            let aveShareData = localStorage.getItem('ave-share-details');
+            console.log('[CS]',aveShareData);
+            if(aveShareData){
+                let _data = JSON.parse(aveShareData);
+                waitForHtmlElmement('body', () => {
+                    let aveShareElementTmp = document.createElement('div');
+                    aveShareElementTmp.style.display = "none";
+                    aveShareElementTmp.innerHTML = `
+                <span class="a-button a-button-primary vvp-details-btn" id="a-autoid-0">
+                <span class="a-button-inner">
+                <input data-asin="${_data.asin}" data-is-parent-asin="false" data-recommendation-id="${_data.recommendationId}" data-recommendation-type="VENDOR_TARGETED" class="a-button-input" type="submit" aria-labelledby="a-autoid-0-announce">
+                <span class="a-button-text" aria-hidden="true" id="a-autoid-0-announce">Weitere Details
+                </span>
+                </span>
+                </span>
+                `;
+                    document.body.appendChild(aveShareElementTmp);
+                    console.log('[CS]','Click');
+                    // Warte auf das nächste Ereigniszyklus, um sicherzustellen, dass das Element vollständig gerendert wurde
+                    setTimeout(() => {
+                        aveShareElementTmp.querySelector('input').click();
+                        setTimeout(() => {
+                            aveShareElementTmp.remove();
+                            localStorage.removeItem('ave-share-details');
+                        }, 200);
+                    }, 500);
+
+                })
+                //https://www.amazon.de/vine/api/recommendations/A1PA6795UKMFR9%23B0CW9Q5N53%23vine.enrollment.41aad59f-9ff3-49c4-a3e1-d3f3c43c2536/item/B0CW9Q5N53?imageSize=180
+            }
             addAveSettingsTab();
             addAVESettingsMenu();
             waitForHtmlElmement('.vvp-details-btn', () => {
@@ -121,7 +151,25 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
         } else if (SITE_IS_SHOPPING) {
             console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
             _execLock = true;
-            addBranding(); // For now, olny show that the script is active
+            waitForHtmlElmement('body', () => {
+                addBranding(); // For now, olny show that the script is active
+            });
+            useEnrollmentData() // Function to use enrollment data from URL
+
+            function useEnrollmentData() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const aveData = urlParams.get('ave-data');
+                if (aveData) {
+                    const enrollmentData = JSON.parse(decodeURIComponent(aveData));
+                    console.log('Enrollment data received:', enrollmentData);
+
+                    //Redirect to Vine and Open Item
+                    localStorage.setItem('ave-share-details', JSON.stringify(enrollmentData));
+
+                    window.open(`${window.location.origin}/vine/vine-items`, '_blank');
+
+                }
+            }
         }
     }
 });
@@ -309,7 +357,7 @@ function detectCurrentPageType(){
 
 async function parseTileData(tile) {
     return new Promise((resolve, reject) => {
-                if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
+        if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
 
         const _id = tile.getAttribute('data-recommendation-id');
 
@@ -547,6 +595,7 @@ async function createTileFromProduct(product, btnID, cb) {
             </div>
         `;
         _tile.prepend(createFavStarElement(product, btnID));
+        _tile.prepend(createShareElement(product, btnID));
         waitForHtmlElmement('.vvp-item-product-title-container', (_elem) => {
             insertHtmlElementAfter(_elem, createTaxInfoElement(product, btnID));
         }, _tile)
@@ -564,6 +613,65 @@ function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
     _favElement.textContent = '★';
     if (prod.isFav) _favElement.style.color = SETTINGS.FavStarColorChecked; // SETTINGS.FavStarColorChecked = Gelb;
     return _favElement;
+}
+
+function createShareElement(prod, index = Math.round(Math.random()* 10000)) {
+    const _shareElement = document.createElement('div');
+    _shareElement.setAttribute("id", `ave-p-share-${index || Math.round(Math.random() * 5000)}`);
+    _shareElement.classList.add('ave-share');
+    _shareElement.textContent = '🔗';
+    _shareElement.style.float = 'left';
+    _shareElement.style.display = 'flex';
+    _shareElement.style.margin = '0';
+    _shareElement.style.cursor = 'pointer';
+    return _shareElement;
+}
+
+function shareEventHandlerClick(event, _data){
+    if(_data.recommendation_id){
+
+        const newUrl = `${window.location.origin}/dp/${_data.asin}?ave-data=${encodeURIComponent(JSON.stringify({
+            asin: _data.asin,
+            recommendationId: _data.recommendation_id,
+            tax: _data.tax,
+        }))}`;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let queueParam = urlParams.get('queue');
+        let pageParam = urlParams.get('page');
+        if(pageParam == null){pageParam = 1}
+
+        switch(queueParam){
+            case "potluck":
+                queueParam = "Mein FSE"
+                break;
+            case "last_chance":
+                queueParam = "Verfügbar für Alle"
+                break;
+            case "encore":
+                queueParam = "Zusätzlihe Artikel"
+                break;
+            default:
+                queueParam = ""
+                break;
+
+        }
+
+        let shareText = `
+${queueParam}
+Seite: ${pageParam}
+${_data.tax}
+
+${newUrl}`
+
+
+        navigator.clipboard.writeText(shareText).then(() => {
+            console.log('Text wurde in die Zwischenablage kopiert.');
+        }).catch(err => {
+            console.error('Fehler beim Kopieren in die Zwischenablage: ', err);
+        });
+
+    }
 }
 
 function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
@@ -959,6 +1067,7 @@ function addTileEventhandlers(_currTile) {
     const _data = new Object()
     _data.asin = _btn.getAttribute('data-asin');
     _data.recommendation_id = _btn.getAttribute('data-recommendation-id');
+    _data.tax = _currTile.querySelector('[id^="ave-taxinfo-"] > span').textContent;
 
 
     const _childs = _btn.childNodes;
@@ -971,6 +1080,10 @@ function addTileEventhandlers(_currTile) {
 
     waitForHtmlElmement('.ave-favorite-star', (elem) => {
         elem.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
+    }, _currTile);
+
+    waitForHtmlElmement('.ave-share', (elem) => {
+        elem.addEventListener('click', (event) => {shareEventHandlerClick(event, _data)});
     }, _currTile);
 }
 
@@ -1840,9 +1953,9 @@ async function cleanUpDatabase(cb = () => {}) {
         }
 
         Promise.allSettled(_workersProms).then(() => {
-                if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
-                _dbCleanIcon.remove();
-                cb(true);
+            if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
+            _dbCleanIcon.remove();
+            cb(true);
         })
 
     });
@@ -2027,7 +2140,7 @@ function initBackgroundScan() {
                         break;
 
 
-                        
+
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                         database.getAll().then((products) => {
                             const _needUpdate = [];
@@ -2248,12 +2361,12 @@ function updateNewProductsBtn() {
             }
         }
         if (SETTINGS.EnableDesktopNotifikation && !_notifyed && _prodArrLength > oldCountOfNewItems){
-                if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
-                    oldCountOfNewItems = _prodArrLength;
-                    lastDesktopNotifikationTimestamp = unixTimeStamp();
+            if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
+                oldCountOfNewItems = _prodArrLength;
+                lastDesktopNotifikationTimestamp = unixTimeStamp();
 
-                    desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
-               }
+                desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
+            }
         }
     })
 }
@@ -2350,6 +2463,7 @@ function addStyleToTile(_currTile, _product) {
         // Update Timestamps
     }
     _currTile.prepend(createFavStarElement(_product));
+    _currTile.prepend(createShareElement(_product));
     // insertHtmlElementAfter((_currTile.getElementsByClassName('vvp-item-product-title-container')[0]), createTaxInfoElement(_product));
     waitForHtmlElmement('.vvp-item-product-title-container', (_elem) => {
         insertHtmlElementAfter(_elem, createTaxInfoElement(_product));
@@ -2558,7 +2672,7 @@ function init(hasTiles) {
                 }
             });
         })
-        
+
         _pageinationContainer.appendChild(_btn);
         _pageinationContainer.appendChild(_AveNextArrow);
     }
