@@ -664,12 +664,33 @@ ${_data.tax}
 
 ${newUrl}`
 
+        const cursorPosition = event.target.selectionStart;
+        const inputRect = event.target.getBoundingClientRect();
+
+        let avePopup = document.createElement('div');
+        avePopup.style.position = 'absolute';
+        avePopup.style.zIndex = '9999';
+        avePopup.style.padding = '5px'
+        avePopup.style.top = `${inputRect.top}px`;
+        avePopup.style.left = `${inputRect.left}px`;
+        avePopup.style.border = '5px solid black';
+        avePopup.style.borderRadius = '100vh';
+        avePopup.style.backgroundColor = 'white'
+        avePopup.style.transform = 'translate(-50%, -100%)'
 
         navigator.clipboard.writeText(shareText).then(() => {
+            avePopup.innerText = "Text wurde in die Zwischenablage kopiert."
             console.log('Text wurde in die Zwischenablage kopiert.');
         }).catch(err => {
+            avePopup.innerText = `Fehler beim Kopieren in die Zwischenablage: ${err}`
             console.error('Fehler beim Kopieren in die Zwischenablage: ', err);
         });
+
+        document.body.appendChild(avePopup);
+
+        setTimeout(()=> {
+            avePopup.remove();
+        }, 3500);
 
     }
 }
