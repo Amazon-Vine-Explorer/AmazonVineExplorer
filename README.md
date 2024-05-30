@@ -22,12 +22,12 @@ We are aware of the issue and are working on a fix.
   <summary>Click mich</summary>
   
 <details open>
-<summary>[23.05.2024] - Version 0.10.8.8</summary>
-* Disabled the Manual Scan due to Bugs
+<summary><b>[23.05.2024] - Version 0.10.8.8</b></summary>
+  * Disabled the Manual Scan due to Bugs
 </details>
 <details>
-<summary>[12.05.2024] - Version 0.10.8.7</summary>
-* Changed minimum required Symbols in Search Field from 3 to 2
+<summary><b>[12.05.2024] - Version 0.10.8.7</b></summary>
+  * Changed minimum required Symbols in Search Field from 3 to 2
 </details>
 <details>
 <summary>
