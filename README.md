@@ -16,8 +16,10 @@ This script enhances the experience on the Amazon Vine website. However, it does
 ## Notice:
 The Script has currently some issues processing the Tax Value.
 We are aware of the issue and are working on a fix.
+
+## Changelog:
 <details open>
-<summary>## Changelog:</summary>
+  <summary>Click mich</summary>
 <deatails open>
 <summary>##### [23.05.2024] - Version 0.10.8.8</summary>
 * Disabled the Manual Scan due to Bugs
