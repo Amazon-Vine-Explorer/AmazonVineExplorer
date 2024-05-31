@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Amazon Vine Explorer
+// @name         Amazon Vine Explorer - Share Preview
 // @namespace    http://tampermonkey.net/
 // @version      0.10.9
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
