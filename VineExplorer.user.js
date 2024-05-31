@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.8.8
+// @version      0.10.9
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -89,7 +89,6 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 })
             }
             let aveShareData = localStorage.getItem('ave-share-details');
-            console.log('[CS]',aveShareData);
             if(aveShareData){
                 let _data = JSON.parse(aveShareData);
                 waitForHtmlElmement('body', () => {
@@ -105,7 +104,6 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 </span>
                 `;
                     document.body.appendChild(aveShareElementTmp);
-                    console.log('[CS]','Click');
                     // Warte auf das nächste Ereigniszyklus, um sicherzustellen, dass das Element vollständig gerendert wurde
                     setTimeout(() => {
                         aveShareElementTmp.querySelector('input').click();
@@ -161,8 +159,6 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 const aveData = urlParams.get('ave-data');
                 if (aveData) {
                     const enrollmentData = JSON.parse(decodeURIComponent(aveData));
-                    console.log('Enrollment data received:', enrollmentData);
-
                     //Redirect to Vine and Open Item
                     localStorage.setItem('ave-share-details', JSON.stringify(enrollmentData));
 
@@ -680,10 +676,8 @@ ${newUrl}`
 
         navigator.clipboard.writeText(shareText).then(() => {
             avePopup.innerText = "Text wurde in die Zwischenablage kopiert."
-            console.log('Text wurde in die Zwischenablage kopiert.');
         }).catch(err => {
             avePopup.innerText = `Fehler beim Kopieren in die Zwischenablage: ${err}`
-            console.error('Fehler beim Kopieren in die Zwischenablage: ', err);
         });
 
         document.body.appendChild(avePopup);
