@@ -623,6 +623,7 @@ function createShareElement(prod, index = Math.round(Math.random()* 10000)) {
     return _shareElement;
 }
 
+let run = 0;
 function shareEventHandlerClick(event, _data){
     if(_data.recommendation_id){
 
@@ -663,16 +664,21 @@ ${newUrl}`
         const cursorPosition = event.target.selectionStart;
         const inputRect = event.target.getBoundingClientRect();
 
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
         let avePopup = document.createElement('div');
         avePopup.style.position = 'absolute';
         avePopup.style.zIndex = '9999';
         avePopup.style.padding = '5px'
-        avePopup.style.top = `${inputRect.top}px`;
-        avePopup.style.left = `${inputRect.left}px`;
+        avePopup.style.top = `${inputRect.top + scrollY}px`;
+        avePopup.style.left = `${inputRect.left + scrollX}px`;
         avePopup.style.border = '5px solid black';
         avePopup.style.borderRadius = '100vh';
         avePopup.style.backgroundColor = 'white'
         avePopup.style.transform = 'translate(-50%, -100%)'
+        avePopup.style.opacity = '0';
+        avePopup.style.transition = "opacity 0.2s ease-in-out";
 
         navigator.clipboard.writeText(shareText).then(() => {
             avePopup.innerText = "Text wurde in die Zwischenablage kopiert."
@@ -682,8 +688,16 @@ ${newUrl}`
 
         document.body.appendChild(avePopup);
 
+        // Timeout 0ms for the next Event Cycle -> Give time to render
         setTimeout(()=> {
-            avePopup.remove();
+                avePopup.style.opacity = '1';
+            }, 0);
+
+        setTimeout(()=> {
+            avePopup.style.opacity = '0';
+            setTimeout(()=> {
+                avePopup.remove();
+            }, 200);
         }, 3500);
 
     }
@@ -1034,7 +1048,7 @@ function favStarEventhandlerClick(event, data) {
 /**
  * Updates Style and Text of a Product Tile
  * @param {Product} prod
- * @returns 
+ * @returns
  */
 function updateTileStyle(prod) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
@@ -1067,23 +1081,25 @@ function initTileEventHandlers() {
     if (SETTINGS.DebugLevel > 10) console.log('Called inttTileEventHandlers() >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
     const _tiles = document.getElementsByClassName('vvp-item-tile');
     const _tileLength = _tiles.length;
-
     for(let i = 0; i < _tileLength; i++) {
         if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Tile ${i}`);
         const _currTile = _tiles[i];
+        //console.log('init');
         addTileEventhandlers(_currTile);
     }
 }
 
 function addTileEventhandlers(_currTile) {
+    console.log('Tile Event Handler');
     // const _favStar = _currTile.querySelector('.ave-favorite-star');
     const _btn = _currTile.querySelector('.vvp-details-btn input');
 
     const _data = new Object()
     _data.asin = _btn.getAttribute('data-asin');
     _data.recommendation_id = _btn.getAttribute('data-recommendation-id');
-    _data.tax = _currTile.querySelector('[id^="ave-taxinfo-"] > span').textContent;
-
+    waitForHtmlElmement('[id^="ave-taxinfo-"]', (elem) => {
+        _data.tax = _currTile.querySelector('[id^="ave-taxinfo-"] > span').textContent;
+    });
 
     const _childs = _btn.childNodes;
     _btn.addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
@@ -2574,17 +2590,16 @@ function init(hasTiles) {
                 addStyleToTile(_currTile, _product);
 
             }));
-
-            Promise.allSettled(_tilePorms).then(() => {
-                if(INIT_AUTO_SCAN) {
-                    startAutoScan();
-                } else if (AUTO_SCAN_IS_RUNNING) {
-                    handleAutoScan();
-                } else {
-                    completeDelayedInit();
-                }
-            })
         }
+        Promise.allSettled(_tilePorms).then(() => {
+            if(INIT_AUTO_SCAN) {
+                startAutoScan();
+            } else if (AUTO_SCAN_IS_RUNNING) {
+                handleAutoScan();
+            } else {
+                completeDelayedInit();
+            }
+        })
     } else {
         if (SETTINGS.DebugLevel > 10) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
     }
@@ -2692,4 +2707,3 @@ function init(hasTiles) {
         _pageinationContainer.appendChild(_AveNextArrow);
     }
 }
-
