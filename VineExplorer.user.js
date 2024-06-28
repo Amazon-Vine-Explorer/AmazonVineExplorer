@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.8.9
+// @version      0.10.9
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -88,6 +88,37 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                     injectDarkMode();
                 })
             }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const aveData = urlParams.get('vine-data');
+            let aveShareData = localStorage.getItem('ave-share-details');
+            if(aveData || aveShareData){
+                let _data = aveShareData ? JSON.parse(aveShareData) : (aveData ? JSON.parse(aveData) : null);
+                waitForHtmlElmement('body', () => {
+                    let aveShareElementTmp = document.createElement('div');
+                    aveShareElementTmp.style.display = "none";
+                    aveShareElementTmp.innerHTML = `
+                <span class="a-button a-button-primary vvp-details-btn" id="a-autoid-0">
+                <span class="a-button-inner">
+                <input data-asin="${_data.asin}" data-is-parent-asin="${_data.parentAsin}" data-recommendation-id="${_data.recommendationId}" data-recommendation-type="VENDOR_TARGETED" class="a-button-input" type="submit" aria-labelledby="a-autoid-0-announce">
+                <span class="a-button-text" aria-hidden="true" id="a-autoid-0-announce">Weitere Details
+                </span>
+                </span>
+                </span>
+                `;
+                    document.body.appendChild(aveShareElementTmp);
+                    // Warte auf das nächste Ereigniszyklus, um sicherzustellen, dass das Element vollständig gerendert wurde
+                    setTimeout(() => {
+                        aveShareElementTmp.querySelector('input').click();
+                        setTimeout(() => {
+                            //aveShareElementTmp.remove();
+                            localStorage.removeItem('ave-share-details');
+                        }, 200);
+                    }, 500);
+
+                })
+                //https://www.amazon.de/vine/api/recommendations/A1PA6795UKMFR9%23B0CW9Q5N53%23vine.enrollment.41aad59f-9ff3-49c4-a3e1-d3f3c43c2536/item/B0CW9Q5N53?imageSize=180
+            }
             addAveSettingsTab();
             addAVESettingsMenu();
             waitForHtmlElmement('.vvp-details-btn', () => {
@@ -121,7 +152,23 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
         } else if (SITE_IS_SHOPPING) {
             console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
             _execLock = true;
-            addBranding(); // For now, olny show that the script is active
+            waitForHtmlElmement('body', () => {
+                addBranding(); // For now, olny show that the script is active
+            });
+            useEnrollmentData() // Function to use enrollment data from URL
+
+            function useEnrollmentData() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const aveData = urlParams.get('vine-data');
+                if (aveData) {
+                    const enrollmentData = JSON.parse(decodeURIComponent(aveData));
+                    //Redirect to Vine and Open Item
+                    localStorage.setItem('ave-share-details', JSON.stringify(enrollmentData));
+
+                    window.open(`${window.location.origin}/vine/vine-items`, '_blank');
+
+                }
+            }
         }
     }
 });
@@ -309,7 +356,7 @@ function detectCurrentPageType(){
 
 async function parseTileData(tile) {
     return new Promise((resolve, reject) => {
-                if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
+        if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
 
         const _id = tile.getAttribute('data-recommendation-id');
 
@@ -547,6 +594,7 @@ async function createTileFromProduct(product, btnID, cb) {
             </div>
         `;
         _tile.prepend(createFavStarElement(product, btnID));
+        _tile.prepend(createShareElement(product, btnID));
         waitForHtmlElmement('.vvp-item-product-title-container', (_elem) => {
             insertHtmlElementAfter(_elem, createTaxInfoElement(product, btnID));
         }, _tile)
@@ -566,6 +614,106 @@ function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
     return _favElement;
 }
 
+function createShareElement(prod, index = Math.round(Math.random()* 10000)) {
+    const _shareElement = document.createElement('div');
+    _shareElement.setAttribute("id", `ave-p-share-${index || Math.round(Math.random() * 5000)}`);
+    _shareElement.classList.add('ave-share');
+    _shareElement.textContent = '🔗';
+    _shareElement.style.float = 'left';
+    _shareElement.style.display = 'flex';
+    _shareElement.style.margin = '0';
+    _shareElement.style.cursor = 'pointer';
+    return _shareElement;
+}
+
+let run = 0;
+function shareEventHandlerClick(event, _data){
+    if(_data.recommendation_id){
+        console.log("[AVE]",_data);
+        const newUrl = `${window.location.origin}/dp/${_data.asin}?vine-data=${encodeURIComponent(JSON.stringify({
+            asin: _data.asin,
+            parentAsin: _data.parent_asin,
+            recommendationId: _data.recommendation_id,
+            tax: _data.tax,
+        }))}`;
+
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let queueParam = currentMainPage;
+        //let queueParam = urlParams.get('queue');
+        let pageParam = urlParams.get('page');
+        if(pageParam == null){pageParam = 1}
+        let page = ""
+
+        switch(queueParam){
+            case PAGETYPE.OROGINAL_POTLUCK:
+                queueParam = "Mein FSE"
+                page = `Seite: ${pageParam}`
+                break;
+            case PAGETYPE.ORIGINAL_LAST_CHANCE:
+                queueParam = "Verfügbar für Alle"
+                page = `Seite: ${pageParam}`
+                break;
+            case PAGETYPE.ORIGINAL_SELLER:
+                queueParam = "Zusätzliche Artikel"
+                page = `Seite: ${pageParam}`
+                break;
+            default:
+                queueParam = ""
+                page = ``
+                break;
+
+        }
+
+        let shareText = `
+${queueParam}
+${page}
+${_data.tax}
+
+${newUrl}`
+
+        const cursorPosition = event.target.selectionStart;
+        const inputRect = event.target.getBoundingClientRect();
+
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+        let avePopup = document.createElement('div');
+        avePopup.style.position = 'absolute';
+        avePopup.style.zIndex = '9999';
+        avePopup.style.padding = '5px'
+        avePopup.style.top = `${inputRect.top + scrollY}px`;
+        avePopup.style.left = `${inputRect.left + scrollX}px`;
+        avePopup.style.border = '5px solid black';
+        avePopup.style.borderRadius = '100vh';
+        avePopup.style.backgroundColor = 'white'
+        avePopup.style.transform = 'translate(-50%, -100%)'
+        avePopup.style.opacity = '0';
+        avePopup.style.transition = "opacity 0.2s ease-in-out";
+
+        navigator.clipboard.writeText(shareText).then(() => {
+            avePopup.innerText = "Text wurde in die Zwischenablage kopiert."
+        }).catch(err => {
+            avePopup.innerText = `Fehler beim Kopieren in die Zwischenablage: ${err}`
+        });
+
+        document.body.appendChild(avePopup);
+
+        // Timeout 0ms for the next Event Cycle -> Give time to render
+        setTimeout(()=> {
+                avePopup.style.opacity = '1';
+            }, 0);
+
+        setTimeout(()=> {
+            avePopup.style.opacity = '0';
+            setTimeout(()=> {
+                avePopup.remove();
+            }, 200);
+        }, 3500);
+
+    }
+}
+
 function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     console.log('Called createTaxInfo()');
     let _currencySymbol = '';
@@ -580,7 +728,7 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     _taxElement_span.classList.add('ave-taxinfo-text');
     const _prize = prod.data_estimated_tax_prize;
     console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
-    _taxElement_span.innerText = `Tax Prize: ${(typeof(_prize) == 'number') ? _prize :'--.--'} ${_currencySymbol}`;
+    _taxElement_span.innerText = `Tax Price: ${(typeof(_prize) == 'number') ? _prize :'--.--'} ${_currencySymbol}`;
     console.log('createTaxInfo(): After innerText');
 
     _taxElement.appendChild(_taxElement_span);
@@ -911,7 +1059,7 @@ function favStarEventhandlerClick(event, data) {
 /**
  * Updates Style and Text of a Product Tile
  * @param {Product} prod
- * @returns 
+ * @returns
  */
 function updateTileStyle(prod) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called updateTileStyle(${JSON.stringify(prod, null, 4)})`);
@@ -944,22 +1092,26 @@ function initTileEventHandlers() {
     if (SETTINGS.DebugLevel > 10) console.log('Called inttTileEventHandlers() >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
     const _tiles = document.getElementsByClassName('vvp-item-tile');
     const _tileLength = _tiles.length;
-
     for(let i = 0; i < _tileLength; i++) {
         if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Tile ${i}`);
         const _currTile = _tiles[i];
+        //console.log('init');
         addTileEventhandlers(_currTile);
     }
 }
 
 function addTileEventhandlers(_currTile) {
+    console.log('Tile Event Handler');
     // const _favStar = _currTile.querySelector('.ave-favorite-star');
     const _btn = _currTile.querySelector('.vvp-details-btn input');
 
     const _data = new Object()
     _data.asin = _btn.getAttribute('data-asin');
+    _data.parent_asin = _btn.getAttribute('data-is-parent-asin');
     _data.recommendation_id = _btn.getAttribute('data-recommendation-id');
-
+    waitForHtmlElmement('[id^="ave-taxinfo-"]', (elem) => {
+        _data.tax = _currTile.querySelector('[id^="ave-taxinfo-"] > span').textContent;
+    });
 
     const _childs = _btn.childNodes;
     _btn.addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
@@ -971,6 +1123,10 @@ function addTileEventhandlers(_currTile) {
 
     waitForHtmlElmement('.ave-favorite-star', (elem) => {
         elem.addEventListener('click', (event) => {favStarEventhandlerClick(event, _data)});
+    }, _currTile);
+
+    waitForHtmlElmement('.ave-share', (elem) => {
+        elem.addEventListener('click', (event) => {shareEventHandlerClick(event, _data)});
     }, _currTile);
 }
 
@@ -1840,9 +1996,9 @@ async function cleanUpDatabase(cb = () => {}) {
         }
 
         Promise.allSettled(_workersProms).then(() => {
-                if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
-                _dbCleanIcon.remove();
-                cb(true);
+            if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
+            _dbCleanIcon.remove();
+            cb(true);
         })
 
     });
@@ -2027,7 +2183,7 @@ function initBackgroundScan() {
                         break;
 
 
-                        
+
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                         database.getAll().then((products) => {
                             const _needUpdate = [];
@@ -2248,12 +2404,12 @@ function updateNewProductsBtn() {
             }
         }
         if (SETTINGS.EnableDesktopNotifikation && !_notifyed && _prodArrLength > oldCountOfNewItems){
-                if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
-                    oldCountOfNewItems = _prodArrLength;
-                    lastDesktopNotifikationTimestamp = unixTimeStamp();
+            if (unixTimeStamp() - lastDesktopNotifikationTimestamp >= SETTINGS.DesktopNotifikationDelay) {
+                oldCountOfNewItems = _prodArrLength;
+                lastDesktopNotifikationTimestamp = unixTimeStamp();
 
-                    desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
-               }
+                desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}` , `Es wurden ${_prodArrLength} neue Vine Produkte gefunden`);
+            }
         }
     })
 }
@@ -2350,6 +2506,7 @@ function addStyleToTile(_currTile, _product) {
         // Update Timestamps
     }
     _currTile.prepend(createFavStarElement(_product));
+    _currTile.prepend(createShareElement(_product));
     // insertHtmlElementAfter((_currTile.getElementsByClassName('vvp-item-product-title-container')[0]), createTaxInfoElement(_product));
     waitForHtmlElmement('.vvp-item-product-title-container', (_elem) => {
         insertHtmlElementAfter(_elem, createTaxInfoElement(_product));
@@ -2445,17 +2602,16 @@ function init(hasTiles) {
                 addStyleToTile(_currTile, _product);
 
             }));
-
-            Promise.allSettled(_tilePorms).then(() => {
-                if(INIT_AUTO_SCAN) {
-                    startAutoScan();
-                } else if (AUTO_SCAN_IS_RUNNING) {
-                    handleAutoScan();
-                } else {
-                    completeDelayedInit();
-                }
-            })
         }
+        Promise.allSettled(_tilePorms).then(() => {
+            if(INIT_AUTO_SCAN) {
+                startAutoScan();
+            } else if (AUTO_SCAN_IS_RUNNING) {
+                handleAutoScan();
+            } else {
+                completeDelayedInit();
+            }
+        })
     } else {
         if (SETTINGS.DebugLevel > 10) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
     }
@@ -2558,9 +2714,8 @@ function init(hasTiles) {
                 }
             });
         })
-        
+
         _pageinationContainer.appendChild(_btn);
         _pageinationContainer.appendChild(_AveNextArrow);
     }
 }
-
