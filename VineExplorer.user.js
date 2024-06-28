@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Amazon Vine Explorer - Share Preview
+// @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
 // @version      0.10.9
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
@@ -88,16 +88,19 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                     injectDarkMode();
                 })
             }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const aveData = urlParams.get('vine-data');
             let aveShareData = localStorage.getItem('ave-share-details');
-            if(aveShareData){
-                let _data = JSON.parse(aveShareData);
+            if(aveData || aveShareData){
+                let _data = aveShareData ? JSON.parse(aveShareData) : (aveData ? JSON.parse(aveData) : null);
                 waitForHtmlElmement('body', () => {
                     let aveShareElementTmp = document.createElement('div');
                     aveShareElementTmp.style.display = "none";
                     aveShareElementTmp.innerHTML = `
                 <span class="a-button a-button-primary vvp-details-btn" id="a-autoid-0">
                 <span class="a-button-inner">
-                <input data-asin="${_data.asin}" data-is-parent-asin="false" data-recommendation-id="${_data.recommendationId}" data-recommendation-type="VENDOR_TARGETED" class="a-button-input" type="submit" aria-labelledby="a-autoid-0-announce">
+                <input data-asin="${_data.asin}" data-is-parent-asin="${_data.parentAsin}" data-recommendation-id="${_data.recommendationId}" data-recommendation-type="VENDOR_TARGETED" class="a-button-input" type="submit" aria-labelledby="a-autoid-0-announce">
                 <span class="a-button-text" aria-hidden="true" id="a-autoid-0-announce">Weitere Details
                 </span>
                 </span>
@@ -108,7 +111,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                     setTimeout(() => {
                         aveShareElementTmp.querySelector('input').click();
                         setTimeout(() => {
-                            aveShareElementTmp.remove();
+                            //aveShareElementTmp.remove();
                             localStorage.removeItem('ave-share-details');
                         }, 200);
                     }, 500);
@@ -626,37 +629,45 @@ function createShareElement(prod, index = Math.round(Math.random()* 10000)) {
 let run = 0;
 function shareEventHandlerClick(event, _data){
     if(_data.recommendation_id){
-
+        console.log("[AVE]",_data);
         const newUrl = `${window.location.origin}/dp/${_data.asin}?vine-data=${encodeURIComponent(JSON.stringify({
             asin: _data.asin,
+            parentAsin: _data.parent_asin,
             recommendationId: _data.recommendation_id,
             tax: _data.tax,
         }))}`;
 
+
         const urlParams = new URLSearchParams(window.location.search);
-        let queueParam = urlParams.get('queue');
+        let queueParam = currentMainPage;
+        //let queueParam = urlParams.get('queue');
         let pageParam = urlParams.get('page');
         if(pageParam == null){pageParam = 1}
+        let page = ""
 
         switch(queueParam){
-            case "potluck":
+            case PAGETYPE.OROGINAL_POTLUCK:
                 queueParam = "Mein FSE"
+                page = `Seite: ${pageParam}`
                 break;
-            case "last_chance":
+            case PAGETYPE.ORIGINAL_LAST_CHANCE:
                 queueParam = "Verfügbar für Alle"
+                page = `Seite: ${pageParam}`
                 break;
-            case "encore":
-                queueParam = "Zusätzlihe Artikel"
+            case PAGETYPE.ORIGINAL_SELLER:
+                queueParam = "Zusätzliche Artikel"
+                page = `Seite: ${pageParam}`
                 break;
             default:
                 queueParam = ""
+                page = ``
                 break;
 
         }
 
         let shareText = `
 ${queueParam}
-Seite: ${pageParam}
+${page}
 ${_data.tax}
 
 ${newUrl}`
@@ -1096,6 +1107,7 @@ function addTileEventhandlers(_currTile) {
 
     const _data = new Object()
     _data.asin = _btn.getAttribute('data-asin');
+    _data.parent_asin = _btn.getAttribute('data-is-parent-asin');
     _data.recommendation_id = _btn.getAttribute('data-recommendation-id');
     waitForHtmlElmement('[id^="ave-taxinfo-"]', (elem) => {
         _data.tax = _currTile.querySelector('[id^="ave-taxinfo-"] > span').textContent;
