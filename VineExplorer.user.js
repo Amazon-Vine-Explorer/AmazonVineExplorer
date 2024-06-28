@@ -156,7 +156,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
 
             function useEnrollmentData() {
                 const urlParams = new URLSearchParams(window.location.search);
-                const aveData = urlParams.get('ave-data');
+                const aveData = urlParams.get('vine-data');
                 if (aveData) {
                     const enrollmentData = JSON.parse(decodeURIComponent(aveData));
                     //Redirect to Vine and Open Item
@@ -627,7 +627,7 @@ let run = 0;
 function shareEventHandlerClick(event, _data){
     if(_data.recommendation_id){
 
-        const newUrl = `${window.location.origin}/dp/${_data.asin}?ave-data=${encodeURIComponent(JSON.stringify({
+        const newUrl = `${window.location.origin}/dp/${_data.asin}?vine-data=${encodeURIComponent(JSON.stringify({
             asin: _data.asin,
             recommendationId: _data.recommendation_id,
             tax: _data.tax,
