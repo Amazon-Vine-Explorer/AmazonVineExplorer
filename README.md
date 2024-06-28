@@ -19,6 +19,12 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog:
 
+##### [28.06.2024] - Version 0.10.9.0.1
+* Little Bugfix to work with an external Partner
+
+##### [28.06.2024] - Version 0.10.9
+* Added ability to Share Vine Items, that opens directly on Vine
+
 ##### [23.05.2024] - Version 0.10.8.8
 * Disabled the Manual Scan due to Bugs
 
