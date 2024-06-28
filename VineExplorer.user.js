@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.10.9
+// @version      0.10.9.0.1
 // @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -100,7 +100,7 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                     aveShareElementTmp.innerHTML = `
                 <span class="a-button a-button-primary vvp-details-btn" id="a-autoid-0">
                 <span class="a-button-inner">
-                <input data-asin="${_data.asin}" data-is-parent-asin="${_data.parentAsin}" data-recommendation-id="${_data.recommendationId}" data-recommendation-type="VENDOR_TARGETED" class="a-button-input" type="submit" aria-labelledby="a-autoid-0-announce">
+                <input data-asin="${_data.asin}" data-is-parent-asin="${_data.isParentAsin}" data-recommendation-id="${_data.recommendationId}" data-recommendation-type="VENDOR_TARGETED" class="a-button-input" type="submit" aria-labelledby="a-autoid-0-announce">
                 <span class="a-button-text" aria-hidden="true" id="a-autoid-0-announce">Weitere Details
                 </span>
                 </span>
@@ -632,7 +632,7 @@ function shareEventHandlerClick(event, _data){
         console.log("[AVE]",_data);
         const newUrl = `${window.location.origin}/dp/${_data.asin}?vine-data=${encodeURIComponent(JSON.stringify({
             asin: _data.asin,
-            parentAsin: _data.parent_asin,
+            isParentAsin: _data.parent_asin,
             recommendationId: _data.recommendation_id,
             tax: _data.tax,
         }))}`;
