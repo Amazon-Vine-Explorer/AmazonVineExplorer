@@ -2385,7 +2385,7 @@ function updateNewProductsBtn() {
             const _configKeyWords = SETTINGS.DesktopNotifikationKeywords;
 
             // see https://stackoverflow.com/questions/874709/converting-user-input-string-to-regular-expression
-            var stringToRegex = (s, m) => (m = s.match(/^([\/~@;%#'])(.*?)\1([gimsuy]*)$/)) ? new RegExp(m[2], m[3].split('').filter((i, p, s) => s.indexOf(i) === p).join('')) : new RegExp(s);
+            var stringToRegex = (s, m) => (m = s.match(/^\/(.*?)\/([gimsuy]*)$/)) ? new RegExp(m[1], m[2].split('').filter((i, p, s) => s.indexOf(i) === p).join('')) : undefined;
 
             for (let i = 0; i < _prodArrLength; i++) {
                 const _prod = prodArr[i];
@@ -2397,17 +2397,11 @@ function updateNewProductsBtn() {
                 for (let j = 0; j < _configkeyWordsLength; j++) {
                     const _currKey = _configKeyWords[j].toLowerCase();
                     let _keyFound = false;
-                    if (_currKey.startsWith('/')) {
+                    const _regExp = stringToRegex(_currKey);
+                    if (_regExp !== undefined) {
                         if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Regular Expression: ${_currKey}`);
-
-                        try {
-                            const _regExp = stringToRegex(_currKey);
-                            _keyFound = _regExp.test(_descFull);
-                            if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Regular Expression: ${_regExp}: ${_keyFound}`);
-                        } catch (error) {
-                            console.error('Error evaluating regular expression:', error);
-                            _keyFound = false;
-                        }
+                       _keyFound = _regExp.test(_descFull);
+                        if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Regular Expression: ${_regExp}: ${_keyFound}`);
                     }
                     else {
                         if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Keyword: ${_currKey}`);
