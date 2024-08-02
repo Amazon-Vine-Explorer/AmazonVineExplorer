@@ -2380,10 +2380,12 @@ function updateNewProductsBtn() {
         let _notifyed = false;
         if (SETTINGS.EnableDesktopNotifikation && SETTINGS.DesktopNotifikationKeywords?.length > 0) {
 
-            if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Insige IF`);
+            if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Inside IF`);
 
             const _configKeyWords = SETTINGS.DesktopNotifikationKeywords;
 
+            // see https://stackoverflow.com/questions/874709/converting-user-input-string-to-regular-expression
+            var stringToRegex = (s, m) => (m = s.match(/^([\/~@;%#'])(.*?)\1([gimsuy]*)$/)) ? new RegExp(m[2], m[3].split('').filter((i, p, s) => s.indexOf(i) === p).join('')) : new RegExp(s);
 
             for (let i = 0; i < _prodArrLength; i++) {
                 const _prod = prodArr[i];
@@ -2394,12 +2396,28 @@ function updateNewProductsBtn() {
 
                 for (let j = 0; j < _configkeyWordsLength; j++) {
                     const _currKey = _configKeyWords[j].toLowerCase();
-                    if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Deescription for Keyword: ${_currKey}`);
-                    if (_descFull.includes(_currKey)) {
+                    let _keyFound = false;
+                    if (_currKey.startsWith('/')) {
+                        if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Regular Expression: ${_currKey}`);
+
+                        try {
+                            const _regExp = stringToRegex(_currKey);
+                            _keyFound = _regExp.test(_descFull);
+                            if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Regular Expression: ${_regExp}: ${_keyFound}`);
+                        } catch (error) {
+                            console.error('Error evaluating regular expression:', error);
+                            _keyFound = false;
+                        }
+                    }
+                    else {
+                        if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Keyword: ${_currKey}`);
+                        _keyFound = _descFull.includes(_currKey);
+                    }
+                    if (_keyFound) {
                         desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
                         _notifyed = true;
+                        break;
                     }
-                    break;
                 }
             }
         }
