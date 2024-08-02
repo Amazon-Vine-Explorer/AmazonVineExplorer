@@ -2399,9 +2399,8 @@ function updateNewProductsBtn() {
                     let _keyFound = false;
                     const _regExp = stringToRegex(_currKey);
                     if (_regExp !== undefined) {
-                        if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Regular Expression: ${_currKey}`);
+                        if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Regular Expression: ${_regExp}`);
                        _keyFound = _regExp.test(_descFull);
-                        if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Regular Expression: ${_regExp}: ${_keyFound}`);
                     }
                     else {
                         if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Keyword: ${_currKey}`);
