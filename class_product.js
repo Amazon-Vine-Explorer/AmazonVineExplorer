@@ -21,6 +21,7 @@ class Product {
     real_prize;
     isFav = false;
     isNew = true;
+    isNotified = false;
     gotRemoved = false;
     ts_firstSeen = unixTimeStamp();
     ts_lastSeen = unixTimeStamp();

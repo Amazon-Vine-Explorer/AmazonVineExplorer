@@ -2391,7 +2391,12 @@ function updateNewProductsBtn() {
                 const _prod = prodArr[i];
                 const _descFull = _prod.description_full.toLowerCase();
 
-                if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Deescription: ${_descFull} for keys: `, _configKeyWords);
+                if (_prod.isNotified){
+                    if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Skipping Product which was already notified: ${_descFull}`);
+                    continue;
+                }
+
+                if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description: ${_descFull} for keys: `, _configKeyWords);
                 const _configkeyWordsLength = _configKeyWords.length;
 
                 for (let j = 0; j < _configkeyWordsLength; j++) {
@@ -2409,6 +2414,8 @@ function updateNewProductsBtn() {
                     if (_keyFound) {
                         desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
                         _notifyed = true;
+                        _prod.isNotified = true;
+                        database.update(_prod);
                         break;
                     }
                 }
