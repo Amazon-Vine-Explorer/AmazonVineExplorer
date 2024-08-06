@@ -24,7 +24,7 @@ const PAGE_LOAD_TIMESTAMP = Date.now();
 // Obsolete sobald die Datenbank über Tampermonkey läuft
 const DATABASE_NAME = 'VineVoiceExplorer';
 const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 
 // Make some things accessable from console
 unsafeWindow.ave = {};

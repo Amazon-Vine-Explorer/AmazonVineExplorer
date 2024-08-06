@@ -33,73 +33,65 @@ class DB_HANDLER {
         return new Promise((resolve, reject) => {
             const _request = indexedDB.open(this.#dbName, this.#version);
             const _storeName = this.#storeName; // private class variable is not accessable inside _request functions
-                console.log('IndexedDB init()');
-                console.log(_request);
 
-                _request.onerror = (event) => {
-                    reject(event);
-                    console.error(event);
-                    throw new Error('Indexed DB has an Error');
+            console.log('IndexedDB init()');
+            console.log(_request);
+
+            _request.onerror = (event) => {
+                reject(event);
+                console.error(event);
+                throw new Error('Indexed DB has an Error');
+            }
+
+            _request.onblocked = (event) => {
+                reject(event);
+                console.warn(event);
+                throw new Error('IndexedDB is blocked');
+            }
+
+            _request.onsuccess = (event) => {
+                this.#db = event.target.result;
+                resolve(event.target.result);
+            }
+
+            _request.onupgradeneeded = (event) => {
+                console.log(`DB_HANDLER: Database has to be created or Updated`);
+                console.log(JSON.stringify(event, null, 4));
+                console.log(event);
+
+                const _req = event.target;
+                const _db = _req.result;
+                let _store;
+
+                if (!_db.objectStoreNames.contains(_storeName)) {
+                    if (SETTINGS.DebugLevel > 10) console.log('Database needs to be created...');
+                    _store = _db.createObjectStore(_storeName, { keyPath: 'id' });
+                } else {
+                    // Get a reference to the implicit transaction for this request
+                    // @type IDBTransaction
+                    const _transaction = _req.transaction;
+
+                    // Now, get a reference to the existing object store
+                    // @type IDBObjectStore
+                    _store = _transaction.objectStore(_storeName);
                 }
 
-                _request.onblocked = (event) => {
-                    reject(event);
-                    console.warn(event);
-                    throw new Error('IndexedDB is blocked');
+                console.log(`Updating Database from Version ${event.oldVersion} to ${event.newVersion}`);
+
+                if (!_store.indexNames.contains('isNew')) {
+                    _store.createIndex('isNew', 'isNew', { unique: false });
                 }
 
-                _request.onsuccess = (event) => {
-                    this.#db = event.target.result;
-                    resolve(event.target.result);
+                if (!_store.indexNames.contains('isFav')) {
+                    _store.createIndex('isFav', 'isFav', { unique: false });
                 }
 
-                _request.onupgradeneeded = (event) => {
-                    console.log(`DB_HANDLER: Database has to be created or Updated`);
-                    console.log(JSON.stringify(event, null, 4));
-                    console.log(event);
-
-                    const _req = event.target;
-                    const _db = _req.result;
-
-                    if (!_db.objectStoreNames.contains(_storeName)) {
-                        if (SETTINGS.DebugLevel > 10) console.log('Database needs to be created...');
-                        const _storeOS = _db.createObjectStore(_storeName, { keyPath: 'id' });
-                        // _storeOS.createIndex('isNew', 'isNew', { unique: false });
-                        // _storeOS.createIndex('isFav', 'isFav', { unique: false });
-                        _storeOS.createIndex('data_asin', 'data_asin', { unique: true });
-                    } else {
-                        // Get a reference to the implicit transaction for this request
-                        // @type IDBTransaction
-                        const _transaction = _req.transaction;
-
-                        // Now, get a reference to the existing object store
-                        // @type IDBObjectStore
-                        const _store = _transaction.objectStore(_storeName);
-
-                        console.log(`Updating Database from Version ${event.oldVersion} to ${event.newVersion}`);
-                        switch(event.oldVersion) { // existing db version
-                            //case 0: // We had to Create the DB, but this case should never happen
-                            case 1: { // Update DB from Verion 1 to 2
-                                // Add index for New and Favorites
-                                // _store.createIndex('data_asin', 'data_asin');
-                                break;
-                            }
-                            case 2: {
-                                if (this.#checkForDuplicatedASIN()) {
-                                    _storeOS.createIndex('data_asin', 'data_asin', { unique: true });
-                                }   
-                                break;
-                            }
-                            case 3: {
-                                //  _store.createIndex('data_asin', 'data_asin');
-                                break;
-                            }
-                            default: {
-                                console.error(`There was any Unknown Error while Updating Database from ${event.oldVersion} to ${event.newVersion}`);
-                            }
-                        }
-                    }
-                };
+                if (!_store.indexNames.contains('data_asin')) {
+                    if (this.#checkForDuplicatedASIN()) {
+                        _store.createIndex('data_asin', 'data_asin', { unique: true });
+                    }   
+                }
+            }
         })
     };
 
@@ -305,22 +297,20 @@ class DB_HANDLER {
     async getNewEntries(){
         return new Promise((resolve, reject) => {
             const _result = [];
-            const _request = this.#getStore().openCursor();
+            const _onlyTrue = IDBKeyRange.only(1); 
+            const _request = this.#getStore().index('isNew').openCursor(_onlyTrue);
 
             _request.onsuccess = (event) => {
                 const _cursor = event.target.result;
 
                 if (_cursor) {
-                    if (_cursor.value.isNew) {
-                        _result.push(_cursor.value);
-                    }
-
+                    _result.push(_cursor.value);
                     _cursor.continue();
                 } else { // No more entries
                     resolve(_result);
                 }
             };
-            _request.onerror = (event) => {reject(`DB_HANDLER.getNewEntrys(): ${event.target.error.name}`);};
+            _request.onerror = (event) => {reject(`DB_HANDLER.getNewEntries(): ${event.target.error.name}`);};
         })
     };
 
@@ -332,22 +322,20 @@ class DB_HANDLER {
     async getFavEntries(cb){
         return new Promise((resolve, reject) => {
             const _result = [];
-            const _request = this.#getStore().openCursor();
+            const _onlyTrue = IDBKeyRange.only(1); 
+            const _request = this.#getStore().index('isFav').openCursor(_onlyTrue);
 
             _request.onsuccess = (event) => {
                 const _cursor = event.target.result;
 
                 if (_cursor) {
-                    if (_cursor.value.isFav) {
-                        _result.push(_cursor.value);
-                    }
-
+                    _result.push(_cursor.value);
                     _cursor.continue();
                 } else { // No more entries
                     resolve(_result);
                 }
             };
-            _request.onerror = (event) => {reject(`DB_HANDLER.getNewEntrys(): ${event.target.error.name}`);};
+            _request.onerror = (event) => {reject(`DB_HANDLER.getFavEntries(): ${event.target.error.name}`);};
         })
     };
     

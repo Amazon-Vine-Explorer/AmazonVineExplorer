@@ -47,8 +47,8 @@ class Product {
     data_img_alt;
     data_asin;
 
-    isFav = false;
-    isNew = true;
+    isFav = 0;
+    isNew = 1;
     gotRemoved = false;
     ts_firstSeen = linuxTimeStamp();
     ts_lastSeen = linuxTimeStamp();
@@ -455,8 +455,8 @@ function convertProduct(vvProd) {
     _newProduct.data_img_url = vvProd.BildURL;
     _newProduct.data_img_alt = '';
     _newProduct.data_asin = _extractedData.dataAsin;
-    _newProduct.isFav = vvProd.Favorit;
-    _newProduct.isNew = false;
+    _newProduct.isFav = vvProd.Favorit ? 1 : 0;
+    _newProduct.isNew = 0;
     _newProduct.ts_firstSeen = _timeStamp;
     _newProduct.ts_lastSeen = _timeStamp;
     _newProduct.generated_short = true;
@@ -476,7 +476,7 @@ function updateEntrys(_machingKeys, cb) {
         const _currKey = _machingKeys[i];
         vv_database.get(_currKey, (_vvProd) => {
             database.get(_currKey, (_veProd) => {
-                if (!_veProd.isFav) _veProd.isFav = (_vvProd.Favorit) ? true : false;
+                if (!_veProd.isFav) _veProd.isFav = (_vvProd.Favorit) ? 1 : 0;
                 database.update(_veProd, () => {
                     _returned++;
                     consoleReplace(/Updating maching Products.+/, `Updating maching Products (${_returned}/${_machingKeys.length})`);

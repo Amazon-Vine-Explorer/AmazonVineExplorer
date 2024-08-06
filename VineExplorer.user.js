@@ -473,7 +473,7 @@ function addLeftSideButtons(forceClean) {
                 const _prodsArryLength = prodsArr.length;
                 for (let i = 0; i < _prodsArryLength; i++) {
                     const _currProd = prodsArr[i];
-                    _currProd.isNew = false;
+                    _currProd.isNew = 0;
                     database.update(_currProd);
                 }
             })
@@ -532,7 +532,7 @@ function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
         }
         for (let i = 0; i < _prodsLength; i++) {
             const _currProd = prods[i];
-            _currProd.isNew = false;
+            _currProd.isNew = 0;
             database.update(_currProd, ()=> {
                 if (SETTINGS.DebugLevel > 10) console.log(`markAllCurrentDatabaseProductsAsSeen() - Updated ${_currProd.id}`);
                 _returned++
@@ -1030,7 +1030,7 @@ function btnEventhandlerClick(event, data) {
         database.get(data.recommendation_id).then(async (prod) => {
             if (SETTINGS.DebugLevel > 10) console.log(`btnEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
-                prod.isNew = false;
+                prod.isNew = 0;
                 requestProductDetails(prod).then((_newProd) => {
                     database.update(_newProd || prod).then( () => {
                         updateTileStyle(_newProd || prod);
@@ -1047,7 +1047,7 @@ function favStarEventhandlerClick(event, data) {
         database.get(data.recommendation_id).then((prod) => {
             if (SETTINGS.DebugLevel > 10) console.log(`favStarEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
-                prod.isFav = !prod.isFav;
+                prod.isFav = 1 - prod.isFav;
                 database.update(prod).then(() => {
                     updateTileStyle(prod);
                 });
@@ -2380,26 +2380,44 @@ function updateNewProductsBtn() {
         let _notifyed = false;
         if (SETTINGS.EnableDesktopNotifikation && SETTINGS.DesktopNotifikationKeywords?.length > 0) {
 
-            if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Insige IF`);
+            if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Inside IF`);
 
             const _configKeyWords = SETTINGS.DesktopNotifikationKeywords;
 
+            // see https://stackoverflow.com/questions/874709/converting-user-input-string-to-regular-expression
+            var stringToRegex = (s, m) => (m = s.match(/^\/(.*?)\/([gimsuy]*)$/)) ? new RegExp(m[1], m[2].split('').filter((i, p, s) => s.indexOf(i) === p).join('')) : undefined;
 
             for (let i = 0; i < _prodArrLength; i++) {
                 const _prod = prodArr[i];
                 const _descFull = _prod.description_full.toLowerCase();
 
-                if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Deescription: ${_descFull} for keys: `, _configKeyWords);
+                if (_prod.isNotified){
+                    if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Skipping Product which was already notified: ${_descFull}`);
+                    continue;
+                }
+
+                if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description: ${_descFull} for keys: `, _configKeyWords);
                 const _configkeyWordsLength = _configKeyWords.length;
 
                 for (let j = 0; j < _configkeyWordsLength; j++) {
                     const _currKey = _configKeyWords[j].toLowerCase();
-                    if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Deescription for Keyword: ${_currKey}`);
-                    if (_descFull.includes(_currKey)) {
+                    let _keyFound = false;
+                    const _regExp = stringToRegex(_currKey);
+                    if (_regExp !== undefined) {
+                        if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Regular Expression: ${_regExp}`);
+                       _keyFound = _regExp.test(_descFull);
+                    }
+                    else {
+                        if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Search Product Description for Keyword: ${_currKey}`);
+                        _keyFound = _descFull.includes(_currKey);
+                    }
+                    if (_keyFound) {
                         desktopNotifikation(`Amazon Vine Explorer - ${AVE_VERSION}`, _prod.description_full, _prod.data_img_url, true);
                         _notifyed = true;
+                        _prod.isNotified = true;
+                        database.update(_prod);
+                        break;
                     }
-                    break;
                 }
             }
         }
