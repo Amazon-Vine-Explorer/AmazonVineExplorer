@@ -469,12 +469,14 @@ function addLeftSideButtons(forceClean) {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         setTimeout(() => {
-            database.getAll().then((prodsArr) => {
+            database.getNewEntries().then((prodsArr) => {
                 const _prodsArryLength = prodsArr.length;
                 for (let i = 0; i < _prodsArryLength; i++) {
                     const _currProd = prodsArr[i];
-                    _currProd.isNew = 0;
-                    database.update(_currProd);
+                    if (_currProd.isNew) {
+                        _currProd.isNew = 0;
+                        database.update(_currProd);
+                    }
                 }
             })
         }, 30);
