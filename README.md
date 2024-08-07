@@ -19,13 +19,13 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog:
 
-##### [05.08.2024] - Version 9.9.9
+##### [05.08.2024] - Version 0.10.9.0.1.deburau.2
 * Enhancements
   - Mark all seen now only updates new products, not all products
   - Desktop notifications for products with keyword matches now open the
     Amazon product page
     
-##### [05.08.2024] - Version 9.9.9
+##### [05.08.2024] - Version 0.10.9.0.1.deburau.1
 * Enhancements
   - isNew and isFav are now indexed. Since IndexedDB does not support 
 	booleans as index, the type was changed to integer 0 and 1
