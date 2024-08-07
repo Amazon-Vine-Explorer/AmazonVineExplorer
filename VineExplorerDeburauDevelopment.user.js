@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Amazon Vine Explorer - Online Development Preview
+// @name         Amazon Vine Explorer - Deburau Development Fork
 // @namespace    http://tampermonkey.net/
 // @version      9.9.9
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
