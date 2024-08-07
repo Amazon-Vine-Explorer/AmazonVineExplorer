@@ -19,6 +19,26 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog:
 
+##### [05.08.2024] - Version 9.9.9
+* Enhancements
+  - Mark all seen now only updates new products, not all products
+  - Desktop notifications for products with keyword matches now open the
+    Amazon product page
+    
+##### [05.08.2024] - Version 9.9.9
+* Enhancements
+  - isNew and isFav are now indexed. Since IndexedDB does not support 
+	booleans as index, the type was changed to integer 0 and 1
+* New Features
+  - Desktop Notification Highlight Keywords can now be JavaScript regular
+    expressions. If a keyword has the form _/\<regular expression\>/\<flags\>_,
+	it is treated as a regular expression. For instance, if you want get
+	notified for new SSD products, you can use the keyword _/\bssd\b/_
+	and get only notified for products with "ssd" in the description, but not
+	the word "crossdressed"
+* Bugfixes
+  - notifications are only sent once per product. Fixes #18
+
 ##### [28.06.2024] - Version 0.10.9.0.1
 * Little Bugfix to work with an external Partner
 
