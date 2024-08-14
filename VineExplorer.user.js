@@ -1,16 +1,16 @@
 // ==UserScript==
-// @name         Amazon Vine Explorer
+// @name         Amazon Vine Explorer Olum
 // @namespace    http://tampermonkey.net/
-// @version      0.10.9.0.1
-// @updateURL    https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
-// @downloadURL  https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/VineExplorer.user.js
+// @version      0.10.9.0.1_O_5
+// @updateURL    https://github.com/Olum-hack/AmazonVineExplorer/raw/main/VineExplorer.user.js
+// @downloadURL  https://github.com/Olum-hack/AmazonVineExplorer/raw/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
-// @author       MarkusSR1984, Christof121
+// @author       MarkusSR1984, Christof121, Olum-hack
 // @match        *://www.amazon.de/*
 // @match        *://www.amazon.com/*
 // @match        *://www.amazon.co.uk/*
 // @license      MIT
-// @icon         https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/vine_logo.png
+// @icon         https://github.com/Olum-hack/AmazonVineExplorer/raw/main/vine_logo.png
 // @run-at       document-start
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -18,11 +18,11 @@
 // @grant        GM.setValue
 // @grant        GM.xmlHttpRequest
 // @grant        unsafeWindow
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/globals.js
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_db_handler.js
-// @require      https://raw.githubusercontent.com/Amazon-Vine-Explorer/AmazonVineExplorer/main/class_product.js
+// @require      https://github.com/Olum-hack/AmazonVineExplorer/raw/main/globals.js
+// @require      https://github.com/Olum-hack/AmazonVineExplorer/raw/main/class_db_handler.js
+// @require      https://github.com/Olum-hack/AmazonVineExplorer/raw/main/class_product.js
 
-// External Source
+// ==External Source==
 // @require      https://raw.githubusercontent.com/eligrey/FileSaver.js/v2.0.4/src/FileSaver.js
 // @require      https://raw.githubusercontent.com/Christof121/VineFetchFix/main/fetchfix.js
 // ==/UserScript==
@@ -356,7 +356,8 @@ function detectCurrentPageType(){
 
 async function parseTileData(tile) {
     return new Promise((resolve, reject) => {
-        if (SETTINGS.DebugLevel > 5) console.log(`Called parseTileData(`, tile, ')');
+
+        if (SETTINGS.DebugLevel > 12) console.log(`Called parseTileData(`, tile, ')');
 
         const _id = tile.getAttribute('data-recommendation-id');
 
@@ -463,6 +464,7 @@ function addLeftSideButtons(forceClean) {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
+        window.scrollTo(0, 0);
     });
 
     const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', `left: 0; width: 240px; background-color: ${SETTINGS.BtnColorMarkAllAsSeen};`, () => {
@@ -488,11 +490,8 @@ function addLeftSideButtons(forceClean) {
         window.scrollTo(0, 0);
     });
 
-
-
-
     _nodesContainer.appendChild(_setAllSeenBtn);
-    _nodesContainer.appendChild(_setAllSeenDBBtn);
+    if(SETTINGS.EnableBtnMarkAllAsSeen) _nodesContainer.appendChild(_setAllSeenDBBtn);
     _nodesContainer.appendChild(_backToTopBtn);
 
     // const _clearDBBtn = createButton('Datenbank Bereinigen', 'background-color: orange;', () => {
@@ -596,6 +595,7 @@ async function createTileFromProduct(product, btnID, cb) {
             </div>
         `;
         _tile.prepend(createFavStarElement(product, btnID));
+        _tile.prepend(createLasSeenElement(product, btnID));
         _tile.prepend(createShareElement(product, btnID));
         waitForHtmlElmement('.vvp-item-product-title-container', (_elem) => {
             insertHtmlElementAfter(_elem, createTaxInfoElement(product, btnID));
@@ -614,6 +614,63 @@ function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
     _favElement.textContent = '★';
     if (prod.isFav) _favElement.style.color = SETTINGS.FavStarColorChecked; // SETTINGS.FavStarColorChecked = Gelb;
     return _favElement;
+}
+
+function createLasSeenElement(prod, index = Math.round(Math.random()* 10000)) {
+    const _lastSeenElement = document.createElement('div');
+    _lastSeenElement.setAttribute("id", `ave-p-lastSeen-${index || Math.round(Math.random() * 5000)}`);
+    _lastSeenElement.classList.add('ave-last-seen');
+    _lastSeenElement.textContent = 'Last seen: ' + timeAgo(new Date(toTimestamp(prod.ts_lastSeen)));
+    _lastSeenElement.style.float = 'left';
+    _lastSeenElement.style.display = 'flex';
+    return _lastSeenElement;
+}
+
+function timeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+
+    const interval = Math.floor(seconds / 31536000);
+
+    if (interval > 1) {
+        return interval + " years ago";
+    }
+    if (interval === 1) {
+        return interval + " year ago";
+    }
+
+    const months = Math.floor(seconds / 2628000);
+    if (months > 1) {
+        return months + " months ago";
+    }
+    if (months === 1) {
+        return months + " month ago";
+    }
+
+    const days = Math.floor(seconds / 86400);
+    if (days > 1) {
+        return days + " days ago";
+    }
+    if (days === 1) {
+        return days + " day ago";
+    }
+
+    const hours = Math.floor(seconds / 3600);
+    if (hours > 1) {
+        return hours + " hours ago";
+    }
+    if (hours === 1) {
+        return hours + " hour ago";
+    }
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes > 1) {
+        return minutes + " minutes ago";
+    }
+    if (minutes === 1) {
+        return minutes + " minute ago";
+    }
+
+    return "just now";
 }
 
 function createShareElement(prod, index = Math.round(Math.random()* 10000)) {
@@ -1690,8 +1747,6 @@ function createSettingsKeywordsTableElement(dat, index, entry){
     return _tableRow;
 }
 
-
-
 function addOverlays() { // Old Settings Code
     const _overlayBackground = document.createElement('div');
     _overlayBackground.style.position = 'fixed';
@@ -1756,7 +1811,6 @@ function addOverlays() { // Old Settings Code
     document.body.appendChild(_settingsDiv);
 }
 
-
 function componentToHex(c) {
     const _c = Math.min(c, 255)
     const _hex = _c.toString(16);
@@ -1790,7 +1844,6 @@ function colorToHex(color) {
 }
 
 ave.colorToHex = colorToHex;
-
 
 function addDBCleaningSymbol(){
     const _cleaningDiv = document.createElement('div');
@@ -1930,8 +1983,6 @@ function getPageinationData(localDocument = document) {
     return _ret;
 }
 
-
-
 // CleanUp and Fix Database Entrys
 async function cleanUpDatabase(cb = () => {}) {
     if (SETTINGS.DebugLevel > 10) console.log('Called cleanUpDatabase()');
@@ -1963,7 +2014,6 @@ async function cleanUpDatabase(cb = () => {}) {
                     _needUpdate = true;
                     if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} had no valid lastseen timestamp. fixed`);
                 }
-
 
                 let _notSeenCounter = _currEntry.notSeenCounter;
                 if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen < (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
@@ -2095,8 +2145,6 @@ function readFile(file) {
     });
 }
 
-
-
 function initBackgroundScan() {
     if (SETTINGS.DebugLevel > 10) console.log('Called initBackgroundScan()');
     if  (BackGroundScanIsRunning) {console.warn('initBackgroundScan(): Backgroundscan is already running => Exit');return;}
@@ -2121,7 +2169,10 @@ function initBackgroundScan() {
         document.body.appendChild(iframe);
     }
 
+    showBackgroundScanScreen('Start Background Scanner');
+
     const _paginatinWaitLoop = setInterval(() => {
+
         const _pageinationData = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
         if (_pageinationData) {
             clearInterval(_paginatinWaitLoop);
@@ -2137,18 +2188,36 @@ function initBackgroundScan() {
 
             let _loopIsWorking = false;
             let _subStage = 0;
+            let _PageMax =0;
             const _stageZeroSites = ['queue=potluck', 'queue=last_chance']
 
             backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage);
             function initBackgroundScanSubFunctionScannerLoop(){
+                let startTime = performance.now(); // Get the Starttime to calculate the speed
+
                 if (_loopIsWorking) return;
                 _loopIsWorking = true;
 
-                let _backGroundScanStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE')) || 0;
+                let TimeWaitingMS = Date.now() - (localStorage.getItem('AVE_BACKGROUND_SCAN_LAST_TIME') || 0);
+                let TimeWaitingMin = TimeWaitingMS / 1000 / 60;
+
+                if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): TimeWaitingMin ', TimeWaitingMin);
+
+                let _backGroundScanStage
+
+                //Nach 10 Stunden wird neu gestartet
+                if(TimeWaitingMin > 600) {
+                    _backGroundScanStage = 0;
+                    _subStage = 0;
+                    localStorage.setItem('AVE_BACKGROUND_SCAN_LAST_TIME', Date.now());
+                } else {
+                    _backGroundScanStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE')) || 0;
+                }
+
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
 
                 switch (_backGroundScanStage) {
-                    case 0:{    // potluck, last_chance
+                    case 0:{ // potluck, last_chance
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
                         if (_stageZeroSites[_subStage]) {
                             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
@@ -2162,29 +2231,43 @@ function initBackgroundScan() {
                         }
                         break;
                     }
-                    case 1: {   // queue=encore | queue=encore&pn=&cn=&page=2...x
-                        _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
+                    case 1: { // queue=encore | queue=encore&pn=&cn=&page=2...x
+                        _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT')) || 0;
+
+                        // Alle 100 Seiten wird die maximale Seitenzahl geprüft
+                        if((_subStage % 100) == 0) {
+                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 update PAGE_MAX');
+
+                            let _pagedate = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
+                            if (_pagedate) {
+                                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX', _pageinationData.maxPage);
+                            }
+                        }
+
+                        _PageMax = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0;
+
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
-                        if (_subStage < (parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0)) {
+                        updateBackgroundScanScreenText('Background Scanner Page: '+ _subStage+ ' / '+ _PageMax);
+
+                        //Wenn die maximale Seitenzahl nicht erreicht ist, wird gescannt
+                        if (_subStage < _PageMax) {
                             backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
                             _subStage++
                             localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                         } else {
+                            localStorage.setItem('AVE_BACKGROUND_SCAN_LAST_TIME', Date.now());
                             _subStage = 0;
                             _backGroundScanStage++;
                             _scanFinished();
                         }
                         break;
                     }
-                    case 2: {   // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
-
+                    case 2: { // qerry about other values (tax, real prize, ....) ~ 20 - 30 Products then loopover to stage 1
 
                         //Disaled due to Bugs fetching the Tax
                         _backGroundScanStage++;
                         _scanFinished();
                         break;
-
-
 
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
                         database.getAll().then((products) => {
@@ -2224,6 +2307,15 @@ function initBackgroundScan() {
                         }
                         break;
                     }
+                    case 3: { //Warten für drei Stunden nach dem der Scan abgeschlossen ist
+                        updateBackgroundScanScreenText('Background Scanner Time Waiting: '+ TimeWaitingMin);
+
+                        if(TimeWaitingMin > 180)
+                        {
+                            _backGroundScanStage++;
+                        }
+                        _scanFinished();
+                    }
                     default: {
                         cleanUpDatabase(() => {
                             _backGroundScanStage = 0;
@@ -2238,11 +2330,16 @@ function initBackgroundScan() {
                     localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
                     localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                     _loopIsWorking = false;
-                    backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness));
+
+                    let delay = SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness)
+                    let timeElapsed = performance.now() - startTime;
+                    if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): Scantime: ', timeElapsed, ' Delay: ', delay);
+
+                    backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, delay);
                 }
             }
         }
-    }, 250);
+    }, 250); //scan every 250ms
 }
 
 function backGroundTileScanner(url, cb) {
@@ -2284,6 +2381,27 @@ function backGroundTileScanner(url, cb) {
     }, 100);
 }
 
+function showBackgroundScanScreen(text) {
+
+    const _text = document.createElement('div');
+    _text.style.position = 'fixed';
+    _text.style.bottom = '35px';
+    _text.style.left = '35px';
+    _text.style.color = 'orange'; // Textfarbe
+    _text.style.textAlign = 'center';
+    _text.style.fontSize = '10px'; // Ändere die Schriftgröße hier
+    _text.style.lineHeight = "1";
+    _text.style.zIndex = '9999';
+    _text.innerHTML = `<p id="ave-backgroundscan-text">${text}</p>`;
+
+    document.body.appendChild(_text);
+}
+
+function updateBackgroundScanScreenText(text = '') {
+    const _elem = document.getElementById('ave-backgroundscan-text');
+    _elem.textContent = text;
+}
+
 function startAutoScan() {
     if (SETTINGS.DebugLevel > 10) console.log('Called startAutoScan()');
     showAutoScanScreen('Init Autoscan, please wait...');
@@ -2301,8 +2419,6 @@ function startAutoScan() {
         }, 5000);
     })
 }
-
-
 
 function handleAutoScan() {
     let _href;
@@ -2329,8 +2445,6 @@ function handleAutoScan() {
         });
     }
 }
-
-
 
 function stickElementToTopScrollEVhandler(elemID, dist) {
     const _elem = document.getElementById(elemID);
@@ -2507,7 +2621,6 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
     return _btn;
 }
 
-
 function addStyleToTile(_currTile, _product) {
 
     if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
@@ -2529,6 +2642,7 @@ function addStyleToTile(_currTile, _product) {
         // Update Timestamps
     }
     _currTile.prepend(createFavStarElement(_product));
+    _currTile.prepend(createLasSeenElement(_product));
     _currTile.prepend(createShareElement(_product));
     // insertHtmlElementAfter((_currTile.getElementsByClassName('vvp-item-product-title-container')[0]), createTaxInfoElement(_product));
     waitForHtmlElmement('.vvp-item-product-title-container', (_elem) => {
@@ -2536,7 +2650,6 @@ function addStyleToTile(_currTile, _product) {
     }, _currTile)
 
 }
-
 
 async function requestProductDetails(prod) {
     return new Promise(async (resolve, reject) => {
@@ -2598,11 +2711,8 @@ async function requestProductDetails(prod) {
     })
 }
 
-
-
 function init(hasTiles) {
     // Get all Products on this page ;)
-
 
     if (AUTO_SCAN_IS_RUNNING) showAutoScanScreen(`Autoscan is running...Page (${AUTO_SCAN_PAGE_CURRENT}/${AUTO_SCAN_PAGE_MAX})`);
 
@@ -2639,10 +2749,7 @@ function init(hasTiles) {
         if (SETTINGS.DebugLevel > 10) console.log(`init(): NO TILES TO PARSE ON THIS SITE => SKIP`);
     }
 
-
     if (AUTO_SCAN_IS_RUNNING) return;
-
-
 
     const _searchbarContainer = document.getElementById('vvp-items-button-container');
 
@@ -2651,7 +2758,6 @@ function init(hasTiles) {
     _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn', SETTINGS.BtnColorNewProducts, () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
 
     updateNewProductsBtn();
-
 
     // Searchbar
     const _searchBarSpan = document.createElement('span');
@@ -2679,10 +2785,8 @@ function init(hasTiles) {
         }
     });
 
-
     _searchBarSpan.appendChild(_searchBarInput);
     _searchbarContainer.appendChild(_searchBarSpan);
-
 
     // Deactivatet due to Bugs
     // Manual Autoscan and Backgroundscan can not run together, so don´t create the button
