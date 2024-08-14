@@ -17,7 +17,10 @@ This script enhances the experience on the Amazon Vine website. However, it does
 The Script has currently some issues processing the Tax Value.
 We are aware of the issue and are working on a fix.
 
-## Changelog:
+## Changelog Deburau
+
+##### [05.08.2024] - Version 0.10.9.0.1.deburau.3
+* Incorporated changes from Olum (see further down)
 
 ##### [05.08.2024] - Version 0.10.9.0.1.deburau.2
 * Enhancements
