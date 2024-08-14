@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer - Deburau Development Fork
 // @namespace    http://tampermonkey.net/
-// @version      0.10.9.0.1.deburau.2
+// @version      0.10.9.0.1.deburau.3
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
-// @author       MarkusSR1984, Christof121, Deburau
+// @author       MarkusSR1984, Christof121, Olum-hack, Deburau
 // @match        *://www.amazon.de/*
 // @match        *://www.amazon.com/*
 // @match        *://www.amazon.co.uk/*
