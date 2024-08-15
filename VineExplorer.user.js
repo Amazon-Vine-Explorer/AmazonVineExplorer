@@ -511,7 +511,7 @@ function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
         const _tile = _tiles[i];
         const _id = _tile.getAttribute('data-recommendation-id');
         database.get(_id).then((prod) => {
-            prod.isNew = false;
+            prod.isNew = 0;
             database.update(prod).then( () => {
                 updateTileStyle(prod);
                 _returned++;
