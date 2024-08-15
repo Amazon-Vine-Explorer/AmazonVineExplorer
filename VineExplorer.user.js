@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer - Deburau Development Fork
 // @namespace    http://tampermonkey.net/
-// @version      0.10.9.0.1.deburau.3
+// @version      0.10.9.0.1.deburau.4
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -46,6 +46,8 @@
     - Reload der Neue Produkte Seite nach einem Click auf "Alle als gesehen Markieren"
     - Originale Pagination auf den eigenen Seiten verstecken
 */
+
+/* eslint-disable no-undef */
 
 'use strict';
 console.log(`Init Vine Voices Explorer ${AVE_VERSION}`);
@@ -2669,13 +2671,13 @@ async function requestProductDetails(prod) {
                 prod.data_childs = _data.variations || [];
                 const _promArray = new Array();
                 prod.data_estimated_tax_prize = prod.data_estimated_tax_prize || 0;
-                for (_child of prod.data_childs) {
+                for (const _child of prod.data_childs) {
                     _promArray.push(fetch(`${window.location.origin}/vine/api/recommendations/${(prod.id).replace(/#/g, '%23')}/item/${_child.asin}`.replace(/#/g, '%23')).then(r => r.json()).then((childData) => {
                         console.log('CHILD_DATA:', childData);
                         if (!childData.error) {
 
                             // Copy over all returned datapoints od child asin
-                            for (_datapoint of Object.keys(childData.result)) {
+                            for (const _datapoint of Object.keys(childData.result)) {
                                 _child[_datapoint] = childData.result[_datapoint];
                             }
 
