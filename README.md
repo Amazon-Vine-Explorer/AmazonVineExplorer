@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [15.08.2024] - Version 0.10.9.0.1.deburau.4
+* Use ESLint and fix errors in requestProductDetails
+
 ##### [05.08.2024] - Version 0.10.9.0.1.deburau.3
 * Incorporated changes from Olum (see further down)
 
