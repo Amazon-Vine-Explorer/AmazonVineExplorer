@@ -19,6 +19,11 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [16.08.2024] - Version 0.10.9.0.1.deburau.5
+* Recently my IP address was temporarely blocked several times by amazon, visiting the vine site 
+  returned status 503. So I raised the default for "Background Scan Per Page Min Delay(Milliseconds)"
+  to 10.000 and the maximal possible value to 20.000
+
 ##### [15.08.2024] - Version 0.10.9.0.1.deburau.4
 * Use ESLint and fix errors in requestProductDetails
 
