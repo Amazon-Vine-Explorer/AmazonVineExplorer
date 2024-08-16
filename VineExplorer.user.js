@@ -2783,7 +2783,7 @@ function init(hasTiles) {
                     createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
                     searchInputTimeout = null;
                 })
-            }, 250);
+            }, SETTINGS.SearchBarInputDelay);
         }
     });
 
