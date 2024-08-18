@@ -207,6 +207,7 @@ class DB_HANDLER {
             const _request = this.#getStore().get(id);
             _request.onerror = () => {
                 const _data_asin = id.split('#')[1];
+                console.warn(`failed to get object with ID "${id}", trying to get it with ASIN "${_data_asin}"`)
                 return new Promise((resolve1, reject1)=> {
                     const _request1 = this.getByASIN(_data_asin);
                     _request1.onerror = (event1) => {reject1(`DB_HANDLER.add(): ${event1.target.error}`);};

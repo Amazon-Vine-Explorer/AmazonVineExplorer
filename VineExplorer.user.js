@@ -363,7 +363,7 @@ async function parseTileData(tile) {
 
         const _id = tile.getAttribute('data-recommendation-id');
 
-        database.get(_id).then((_ret) => {
+        database.getById(_id).then((_ret) => {
             if (_ret) {
                 _ret.gotFromDB = true;
                 _ret.ts_lastSeen = unixTimeStamp();
@@ -512,7 +512,7 @@ function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
     for (let i = 0; i < _tilesLength; i++) {
         const _tile = _tiles[i];
         const _id = _tile.getAttribute('data-recommendation-id');
-        database.get(_id).then((prod) => {
+        database.getById(_id).then((prod) => {
             prod.isNew = 0;
             database.update(prod).then( () => {
                 updateTileStyle(prod);
@@ -1088,7 +1088,7 @@ function btnEventhandlerClick(event, data) {
     lastBtnEventhandlerClickTimeStamp = Date.now();
     if (SETTINGS.DebugLevel > 10) console.log(`called btnEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
-        database.get(data.recommendation_id).then(async (prod) => {
+        database.getById(data.recommendation_id).then(async (prod) => {
             if (SETTINGS.DebugLevel > 10) console.log(`btnEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isNew = 0;
@@ -1105,7 +1105,7 @@ function btnEventhandlerClick(event, data) {
 function favStarEventhandlerClick(event, data) {
     if (SETTINGS.DebugLevel > 10) console.log(`called favStarEventhandlerClick(${JSON.stringify(event)}, ${JSON.stringify(data)})`);
     if (data.recommendation_id) {
-        database.get(data.recommendation_id).then((prod) => {
+        database.getById(data.recommendation_id).then((prod) => {
             if (SETTINGS.DebugLevel > 10) console.log(`favStarEventhandlerClick() got respose from DB:`, prod);
             if (prod) {
                 prod.isFav = 1 - prod.isFav;
@@ -2101,7 +2101,7 @@ async function importDatabase() {
                     // Assuming that the `database` object has a method like `add` to insert data
                     // Adjust this part based on the actual methods provided by your database object
                     for (const data of jsonData) {
-                        const existingRecord = await database.get(data.id);
+                        const existingRecord = await database.getById(data.id);
 
                         if (!existingRecord) {
                             await database.add(data);
