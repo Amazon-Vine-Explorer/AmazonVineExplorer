@@ -214,7 +214,16 @@ class DB_HANDLER {
                     _request1.onsuccess = (event1) =>{resolve1(event1.target.result);};
                 });                
             };
-            _request.onsuccess = (event) => {resolve(event.target.result);};
+            _request.onsuccess = (event) => {
+                const _data_asin = id.split('#')[1];
+                console.warn(`got object with ID "${id}" but trying to get it with ASIN "${_data_asin}"`)
+                return new Promise((resolve1, reject1)=> {
+                    const _request1 = this.getByASIN(_data_asin);
+                    _request1.onerror = (event1) => {reject1(`DB_HANDLER.add(): ${event1.target.error}`);};
+                    _request1.onsuccess = (event1) =>{resolve1(event1.target.result);};
+                });                
+//                resolve(event.target.result);
+            };
         })
     };
 
