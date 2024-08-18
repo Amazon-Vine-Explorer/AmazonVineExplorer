@@ -193,6 +193,31 @@ class DB_HANDLER {
     };
 
     /**
+    * Get Object by ID
+    * If the entry is not found by the given ID, the ID is deconstructed to get the ASIN.
+    * If an entry exists with this ASIN, it is returned
+    * @async
+    * @param {string} id Object ID
+    * @returns {Promise<Product>}
+    */ 
+    async getById(id){
+        return new Promise((resolve, reject) => {
+            if (typeof(id) != 'string') reject('DB_HANDLER.get(): id is not defined or is not typeof string');
+            
+            const _request = this.#getStore().get(id);
+            _request.onerror = () => {
+                const _data_asin = id.split('#')[1];
+                return new Promise((resolve1, reject1)=> {
+                    const _request1 = this.getByASIN(_data_asin);
+                    _request1.onerror = (event1) => {reject1(`DB_HANDLER.add(): ${event1.target.error}`);};
+                    _request1.onsuccess = (event1) =>{resolve1(event1.target.result);};
+                });                
+            };
+            _request.onsuccess = (event) => {resolve(event.target.result);};
+        })
+    };
+
+    /**
     * Get Object by ASIN
     * @async
     * @param {string} asin ASIN

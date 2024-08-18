@@ -19,6 +19,12 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [18.08.2024] - Version 0.10.9.0.1.deburau.7
+* The field "id" is used as thè primary key of the IndexedDB database. Unfortunatly it may change over
+  time. This often ruslts in errors like this, because the data_asin stays constant even if the id changes.:
+  `vine-items:1 Uncaught (in promise) DB_HANDLER.add(): ConstraintError: Unable to add key to index 'data_asin': at least one key does not satisfy the uniqueness requirements.`
+  Now it tries to get the object first with the ID an if not found, try with ASIN
+
 ##### [16.08.2024] - Version 0.10.9.0.1.deburau.6
 * Search Bar Input Delay is now configurable
 
