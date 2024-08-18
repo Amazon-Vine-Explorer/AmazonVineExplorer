@@ -201,38 +201,23 @@ class DB_HANDLER {
     * @returns {Promise<Product>}
     */
     async getById(id) {
-        return new Promise((resolve, reject) => {
-            if (typeof (id) != 'string') reject('DB_HANDLER.get(): id is not defined or is not typeof string');
-
-            const _request = this.#getStore().get(id);
-            _request.onerror = () => {
-                const _data_asin = id.split('#')[1];
-                console.warn(`failed to get object with ID "${id}", trying to get it with ASIN "${_data_asin}"`)
-                return new Promise((resolve1, reject1) => {
-                    const _request1 = this.getByASIN(_data_asin);
-                    _request1.onerror = (event1) => {
-                        reject1(`DB_HANDLER.add(): ${event1.target.error}`);
-                    };
-                    _request1.onsuccess = (event1) => {
-                        resolve1(event1.target.result);
-                    };
+        return new Promise((_resolve, _reject) => {
+            this.get(id)
+                .then((_prod) => {
+                    _resolve(_prod);
+                })
+                .catch(() => {
+                    const _data_asin = id.split('#')[1];
+                    console.warn(`failed to get object with ID "${id}", trying to get it with ASIN "${_data_asin}"`);
+                    this.getByASIN(_data_asin)
+                        .then((_prod) => {
+                            _resolve(_prod)
+                        })
+                        .catch((_error) => {
+                            _reject(_error)
+                        });
                 });
-            };
-            _request.onsuccess = () => {
-                const _data_asin = id.split('#')[1];
-                console.warn(`got object with ID "${id}" but trying to get it with ASIN "${_data_asin}"`)
-                return new Promise((resolve1, reject1) => {
-                    const _request1 = this.getByASIN(_data_asin);
-                    _request1.onerror = (event1) => {
-                        reject1(`DB_HANDLER.add(): ${event1.target.error}`);
-                    };
-                    _request1.onsuccess = (event1) => {
-                        resolve1(event1.target.result);
-                    };
-                });
-                //                resolve(event.target.result);
-            };
-        })
+        });
     };
 
     /**
