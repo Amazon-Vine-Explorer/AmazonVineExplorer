@@ -205,34 +205,30 @@ class DB_HANDLER {
             this.get(id)
                 .then((_prod) => {
                     if (_prod) {
-                        console.warn(`got object with ID "${id}": "${_prod}"`);
+                        console.info(`got object with ID "${id}": "${_prod}"`);
                         _resolve(_prod);
                     } else {
                         const _data_asin = id.split('#')[1];
-                        console.warn(`#1 failed to get object with ID "${id}", trying to get it with ASIN "${_data_asin}"`);
+                        console.warn(`object with ID "${id}" not found, trying to get it with ASIN "${_data_asin}"`);
                         this.getByASIN(_data_asin)
                             .then((_prod) => {
-                                console.warn(`#1 got object with ID "${id}" and ASIN "${_data_asin}": "${_prod}"`);
-                                _resolve(_prod)
+                                if (_prod) {
+                                    console.warn(`got object with ID "${id}" and ASIN "${_data_asin}": "${_prod}"`);
+                                } else {
+                                    console.warn(`object with ID "${id}" and ASIN "${_data_asin}" not found`);
+                                }
+
+                                _resolve(_prod);
                             })
                             .catch((_error) => {
-                                console.warn(`#1 failed to get object with ID "${id}" and ASIN "${_data_asin}": "${_error}"`);
+                                console.error(`failed to get object with ID "${id}" and ASIN "${_data_asin}": "${_error}"`);
                                 _reject(_error)
                             });
                     }
                 })
-                .catch(() => {
-                    const _data_asin = id.split('#')[1];
-                    console.warn(`#2 failed to get object with ID "${id}", trying to get it with ASIN "${_data_asin}"`);
-                    this.getByASIN(_data_asin)
-                        .then((_prod) => {
-                            console.warn(`#2 got object with ID "${id}" and ASIN "${_data_asin}": "${_prod}"`);
-                            _resolve(_prod)
-                        })
-                        .catch((_error) => {
-                            console.warn(`#2 failed to get object with ID "${id}" and ASIN "${_data_asin}": "${_error}"`);
-                            _reject(_error)
-                        });
+                .catch((_error) => {
+                    console.error(`failed to get object with ID "${id}": "${_error}"`);
+                    _reject(_error)
                 });
         });
     };
