@@ -204,6 +204,7 @@ class DB_HANDLER {
         return new Promise((_resolve, _reject) => {
             this.get(id)
                 .then((_prod) => {
+                    console.warn(`got object with ID "${id}": "${_prod}"`);
                     _resolve(_prod);
                 })
                 .catch(() => {
@@ -211,9 +212,11 @@ class DB_HANDLER {
                     console.warn(`failed to get object with ID "${id}", trying to get it with ASIN "${_data_asin}"`);
                     this.getByASIN(_data_asin)
                         .then((_prod) => {
+                            console.warn(`got object with ID "${id}" and ASIN "${_data_asin}": "${_prod}"`);
                             _resolve(_prod)
                         })
                         .catch((_error) => {
+                            console.warn(`failed to get object with ID "${id}" and ASIN "${_data_asin}": "${_error}"`);
                             _reject(_error)
                         });
                 });
