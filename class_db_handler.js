@@ -214,7 +214,7 @@ class DB_HANDLER {
                     _request1.onsuccess = (event1) =>{resolve1(event1.target.result);};
                 });                
             };
-            _request.onsuccess = (event) => {
+            _request.onsuccess = () => {
                 const _data_asin = id.split('#')[1];
                 console.warn(`got object with ID "${id}" but trying to get it with ASIN "${_data_asin}"`)
                 return new Promise((resolve1, reject1)=> {
