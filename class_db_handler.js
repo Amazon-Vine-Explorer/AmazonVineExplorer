@@ -205,7 +205,7 @@ class DB_HANDLER {
             const _index = this.#getStore().index('data_asin');
             const _request = _index.get(asin);
             _request.onerror = (event) => {reject(`DB_HANDLER.add(): ${event.target.error.name}`);};
-            _request.onsuccess = (event) => {resole(event.target.result);};
+            _request.onsuccess = (event) => {resolve(event.target.result);};
         })
     };
 
