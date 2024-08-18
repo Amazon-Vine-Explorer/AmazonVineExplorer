@@ -78,7 +78,7 @@ unsafeWindow.ave = {
 
 const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATABASE_VERSION, (res, err) => {
     if (err) {
-        console.error(`Somithing was going wrong while init database :'(`);
+        console.error(`Something was going wrong while init database :'(`);
         return;
     } else {
         let _execLock = false;
@@ -183,7 +183,7 @@ let showDbUpdateLogoTimeout = null;
 let showDbUpdateLogoIcon = null;
 
 ave_eventhandler.on('ave-database-changed', () => {
-    console.warn('EVENT - Database has new Data for us! we should look what has changed');
+    console.info('EVENT - Database has new Data for us! we should look what has changed');
     updateNewProductsBtn();
 
     if (showDbUpdateLogoTimeout) clearTimeout(showDbUpdateLogoTimeout);
