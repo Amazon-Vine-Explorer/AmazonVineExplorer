@@ -2271,43 +2271,43 @@ function initBackgroundScan() {
                         _scanFinished();
                         break;
 
-                        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
-                        database.getAll().then((products) => {
-                            const _needUpdate = [];
-                            const _randCount = Math.round(Math.random() * 4);
-                            for (const _prod of products) {
-                                if (_needUpdate.length < _randCount) {
-                                    if (typeof(_prod.data_estimated_tax_prize) != 'number') _needUpdate.push(_prod);
-                                } else {
-                                    break;
-                                }
-                            }
+                        // if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.2 with _subStage: ', _subStage);
+                        // database.getAll().then((products) => {
+                        //     const _needUpdate = [];
+                        //     const _randCount = Math.round(Math.random() * 4);
+                        //     for (const _prod of products) {
+                        //         if (_needUpdate.length < _randCount) {
+                        //             if (typeof(_prod.data_estimated_tax_prize) != 'number') _needUpdate.push(_prod);
+                        //         } else {
+                        //             break;
+                        //         }
+                        //     }
 
-                            const _promises = [];
+                        //     const _promises = [];
 
-                            for (const _prod of _needUpdate) {
-                                requestProductDetails(_prod).then((_newProd) => {
-                                    _promises.push(database.update(_newProd));
-                                });
-                            }
+                        //     for (const _prod of _needUpdate) {
+                        //         requestProductDetails(_prod).then((_newProd) => {
+                        //             _promises.push(database.update(_newProd));
+                        //         });
+                        //     }
 
-                            Promise.all(_promises).then(() => {
-                                _scanFinished();
-                                _subStage++;
-                            }).catch(() => {
-                                console.error('There was an error while updating an product in database');
-                                _scanFinished();
-                                _subStage++;
-                            });
-                        });
+                        //     Promise.all(_promises).then(() => {
+                        //         _scanFinished();
+                        //         _subStage++;
+                        //     }).catch(() => {
+                        //         console.error('There was an error while updating an product in database');
+                        //         _scanFinished();
+                        //         _subStage++;
+                        //     });
+                        // });
 
-                        if (_subStage++ >= 10)
-                        {
-                            _subStage = 0;
-                            _backGroundScanStage++;
-                            _scanFinished();
-                        }
-                        break;
+                        // if (_subStage++ >= 10)
+                        // {
+                        //     _subStage = 0;
+                        //     _backGroundScanStage++;
+                        //     _scanFinished();
+                        // }
+                        // break;
                     }
                     case 3: { //Warten für drei Stunden nach dem der Scan abgeschlossen ist
                         updateBackgroundScanScreenText('Background Scanner Time Waiting: '+ TimeWaitingMin);
@@ -2318,6 +2318,7 @@ function initBackgroundScan() {
                         }
                         _scanFinished();
                     }
+                    break;
                     default: {
                         cleanUpDatabase(() => {
                             _backGroundScanStage = 0;
