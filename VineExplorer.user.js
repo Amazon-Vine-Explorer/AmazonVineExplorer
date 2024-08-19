@@ -2317,8 +2317,8 @@ function initBackgroundScan() {
                             _backGroundScanStage++;
                         }
                         _scanFinished();
+                        break;
                     }
-                    break;
                     default: {
                         cleanUpDatabase(() => {
                             _backGroundScanStage = 0;
