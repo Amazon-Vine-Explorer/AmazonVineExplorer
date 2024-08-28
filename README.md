@@ -19,7 +19,7 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
-##### [28.08.2024] - Version 0.10.9.0.1.deburau.7
+##### [28.08.2024] - Version 0.10.9.0.1.deburau.8
 * When upgrading from a former database version, a check for duplicate ASINs is performed. This check fails for newly created databases with the error message
   `Something was going wrong while init database` and `DB_HANDLER.#getStore: Database Object is not defined`
   Now this check is only performed for upgrading existing databases
