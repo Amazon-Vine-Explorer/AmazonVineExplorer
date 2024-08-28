@@ -87,7 +87,11 @@ class DB_HANDLER {
                 }
 
                 if (!_store.indexNames.contains('data_asin')) {
-                    if (this.#checkForDuplicatedASIN()) {
+                    // if new db, don't check for duplicate asins
+                    if (event.oldVersion === 0){
+                        _store.createIndex('data_asin', 'data_asin', { unique: true });
+                    }
+                    else if (this.#checkForDuplicatedASIN()) {
                         _store.createIndex('data_asin', 'data_asin', { unique: true });
                     }
                 }
