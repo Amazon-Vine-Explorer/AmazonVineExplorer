@@ -289,8 +289,8 @@ class SETTINGS_DEFAULT {
     MaxItemsPerPage = 500;
     FetchRetryTime = 50;
     FetchRetryMaxTime = 5000;
-    BackGroundScanDelayPerPage = 10000;
-    BackGroundScannerRandomness = 4000;
+    BackGroundScanDelayPerPage = 6000;
+    BackGroundScannerRandomness = 6000;
     DesktopNotifikationDelay = 60;
     SearchBarInputDelay = 250;
     DesktopNotifikationKeywords = [];
