@@ -1,3 +1,15 @@
+# Personal Notice
+It's nice to see that my work has been well received, even if this script is far from being neatly written. 
+
+I saw a lot of pull requests being created.
+
+Unfortunately, due to health reasons, I am unable to further develop this script
+
+If anyone is interested in taking over this, please write to me
+
+Thank you very much
+
+
 # Amazon Vine Explorer
 
 Makes the Amazon Vine Website even a bit better
