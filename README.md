@@ -19,6 +19,10 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [03.09.2024] - Version 0.10.9.0.1.deburau.10
+* New command **DATABASE MERGE +++** in AVE Settings. It reads a database export and merges it into the existing database.
+  New entrires are added, existing entries are overwritten. This differs from **DATABASE IMPORT <<<**, where existing entries are skipped.
+
 ##### [28.08.2024] - Version 0.10.9.0.1.deburau.9
 * Defaults for **BackGroundScanDelayPerPage** and **BackGroundScannerRandomness** set to 6000
 

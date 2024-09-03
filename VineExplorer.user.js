@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer - Deburau Development Fork
 // @namespace    http://tampermonkey.net/
-// @version      0.10.9.0.1.deburau.9
+// @version      0.10.9.0.1.deburau.10
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2125,6 +2125,54 @@ async function importDatabase() {
 }
 
 unsafeWindow.ave.importDB = importDatabase;
+
+/**
+ * Opens a file selector dialog and merges a database from a JSON file.
+ * @async
+ * @returns {Promise<void>}
+ */
+async function mergeDatabase() {
+    return new Promise((resolve, reject) => {
+        // Create an input element of type "file"
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.json';
+
+        // Set up an event listener for when a file is selected
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+
+            if (file) {
+                try {
+                    const jsonData = await readFile(file);
+
+                    // Assuming that the `database` object has a method like `add` to insert data
+                    // Adjust this part based on the actual methods provided by your database object
+                    for (const data of jsonData) {
+                        const existingRecord = await database.getById(data.id);
+
+                        if (!existingRecord) {
+                            await database.add(data);
+                        } else {
+                            await database.update(data);
+                        }
+                    }
+
+                    console.log('Data merged successfully.');
+                    resolve();
+                } catch (error) {
+                    console.error('Error merging data:', error);
+                    reject(error);
+                }
+            }
+        });
+
+        // Trigger a click event to open the file selector dialog
+        fileInput.click();
+    });
+}
+
+unsafeWindow.ave.mergeDB = mergeDatabase;
 
 /**
  * Reads the content of a file as text.
