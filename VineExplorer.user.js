@@ -2143,7 +2143,11 @@ async function mergeDatabase() {
             const file = event.target.files[0];
 
             if (file) {
+                const enableBackgroundScan = SETTINGS.EnableBackgroundScan;
+
                 try {
+                    SETTINGS.EnableBackgroundScan = false;
+
                     const jsonData = await readFile(file);
 
                     // Assuming that the `database` object has a method like `add` to insert data
@@ -2163,6 +2167,8 @@ async function mergeDatabase() {
                 } catch (error) {
                     console.error('Error merging data:', error);
                     reject(error);
+                } finally {
+                    SETTINGS.EnableBackgroundScan = enableBackgroundScan;
                 }
             }
         });
