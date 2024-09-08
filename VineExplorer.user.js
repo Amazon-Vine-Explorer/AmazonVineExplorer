@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer - Deburau Development Fork
 // @namespace    http://tampermonkey.net/
-// @version      0.10.9.0.1.deburau.10
+// @version      0.10.9.0.1.deburau.11
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2838,7 +2838,7 @@ function init(hasTiles) {
                     createNewSite(PAGETYPE.SEARCH_RESULT, _objArr);
                     searchInputTimeout = null;
                 })
-            }, SETTINGS.SearchBarInputDelay);
+            }, ev.key === 'Enter' ? 1 : SETTINGS.SearchBarInputDelay);
         }
     });
 

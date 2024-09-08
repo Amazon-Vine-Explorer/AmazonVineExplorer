@@ -293,7 +293,7 @@ class SETTINGS_DEFAULT {
     BackGroundScanDelayPerPage = 6000;
     BackGroundScannerRandomness = 6000;
     DesktopNotifikationDelay = 60;
-    SearchBarInputDelay = 250;
+    SearchBarInputDelay = 500;
     DesktopNotifikationKeywords = [];
 
     CssProductNewTag = "border: 2mm ridge rgba(218, 247, 166, .6); background-color: rgba(218, 247, 166, .2)";

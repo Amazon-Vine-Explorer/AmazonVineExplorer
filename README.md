@@ -19,6 +19,10 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [08.09.2024] - Version 0.10.9.0.1.deburau.11
+* When the enter key is pressed in the search bar, the search is executed immediately instead of waiting for the input timeout 
+* The search bar input delay was increased to 500 milliseconds
+
 ##### [03.09.2024] - Version 0.10.9.0.1.deburau.10
 * New command **DATABASE MERGE +++** in AVE Settings. It reads a database export and merges it into the existing database.
   New entrires are added, existing entries are overwritten. This differs from **DATABASE IMPORT <<<**, where existing entries are skipped.
