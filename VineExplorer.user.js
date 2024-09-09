@@ -1694,7 +1694,7 @@ function createSettingsMenuElement(dat){
             console.log('EVENTHANDLER CHANGE:', elm, 'event:', ev);
             const _value = elm.target.value.trim();
             if (_value && _value.length > 0) {
-                for (let _key in _value.split('\n')) {
+                for (let _key of _value.split('\n')) {
                     _key = _key.trim();
                     if (_key.length === 0) {
                         continue;
