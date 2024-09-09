@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer - Deburau Development Fork
 // @namespace    http://tampermonkey.net/
-// @version      0.10.9.0.1.deburau.11
+// @version      0.10.9.0.1.deburau.12
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -1692,12 +1692,22 @@ function createSettingsMenuElement(dat){
         _elem_keyword_input_input.addEventListener('change', (elm, ev) => {
             console.log('EVENTHANDLER CHANGE:', elm, 'event:', ev);
             const _value = elm.target.value.trim();
-            if (_value && _value.length > 0 && !SETTINGS[dat.key].includes(_value)) SETTINGS[dat.key].push(_value);
+            if (_value && _value.length > 0) {
+                for (let _key in _value.split('\n')) {
+                    _key = _key.trim();
+                    if (_key.length === 0) {
+                        continue;
+                    }
+                    if (!SETTINGS[dat.key].includes(_key)) {
+                        SETTINGS[dat.key].push(_key);
+                    }
+                }
+            }
             SETTINGS.save();
             elm.target.value = '';
             const _table = document.getElementById(dat.key);
             _table.innerHTML = '';
-            for (let i = 0; i < SETTINGS[dat.key].length; i++){
+            for (let i = 0; i < SETTINGS[dat.key].length; i++) {
                 _table.appendChild(createSettingsKeywordsTableElement(dat, i, SETTINGS[dat.key][i]));
             }
         })
