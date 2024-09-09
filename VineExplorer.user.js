@@ -1686,8 +1686,9 @@ function createSettingsMenuElement(dat){
         const _elem_keyword_input_label = document.createElement('label');
         _elem_keyword_input_label.setAttribute('data-ave-tooltip', dat.description);
 
-        const _elem_keyword_input_input = document.createElement('input');
-        _elem_keyword_input_input.setAttribute('type', 'text');
+        const _elem_keyword_input_input = document.createElement('textarea');
+        _elem_keyword_input_input.setAttribute('cols', 70);
+        _elem_keyword_input_input.setAttribute('rows', 1);
         _elem_keyword_input_input.setAttribute('placeholder', dat.inputPlaceholder);
         _elem_keyword_input_input.addEventListener('change', (elm, ev) => {
             console.log('EVENTHANDLER CHANGE:', elm, 'event:', ev);
