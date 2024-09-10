@@ -441,7 +441,7 @@ class DB_HANDLER {
                 }
                 if (_addRequest){
                     _addRequest.onsuccess = () => {
-                        resolve
+                        resolve();
                     }
                 } else{
                     resolve();
