@@ -2109,10 +2109,16 @@ async function importDatabase() {
             if (file) {
                 try {
                     const jsonData = await readFile(file);
-                    await database.import(jsonData);
-                    console.log('Data imported successfully.');
-                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
-                    resolve();
+                    database.import(jsonData)
+                    .then(() => {
+                        console.log('Data imported successfully.');
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
+                        resolve();
+                    })
+                    .catch((error) => {
+                        console.error('Error importing data:', error);
+                        reject(error);
+                    });
                 } catch (error) {
                     console.error('Error importing data:', error);
                     reject(error);
