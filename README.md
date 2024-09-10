@@ -21,7 +21,7 @@ We are aware of the issue and are working on a fix.
 
 ##### [09.09.2024] - Version 0.10.9.0.1.deburau.12
 * Multiple desktop notification keywords can be entered seperated by new lines
-* BREAKING CHNAGE: Database Import now clears the database prior to importing new data
+* BREAKING CHANGE: Database Import now clears the database prior to importing new data
 * Command for database merging is removed
 
 ##### [08.09.2024] - Version 0.10.9.0.1.deburau.11
