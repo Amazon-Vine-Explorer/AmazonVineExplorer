@@ -417,6 +417,42 @@ class DB_HANDLER {
     };
 
     /**
+     * Imports the database, i.e. delete all existing entries and add new ones
+     * @async
+    * @returns {Promise<void>}
+     */
+    async import(datas) {
+        return new Promise((resolve, reject) => {
+            if (datas === null) {
+                reject('DB_HANDLER.import(): datas is null');
+            }
+
+            if (typeof datas[Symbol.iterator] !== 'function') {
+                reject('DB_HANDLER.import(): datas is not iterable');
+            }
+
+            const _store = this.#getStore(true);
+            const _clearRequest = _store.clear();
+            _clearRequest.onsuccess = () => {
+                let _addRequest;
+                for (const data of datas) {
+                    _addRequest = _store.add(data);
+                    _addRequest.onerror = (event) => { reject(`DB_HANDLER.import().add(): ${event.target.error.name}`); };
+                }
+                if (_addRequest){
+                    _addRequest.onsuccess = () => {
+                        resolve
+                    }
+                } else{
+                    resolve();
+                }
+            };
+
+            _clearRequest.onerror = (event) => { reject(`DB_HANDLER.import().clear(): ${event.target.error.name}`); };
+        })
+    }
+
+    /**
     * Deletes the entire database.
     * @async
     * @returns {Promise<void>}
