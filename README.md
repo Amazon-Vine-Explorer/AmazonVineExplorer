@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [04.09.2024] - Version 0.10.9.0.1.deburau.13
+* Included pull request #41 from DeMoehn from original repo
+
 ##### [09.09.2024] - Version 0.10.9.0.1.deburau.12
 * Multiple desktop notification keywords can be entered seperated by new lines
 * BREAKING CHANGE: Database Import now clears the database prior to importing new data

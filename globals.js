@@ -215,6 +215,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnSeller', type: 'bool', name: '
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableTopLogoChange', type: 'bool', name: 'Enable Top Logo Change', description: 'Enables the Change of the top logo to our AVE Logo'});
 
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Button All Products', description: 'Enable "All Products" Button'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnablePaginationTop', type: 'bool', name: 'Enable Pagination on top', description: 'Enable Pagination to be displayed on top for ZA page' });
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Background Scan', description: 'Enables the Background scan, if disabled you will find a Button for Autoscan on the Vine Website'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Infiniti Scroll Live Querry', description: 'If enabled the Products of the All Products Page will get querryd from Amazon directls otherwise they will get loaded from Database(faster)'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikation', type: 'bool', name: 'Enable Desktop Notifications', description: 'Enable Desktop Notifications if new Products are detected'});
@@ -267,6 +268,7 @@ class SETTINGS_DEFAULT {
     EnableInfiniteScrollLiveQuerry = false;
     EnableDesktopNotifikation = false;
     EnableBtnAll = true;
+    EnablePaginationTop = true;
     EnableBtnMarkAllAsSeen = true;
 
     BtnColorFavorites = '#ffe143';
@@ -410,6 +412,47 @@ async function waitForHtmlElmement(selector, cb, altDocument = document) {
     });
 }
 
+// Wrap waitForHtmlElmement in a Promise to use it with async/await
+function waitForHtmlElementPromise(selector, altDocument = document) {
+    return new Promise((resolve, reject) => {
+        waitForHtmlElmement(selector, resolve, altDocument);
+        setTimeout(() => {
+            reject(new Error(`Timeout waiting for element: ${selector}`));
+        }, 10000); // 10 seconds timeout
+    });
+}
+
+// Function to find the active menu button (used for top pagination)
+async function findActiveMenuButton() {
+    // Array of menu IDs
+    const buttonIds = [
+        'vvp-items-button--recommended',
+        'vvp-items-button--all',
+        'vvp-items-button--seller'
+    ];
+
+    for (const id of buttonIds) {
+        try {
+            const buttonSpan = await waitForHtmlElementPromise(`#${id}`);
+            const innerSpan = buttonSpan.querySelector('.a-button-inner');
+            if (innerSpan) {
+                const link = innerSpan.querySelector('a');
+                if (link && link.getAttribute('aria-checked') === 'true') {
+                    return id;
+                } else {
+                    console.warn(`findActiveMenuButton(): link is null or undefined for ${id}`);
+                }
+            } else {
+                console.warn(`findActiveMenuButton(): innerSpan is null or undefined for ${id}`);
+            }
+        } catch (error) {
+            console.warn(`findActiveMenuButton(): buttonSpan is null or undefined for ${id}`, error);
+        }
+    }
+
+    return null;
+}
+
 /**
  *  Wait for given amount of milliseconds
  *  USE ONLY IN ASYNC FUNCTIONS
@@ -523,6 +566,34 @@ async function fastStyleChanges() {
                 elem.style.height = '100px';
             });
 
+        }
+
+        if (SETTINGS.EnablePaginationTop) {
+            const activeButtonId = await findActiveMenuButton();
+            if (activeButtonId) {
+                console.log('EnablePaginationTop: Active menu button ID:', activeButtonId);
+                if (activeButtonId == "vvp-items-button--seller") {
+                    waitForHtmlElmement('div.a-text-center[role="navigation"]', (elem) => {
+                        var clonedDiv = elem.cloneNode(true);
+                        //clonedDiv.style.marginTop = '-25px';
+                        clonedDiv.style.marginBottom = '10px';
+                        var parentContainer = document.getElementById('vvp-items-grid-container');
+                        if (parentContainer) {
+                            var pTag = parentContainer.querySelector('p');
+                            var vvpItemsGridDiv = document.getElementById('vvp-items-grid');
+                            if (pTag && vvpItemsGridDiv) {
+                                parentContainer.insertBefore(clonedDiv, vvpItemsGridDiv);
+                            } else {
+                                console.error('EnablePaginationTop: Required elements not found inside the parent container.');
+                            }
+                        } else {
+                            console.error('EnablePaginationTop: Parent container not found.');
+                        }
+                    });
+                }
+            } else {
+                console.log('EnablePaginationTop: No active menu button found.');
+            }
         }
     } else if (SITE_IS_SHOPPING) {
 
