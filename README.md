@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [16.09.2024] - Version 0.10.9.0.1.deburau.14
+* Desktop notifications for products with keyword matches now open the Amazon product page
+
 ##### [14.09.2024] - Version 0.10.9.0.1.deburau.13
 * Included pull request #41 from DeMoehn from original repo
 
