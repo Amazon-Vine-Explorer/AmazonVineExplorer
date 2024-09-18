@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [18.09.2024] - Version 0.10.9.0.1.deburau.14
+* An alert notification is show after product data import finished
+
 ##### [16.09.2024] - Version 0.10.9.0.1.deburau.14
 * Desktop notifications for products with keyword matches now open the Amazon product page
 

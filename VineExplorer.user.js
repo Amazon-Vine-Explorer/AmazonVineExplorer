@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer - Deburau Development Fork
 // @namespace    http://tampermonkey.net/
-// @version      0.10.9.0.1.deburau.14
+// @version      0.10.9.0.1.deburau.15
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2113,14 +2113,17 @@ async function importDatabase() {
                     .then(() => {
                         console.log('Data imported successfully.');
                         localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
+                        alert('Data imported successfully');
                         resolve();
                     })
                     .catch((error) => {
                         console.error('Error importing data:', error);
+                        alert(`Error importing data: ${error}`);
                         reject(error);
                     });
                 } catch (error) {
                     console.error('Error importing data:', error);
+                    alert(`Error importing data: ${error}`);
                     reject(error);
                 }
             }
