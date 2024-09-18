@@ -2131,15 +2131,15 @@ async function importDatabase() {
                     .finally(() => {
                         SETTINGS.EnableBackgroundScan = enableBackgroundScan;
                         BackGroundScanIsRunning = false;
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_LAST_TIME', 0);
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_IS_RUNNING', false);
                         initBackgroundScan();
                     });
 
                 } catch (error) {
+                    SETTINGS.EnableBackgroundScan = enableBackgroundScan;
                     console.error('Error importing data:', error);
                     alert(`Error importing data: ${error}`);
-                    SETTINGS.EnableBackgroundScan = enableBackgroundScan;
-                    BackGroundScanIsRunning = false;
-                    initBackgroundScan();
                     reject(error);
                 }
             }
