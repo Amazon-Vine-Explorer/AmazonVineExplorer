@@ -2107,12 +2107,15 @@ async function importDatabase() {
             const file = event.target.files[0];
 
             if (file) {
+                const backGroundScanWasRunning = BackGroundScanIsRunning;
+                BackGroundScanIsRunning = false;
                 try {
                     const jsonData = await readFile(file);
                     database.import(jsonData)
                     .then(() => {
                         console.log('Data imported successfully.');
-                        localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
+                        // localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
+                        // localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
                         alert('Data imported successfully');
                         resolve();
                     })
@@ -2125,6 +2128,9 @@ async function importDatabase() {
                     console.error('Error importing data:', error);
                     alert(`Error importing data: ${error}`);
                     reject(error);
+                } finally {
+                    if (backGroundScanWasRunning) initBackgroundScan();
+                    // BackGroundScanIsRunning = backGroundScanWasRunning;
                 }
             }
         });
