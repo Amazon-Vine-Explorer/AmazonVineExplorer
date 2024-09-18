@@ -2107,8 +2107,12 @@ async function importDatabase() {
             const file = event.target.files[0];
 
             if (file) {
-                const backGroundScanWasRunning = BackGroundScanIsRunning;
-                BackGroundScanIsRunning = false;
+                if (backGroundScanTimeout) {
+                    console.log('Stopping background scan');
+                    clearTimeout(backGroundScanTimeout);
+                    backGroundScanTimeout = null;
+                }
+
                 try {
                     const jsonData = await readFile(file);
                     database.import(jsonData)
@@ -2129,8 +2133,7 @@ async function importDatabase() {
                     alert(`Error importing data: ${error}`);
                     reject(error);
                 } finally {
-                    if (backGroundScanWasRunning) initBackgroundScan();
-                    // BackGroundScanIsRunning = backGroundScanWasRunning;
+                    initBackgroundScan();
                 }
             }
         });
