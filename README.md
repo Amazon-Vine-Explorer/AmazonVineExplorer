@@ -22,7 +22,11 @@ We are aware of the issue and are working on a fix.
 ##### [19.09.2024] - Version 0.10.9.0.1.deburau.16
 * The database cleanup now happens right after a complete scan is finished. Prior to this change,
   the cleanup was performed after waiting for three hours, just before a new scan was started
-* Add missing SECONDS_PER_WEEK to globals.js, fixes database cleanup not working
+* Add missing SECONDS_PER_WEEK to globals.js, fixes database cleanup not working.
+
+  After the upgrade, it needs six completed background scans until old entries get deleted. Each
+  scan needs about one to two hours plus three hours delay until the next scan starts. This sums
+  up to one to two days until cleaning up old entries effectivly starts
 
 ##### [18.09.2024] - Version 0.10.9.0.1.deburau.15
 * An alert notification is show after product data import finished
