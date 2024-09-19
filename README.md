@@ -19,7 +19,11 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
-##### [18.09.2024] - Version 0.10.9.0.1.deburau.14
+##### [19.09.2024] - Version 0.10.9.0.1.deburau.16
+* The database cleanup now happens right after a complete scan is finished. Prior to this change,
+  the cleanup was performed after waiting for three hours, just before a new scan was started
+
+##### [18.09.2024] - Version 0.10.9.0.1.deburau.15
 * An alert notification is show after product data import finished
 * Restart background scan after import finished
 

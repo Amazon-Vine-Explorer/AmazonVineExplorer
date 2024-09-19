@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer - Deburau Development Fork
 // @namespace    http://tampermonkey.net/
-// @version      0.10.9.0.1.deburau.15
+// @version      0.10.9.0.1.deburau.16
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2335,23 +2335,22 @@ function initBackgroundScan() {
                         // }
                         // break;
                     }
-                    case 3: { //Warten für drei Stunden nach dem der Scan abgeschlossen ist
+                    case 3: {
+                        cleanUpDatabase();
+                        _backGroundScanStage++;
+                        _scanFinished();
+                        break;
+                    }
+                    case 4: { //Warten für drei Stunden nach dem der Scan abgeschlossen ist
                         updateBackgroundScanScreenText('Background Scanner Time Waiting: '+ TimeWaitingMin);
 
                         if(TimeWaitingMin > 180)
                         {
-                            _backGroundScanStage++;
+                            _backGroundScanStage = 0;
+                            _subStage = 0;
                         }
                         _scanFinished();
                         break;
-                    }
-                    default: {
-                        cleanUpDatabase(() => {
-                            _backGroundScanStage = 0;
-                            _subStage = 0;
-                            _scanFinished();
-                        })
-                        //clearInterval(backGroundScanTimeout);
                     }
                 }
                 function _scanFinished() {
