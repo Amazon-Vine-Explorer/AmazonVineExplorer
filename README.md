@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [30.09.2024] - Version 0.10.9.0.1.deburau.17
+* Not Seen Max Count is configurable in AVE settings
+
 ##### [19.09.2024] - Version 0.10.9.0.1.deburau.16
 * The database cleanup now happens right after a complete scan is finished. Prior to this change,
   the cleanup was performed after waiting for three hours, just before a new scan was started
