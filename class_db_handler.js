@@ -455,7 +455,7 @@ class DB_HANDLER {
     /**
     * Returns the total number of records.
     * @async
-    * @returns {Promise<void>}
+    * @returns {Promise<Number>}
     */
     async count() {
         return new Promise((resolve, reject) => {

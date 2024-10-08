@@ -2260,9 +2260,6 @@ function initBackgroundScan() {
 
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
 
-                let _databaseCountBefore;
-                database.count().then((count)=>_databaseCountBefore = count);
-
                 switch (_backGroundScanStage) {
                     case 0:{ // potluck, last_chance
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
@@ -2372,9 +2369,8 @@ function initBackgroundScan() {
                         break;
                     }
                 }
-                function _scanFinished() {
-                    const _databaseCountAfter = database.count();
-                    console.log(`_scanFinished: _databaseCountBefore=${_databaseCountBefore}, _databaseCountAfter=${_databaseCountAfter}`);
+                function _scanFinished(arg) {
+                    console.log(`_scanFinished: arg=${arg}`);
 
                     if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
                     localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
