@@ -2214,22 +2214,6 @@ function initBackgroundScan() {
                 localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
             }
 
-            if (!(localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true')) {
-                let FastTimeWaitingMS = Date.now() - (localStorage.getItem('AVE_FAST_SCAN_LAST_TIME') || 0);
-                let FastTimeWaitingMin = FastTimeWaitingMS / 1000 / 60;
-                if (FastTimeWaitingMin < 1) {
-                    localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
-                } else {
-                    console.log('initBackgroundScan(): starting fast scan');
-                    localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', true);
-                    localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT', -1);
-                    localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
-                    localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE'));
-                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
-                    localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
-                }
-            }
-
             let _loopIsWorking = false;
             let _subStage = 0;
             let _PageMax =0;
@@ -2242,6 +2226,22 @@ function initBackgroundScan() {
                 if (_loopIsWorking) return;
                 _loopIsWorking = true;
 
+                if (!(localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true')) {
+                    let FastTimeWaitingMS = Date.now() - (localStorage.getItem('AVE_FAST_SCAN_LAST_TIME') || 0);
+                    let FastTimeWaitingMin = FastTimeWaitingMS / 1000 / 60;
+                    if (FastTimeWaitingMin < 1) {
+                        localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
+                    } else {
+                        console.log('initBackgroundScan(): starting fast scan');
+                        localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', true);
+                        localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT', -1);
+                        localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
+                        localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE'));
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
+                    }
+                }
+    
                 let TimeWaitingMS = Date.now() - (localStorage.getItem('AVE_BACKGROUND_SCAN_LAST_TIME') || 0);
                 let TimeWaitingMin = TimeWaitingMS / 1000 / 60;
 
