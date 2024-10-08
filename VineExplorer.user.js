@@ -2214,6 +2214,21 @@ function initBackgroundScan() {
                 localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
             }
 
+            if (!(localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true')) {
+                let FastTimeWaitingMS = Date.now() - (localStorage.getItem('AVE_FAST_SCAN_LAST_TIME') || 0);
+                let FastTimeWaitingMin = FastTimeWaitingMS / 1000 / 60;
+                if (FastTimeWaitingMin < 1) {
+                    localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
+                } else {
+                    console.log('initBackgroundScan(): starting fast scan');
+                    localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', true);
+                    localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
+                    localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE'));
+                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
+                    localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
+                }
+            }
+
             let _loopIsWorking = false;
             let _subStage = 0;
             let _PageMax =0;
@@ -2238,11 +2253,14 @@ function initBackgroundScan() {
                     _backGroundScanStage = 0;
                     _subStage = 0;
                     localStorage.setItem('AVE_BACKGROUND_SCAN_LAST_TIME', Date.now());
+                    localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
                 } else {
                     _backGroundScanStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE')) || 0;
                 }
 
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
+
+                const _databaseCountBefore = database.count();
 
                 switch (_backGroundScanStage) {
                     case 0:{ // potluck, last_chance
@@ -2354,10 +2372,20 @@ function initBackgroundScan() {
                     }
                 }
                 function _scanFinished() {
+                    const _databaseCountAfter = database.count();
+                    console.log(`_scanFinished: _databaseCountBefore=${_databaseCountBefore}, _databaseCountAfter=${_databaseCountAfter}`);
+
                     if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
                     localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
                     localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                     _loopIsWorking = false;
+
+                    if (localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true') {
+                        localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT'));
+                        localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_STAGE'));
+                        localStorage.setItem('AVE_FAST_SCAN_LAST_TIME', Date.now());
+                    }
 
                     let delay = SETTINGS.BackGroundScanDelayPerPage + Math.round(Math.random() * SETTINGS.BackGroundScannerRandomness)
                     let timeElapsed = performance.now() - startTime;
@@ -2392,7 +2420,6 @@ function backGroundTileScanner(url, cb) {
                         _returned++;
                         if (SETTINGS.DebugLevel > 14) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
                         if (!prod.gotFromDB) database.add(prod);
-
                     }))
                 }
 

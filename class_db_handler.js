@@ -453,6 +453,19 @@ class DB_HANDLER {
     }
 
     /**
+    * Returns the total number of records.
+    * @async
+    * @returns {Promise<void>}
+    */
+    async count() {
+        return new Promise((resolve, reject) => {
+            const _request = indexedDB.count();
+            _request.onsuccess = (event) => { resolve(event.target.result); };
+            _request.onerror = (event) => { reject(`DB_HANDLER.count(): ${event.target.error.name}`); };
+        });
+    }
+
+    /**
     * Deletes the entire database.
     * @async
     * @returns {Promise<void>}
