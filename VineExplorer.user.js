@@ -2229,7 +2229,7 @@ function initBackgroundScan() {
                 if (!(localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true')) {
                     let FastTimeWaitingMS = Date.now() - (localStorage.getItem('AVE_FAST_SCAN_LAST_TIME') || 0);
                     let FastTimeWaitingMin = FastTimeWaitingMS / 1000 / 60;
-                    if (FastTimeWaitingMin < 1) {
+                    if (FastTimeWaitingMin < 5) {
                         localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
                     } else {
                         console.log('initBackgroundScan(): starting fast scan');
