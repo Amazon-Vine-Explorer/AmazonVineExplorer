@@ -2265,7 +2265,7 @@ function initBackgroundScan() {
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
                         if (_stageZeroSites[_subStage]) {
                             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
-                            backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (elm) => {_scanFinished()});
+                            backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (newCount) => {_scanFinished(newCount)});
                             _subStage++
                         } else {
                             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside ELSE');
@@ -2295,7 +2295,7 @@ function initBackgroundScan() {
 
                         //Wenn die maximale Seitenzahl nicht erreicht ist, wird gescannt
                         if (_subStage < _PageMax) {
-                            backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , () => {_scanFinished()});
+                            backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , (newCount) => {_scanFinished(newCount)});
                             _subStage++
                             localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                         } else {
@@ -2369,8 +2369,8 @@ function initBackgroundScan() {
                         break;
                     }
                 }
-                function _scanFinished(arg) {
-                    console.log(`_scanFinished: arg=${arg}`);
+                function _scanFinished(newCount) {
+                    console.log(`_scanFinished: newCount=${newCount}`);
 
                     if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
                     localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
@@ -2410,23 +2410,27 @@ function backGroundTileScanner(url, cb) {
             if (SETTINGS.DebugLevel > 10) console.log(`BackgroundsScan Querryd: ${url} and got ${_tilesLength} Tiles`);
             clearInterval(_loopDelay);
             if (_tilesLength > 0) {
+                let _newCount = 0;
                 let _returned = 0;
                 const _tilesProm = []
                 for (let i = 0; i < _tilesLength; i++) {
                     _tilesProm.push(parseTileData(_tiles[i]).then((prod) => {
                         _returned++;
                         if (SETTINGS.DebugLevel > 14) console.log(`BACKGROUNDSCAN => Got TileData Back: Tile ${_returned}/${_tilesLength} =>`, prod);
-                        if (!prod.gotFromDB) database.add(prod);
+                        if (!prod.gotFromDB) {
+                            ++_newCount;
+                            database.add(prod);
+                        }
                     }))
                 }
 
                 Promise.allSettled(_tilesProm).then(() => {
-                    cb(true);
+                    cb(_newCount);
                     _iconLoading.remove();
                 });
             } else {
                 if (SETTINGS.DebugLevel > 10) console.log(`BACKGROUNDSCAN => We dont have anything to do here anything => resume autoscan`);
-                cb(true); // We dont have to do here anything
+                cb(); // We dont have to do here anything
                 _iconLoading.remove();
             }
         }
