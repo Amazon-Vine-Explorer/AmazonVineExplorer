@@ -2383,7 +2383,7 @@ function initBackgroundScan() {
 
                         if(_backGroundScanStage > 0) {
                             if (_backGroundScanStage > 1 || newCount === 0) {
-                                if (_backGroundScanStage > 1 || localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT') === 0) {
+                                if (_backGroundScanStage > 1 || localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT') == 0) {
                                     console.log('initBackgroundScan(): stopping fast scan');
                                     localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
                                     localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT'));
