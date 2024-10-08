@@ -2222,6 +2222,7 @@ function initBackgroundScan() {
                 } else {
                     console.log('initBackgroundScan(): starting fast scan');
                     localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', true);
+                    localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT', -1);
                     localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
                     localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE'));
                     localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
@@ -2378,6 +2379,22 @@ function initBackgroundScan() {
                     _loopIsWorking = false;
 
                     if (localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true') {
+                        const _backGroundScanStage = localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE');
+
+                        if(_backGroundScanStage > 1) {
+                            if (_backGroundScanStage > 2 || newCount === 0) {
+                                if (_backGroundScanStage > 2 || localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT') === 0) {
+                                    console.log('initBackgroundScan(): stopping fast scan');
+                                    localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
+                                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT'));
+                                    localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_STAGE'));
+                                    localStorage.setItem('AVE_FAST_SCAN_LAST_TIME', Date.now());
+                                }
+                            } else {
+                                localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT', newCount);
+                            }
+                        }
+
                         localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
                         localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT'));
                         localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_STAGE'));
