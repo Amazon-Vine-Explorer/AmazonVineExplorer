@@ -459,7 +459,7 @@ class DB_HANDLER {
     */
     async count() {
         return new Promise((resolve, reject) => {
-            const _request = indexedDB.count();
+            const _request = this.#getStore().count();
             _request.onsuccess = (event) => { resolve(event.target.result); };
             _request.onerror = (event) => { reject(`DB_HANDLER.count(): ${event.target.error.name}`); };
         });
