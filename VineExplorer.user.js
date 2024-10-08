@@ -2260,7 +2260,8 @@ function initBackgroundScan() {
 
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
 
-                const _databaseCountBefore = database.count();
+                let _databaseCountBefore;
+                database.count().then((count)=>_databaseCountBefore = count);
 
                 switch (_backGroundScanStage) {
                     case 0:{ // potluck, last_chance
