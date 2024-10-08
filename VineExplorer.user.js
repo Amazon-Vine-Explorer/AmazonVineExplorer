@@ -2390,7 +2390,7 @@ function initBackgroundScan() {
                                     localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_STAGE'));
                                     localStorage.setItem('AVE_FAST_SCAN_LAST_TIME', Date.now());
                                 }
-                            } else {
+                            } else if (newCount >= 0) {
                                 localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT', newCount);
                             }
                         }
