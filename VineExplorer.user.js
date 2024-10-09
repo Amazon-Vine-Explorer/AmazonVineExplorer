@@ -2261,10 +2261,18 @@ function initBackgroundScan() {
 
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
 
+                let _scannerName;
+                if (localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true') {
+                    _scannerName = 'Fast Scanner';
+                } else {
+                    _scannerName = 'Background Scanner';
+                }
+
                 switch (_backGroundScanStage) {
                     case 0:{ // potluck, last_chance
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
                         if (_stageZeroSites[_subStage]) {
+                            updateBackgroundScanScreenText(`${_scannerName} ${_stageZeroSites[_subStage]} Page: ${_subStage} / ${_PageMax}`);
                             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
                             backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (newCount) => {_scanFinished(newCount)});
                             _subStage++
@@ -2292,7 +2300,7 @@ function initBackgroundScan() {
                         _PageMax = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0;
 
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
-                        updateBackgroundScanScreenText('Background Scanner Page: '+ _subStage+ ' / '+ _PageMax);
+                        updateBackgroundScanScreenText(`${_scannerName} queue=encore Page: ${_subStage} / ${_PageMax}`);
 
                         //Wenn die maximale Seitenzahl nicht erreicht ist, wird gescannt
                         if (_subStage < _PageMax) {
@@ -2359,7 +2367,7 @@ function initBackgroundScan() {
                         break;
                     }
                     case 4: { //Warten für drei Stunden nach dem der Scan abgeschlossen ist
-                        updateBackgroundScanScreenText('Background Scanner Time Waiting: '+ TimeWaitingMin);
+                        updateBackgroundScanScreenText(`${_scannerName} Time Waiting: ${TimeWaitingMin}`);
 
                         if(TimeWaitingMin > 180)
                         {
@@ -2379,21 +2387,32 @@ function initBackgroundScan() {
                     _loopIsWorking = false;
 
                     if (localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true') {
-                        const _backGroundScanStage = localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE');
+                        let _stopFastScan = false;
 
-                        if(_backGroundScanStage > 0) {
-                            if (_backGroundScanStage > 1 || newCount === 0) {
-                                if (_backGroundScanStage > 1 || localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT') == 0) {
-                                    console.log('initBackgroundScan(): stopping fast scan');
-                                    localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
-                                    localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT'));
-                                    localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_STAGE'));
-                                    localStorage.setItem('AVE_FAST_SCAN_LAST_TIME', Date.now());
-                                }
-                            }
-                            if (newCount >= 0) {
-                                localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT', newCount);
-                            }
+                        const _backGroundScanStage = localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE') || 0;
+                        const _lastBackGroundScanStage = localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_STAGE') || 0;
+                        const _lastScanPageCurrent = localStorage.getItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT') || 0;
+                        const _scanPageCurrent = localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT') || 0;
+                        if (_backGroundScanStage > 1) {
+                            _stopFastScan = true;
+                        }
+                        if (_backGroundScanStage > 0 && newCount === 0 && localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT') == 0) {
+                            _stopFastScan = true;
+                        }
+                        if (_backGroundScanStage > 0 && _lastBackGroundScanStage > 0 && _scanPageCurrent > 0 && _scanPageCurrent >= _lastScanPageCurrent) {
+                            _stopFastScan = true;
+                        }
+
+                        if(_backGroundScanStage > 0 && newCount >= 0) {
+                            localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT', newCount);
+                        }
+
+                        if (_stopFastScan) {
+                            console.log('initBackgroundScan(): stopping fast scan');
+                            localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
+                            localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _lastScanPageCurrent);
+                            localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _lastBackGroundScanStage);
+                            localStorage.setItem('AVE_FAST_SCAN_LAST_TIME', Date.now());
                         }
                     }
 
