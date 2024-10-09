@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer - Deburau Development Fork
 // @namespace    http://tampermonkey.net/
-// @version      0.10.9.0.1.deburau.17
+// @version      0.10.9.0.1.deburau.18
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2232,7 +2232,7 @@ function initBackgroundScan() {
                     if (FastTimeWaitingMin < 5) {
                         localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
                     } else {
-                        console.log('initBackgroundScan(): starting fast scan');
+                        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): starting fast scan');
                         localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', true);
                         localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT', -1);
                         localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
@@ -2272,7 +2272,7 @@ function initBackgroundScan() {
                     case 0:{ // potluck, last_chance
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
                         if (_stageZeroSites[_subStage]) {
-                            updateBackgroundScanScreenText(`${_scannerName} ${_stageZeroSites[_subStage]} Page: ${_subStage} / ${_PageMax}`);
+                            updateBackgroundScanScreenText(`${_scannerName} ${_stageZeroSites[_subStage].replace('queue=', '')} Page: ${_subStage} / ${_PageMax}`);
                             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
                             backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (newCount) => {_scanFinished(newCount)});
                             _subStage++
@@ -2300,7 +2300,7 @@ function initBackgroundScan() {
                         _PageMax = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0;
 
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
-                        updateBackgroundScanScreenText(`${_scannerName} queue=encore Page: ${_subStage} / ${_PageMax}`);
+                        updateBackgroundScanScreenText(`${_scannerName} encore Page: ${_subStage} / ${_PageMax}`);
 
                         //Wenn die maximale Seitenzahl nicht erreicht ist, wird gescannt
                         if (_subStage < _PageMax) {
@@ -2379,7 +2379,7 @@ function initBackgroundScan() {
                     }
                 }
                 function _scanFinished(newCount) {
-                    console.log(`_scanFinished: newCount=${newCount}`);
+                    if (SETTINGS.DebugLevel > 10) console.log(`_scanFinished: newCount=${newCount}`);
 
                     if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished()`);
                     localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
@@ -2399,7 +2399,7 @@ function initBackgroundScan() {
                         if (_backGroundScanStage > 0 && newCount === 0 && localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT') == 0) {
                             _stopFastScan = true;
                         }
-                        if (_backGroundScanStage > 0 && _lastBackGroundScanStage > 0 && _scanPageCurrent > 0 && _scanPageCurrent >= _lastScanPageCurrent) {
+                        if (_backGroundScanStage == 1 && _lastBackGroundScanStage == 1 && _scanPageCurrent > 0 && _scanPageCurrent >= _lastScanPageCurrent) {
                             _stopFastScan = true;
                         }
 
@@ -2408,7 +2408,7 @@ function initBackgroundScan() {
                         }
 
                         if (_stopFastScan) {
-                            console.log('initBackgroundScan(): stopping fast scan');
+                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): stopping fast scan');
                             localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
                             localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _lastScanPageCurrent);
                             localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _lastBackGroundScanStage);

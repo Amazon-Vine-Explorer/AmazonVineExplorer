@@ -19,6 +19,10 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [09.10.2024] - Version 0.10.9.0.1.deburau.18
+* Every five minues AVE performs a fast scan. That means, potluck and last_chance are scanned and then
+  encore until two consecutive pages without new products are found.
+
 ##### [30.09.2024] - Version 0.10.9.0.1.deburau.17
 * Not Seen Max Count is configurable in AVE settings
 
