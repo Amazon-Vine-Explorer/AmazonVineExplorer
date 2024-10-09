@@ -2261,7 +2261,7 @@ function initBackgroundScan() {
 
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
 
-                const _scannerName = localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') ? 'Fast Scanner' : 'Background Scanner';
+                const _scannerName = localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == true ? 'Fast Scanner' : 'Background Scanner';
 
                 switch (_backGroundScanStage) {
                     case 0:{ // potluck, last_chance
