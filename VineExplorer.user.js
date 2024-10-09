@@ -2234,7 +2234,8 @@ function initBackgroundScan() {
                     } else {
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): starting fast scan');
                         localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', true);
-                        localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT', -1);
+                        localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT1', -1);
+                        localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT2', -1);
                         localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
                         localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE'));
                         localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
@@ -2396,7 +2397,7 @@ function initBackgroundScan() {
                         if (_backGroundScanStage > 1) {
                             _stopFastScan = true;
                         }
-                        if (_backGroundScanStage > 0 && newCount === 0 && localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT') == 0) {
+                        if (_backGroundScanStage > 0 && newCount === 0 && localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT1') == 0 && localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT2') == 0) {
                             _stopFastScan = true;
                         }
                         if (_backGroundScanStage == 1 && _lastBackGroundScanStage == 1 && _scanPageCurrent > 0 && _scanPageCurrent >= _lastScanPageCurrent) {
@@ -2404,7 +2405,8 @@ function initBackgroundScan() {
                         }
 
                         if(_backGroundScanStage > 0 && newCount >= 0) {
-                            localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT', newCount);
+                            localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT2', localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT1'));
+                            localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT1', newCount);
                         }
 
                         if (_stopFastScan) {
