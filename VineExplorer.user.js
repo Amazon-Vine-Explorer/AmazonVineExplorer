@@ -2228,10 +2228,10 @@ function initBackgroundScan() {
                 _loopIsWorking = true;
 
                 if (!(localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true')) {
-                    let FastTimeWaitingMS = Date.now() - (localStorage.getItem('AVE_FAST_SCAN_LAST_TIME') || 0);
-                    let FastTimeWaitingMin = FastTimeWaitingMS / 1000 / 60;
+                    let _fastTimeWaitingMS = Date.now() - (localStorage.getItem('AVE_FAST_SCAN_LAST_TIME') || 0);
+                    let _fastTimeWaitingMin = _fastTimeWaitingMS / 1000 / 60;
                     let _startFastScan = true;
-                    if (FastTimeWaitingMin < 5) {
+                    if (_fastTimeWaitingMin < 5) {
                         _startFastScan = false;
                     }
                     if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE') > 0)) {
