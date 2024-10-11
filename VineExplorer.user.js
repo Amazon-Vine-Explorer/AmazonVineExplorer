@@ -2253,8 +2253,6 @@ function initBackgroundScan() {
                         localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE'));
                         localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
                         localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
-                    } else {
-                        localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
                     }
                 }
     
