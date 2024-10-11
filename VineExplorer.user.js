@@ -2228,16 +2228,18 @@ function initBackgroundScan() {
                 _loopIsWorking = true;
 
                 if (!(localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true')) {
-                    let FastTimeWaitingMS = Date.now() - (localStorage.getItem('AVE_FAST_SCAN_LAST_TIME') || 0);
-                    let FastTimeWaitingMin = FastTimeWaitingMS / 1000 / 60;
+                    let _backGroundScanStage = localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE');
+                    let _backGroundScanPageCurrent = localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT');
+                    let _fastTimeWaitingMS = Date.now() - (localStorage.getItem('AVE_FAST_SCAN_LAST_TIME') || 0);
+                    let _fastTimeWaitingMin = _fastTimeWaitingMS / 1000 / 60;
                     let _startFastScan = true;
-                    if (FastTimeWaitingMin < 5) {
+                    if (_fastTimeWaitingMin < 5) {
                         _startFastScan = false;
                     }
-                    if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE') > 0)) {
+                    if (!(_backGroundScanStage > 0)) {
                         _startFastScan = false;
                     }
-                    if (localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE') == 1 && !(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT') > 0)) {
+                    if (_backGroundScanStage == 1 && !(_backGroundScanPageCurrent > 0)) {
                         _startFastScan = false;
                     }
                     if (_PageMax < 1) {
@@ -2249,8 +2251,8 @@ function initBackgroundScan() {
                         localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', true);
                         localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT1', -1);
                         localStorage.setItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT2', -1);
-                        localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT', localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT'));
-                        localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_STAGE', localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE'));
+                        localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_PAGE_CURRENT', _backGroundScanPageCurrent);
+                        localStorage.setItem('AVE_LAST_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
                         localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
                         localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
                     }
