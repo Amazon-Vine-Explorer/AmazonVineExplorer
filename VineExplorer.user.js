@@ -2237,10 +2237,10 @@ function initBackgroundScan() {
                     if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE') > 0)) {
                         _startFastScan = false;
                     }
-                    if (localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE') == 1 && !(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT') > 0)) {
+                    if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX') > 0)) {
                         _startFastScan = false;
                     }
-                    if (_PageMax < 1) {
+                    if (localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE') == 1 && !(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT') > 0)) {
                         _startFastScan = false;
                     }
 
