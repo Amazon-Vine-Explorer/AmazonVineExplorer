@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [04.11.2024] - Version 0.10.9.0.1.deburau.19
+*  Make it possible to edit the MaxItemsPerPage variable. Change contributed by Olum-hack.
+
 ##### [09.10.2024] - Version 0.10.9.0.1.deburau.18
 * Every five minues AVE performs a fast scan. That means, potluck and last_chance are scanned and then
   encore until three consecutive pages without new products are found.

@@ -253,6 +253,8 @@ SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DATABSE EXPORT >>>', bg
 SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DATABSE IMPORT <<<', bgColor: 'yellow', description: 'Clear the current database and import data from an earlier exported file. Data is imported as is, i.e. there is no validation. Please wait for the completion notification after clicking the button', btnClick: () => {importDatabase();}});
 SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DELETE DATABSE', bgColor: 'rgb(255,0,0)', description: 'A USER DOES NOT NEED TO DO THIS ! ITS ONLY FOR DEVELOPMENT PURPOSES', btnClick: () => {database.deleteDatabase().then(() => {window.location.href = window.location.href})}});
 
+SETTINGS_USERCONFIG_DEFINES.push({key: 'MaxItemsPerPage', type: 'number', min: 20, max: 1000, name: 'Maximum items per page', description: 'Maximum items that will show up one one page'});
+
 class SETTINGS_DEFAULT {
     EnableFullWidth = true;
     DarkMode = false;
