@@ -22,7 +22,8 @@ We are aware of the issue and are working on a fix.
 ##### [10.11.2024] - Version 0.11.1
 *  Simpler regular expressions for Amazon domain detection
 *  Don't announce that this is the master session on none vine pages
-*  Removed "Deburau Development Fork" from branding text
+*  Removed "Deburau Development Fork" from branding text.
+   Be aware that you have to reinstall the script and remove the old one
 
 ##### [04.11.2024] - Version 0.11.0
 *  Make it possible to edit the MaxItemsPerPage variable. Change contributed by Olum-hack.
