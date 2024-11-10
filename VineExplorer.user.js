@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Amazon Vine Explorer - Deburau Development Fork
+// @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
 // @version      0.11.1
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js

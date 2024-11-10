@@ -60,6 +60,7 @@ class AVE_EVENTHANDLER {
 const ave_eventhandler = new AVE_EVENTHANDLER();
 
 function addBranding() {
+    const _isMasterSession = AVE_IS_THIS_SESSION_MASTER && SITE_IS_VINE;
 
     const _oldElem = document.getElementById('ave-branding-text');
     if (_oldElem) _oldElem.remove();
@@ -79,7 +80,7 @@ function addBranding() {
     width: fit-content;
     height: fit-content;
     margin-left: auto;
-    background-color: ${(AVE_IS_THIS_SESSION_MASTER) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)'};
+    background-color: ${(_isMasterSession) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)'};
     justify-content: center;
     display: flex;
     padding: 3px;
@@ -107,14 +108,14 @@ function addBranding() {
     _text.style.left = '10px';
     // _text.style.transform = 'translate(-50%, -50%)';
     _text.style.color = 'blue'; // Textfarbe
-    _text.style.backgroundColor = (AVE_IS_THIS_SESSION_MASTER) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)';
+    _text.style.backgroundColor = (_isMasterSession) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)';
     _text.style.textAlign = 'left';
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
     _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
     _text.innerHTML = `
     <p id="ave-brandig-text">
-      ${AVE_TITLE}${(AVE_IS_THIS_SESSION_MASTER) ? ' - Master': ''} - ${AVE_VERSION}
+      ${AVE_TITLE}${(_isMasterSession) ? ' - Master': ''} - ${AVE_VERSION}
     </p>
     <div class="ave-x-wrapper">
       <div class="ave-close-x" id="ave-branding-x">
