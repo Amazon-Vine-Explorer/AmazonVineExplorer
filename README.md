@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [10.11.2024] - Version 0.11.1
+*  Simpler regular expressions for Amazon domain detection
+
 ##### [04.11.2024] - Version 0.11.0
 *  Make it possible to edit the MaxItemsPerPage variable. Change contributed by Olum-hack.
 *  Bumped version number from 0.10.9.0.1.deburau.18 to 0.11.0
