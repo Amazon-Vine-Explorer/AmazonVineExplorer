@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [14.11.2024] - Version 0.11.1
+*  A value of 0 for "Desktop Notifikation Delay (Seconds)" disables those notifications. This does not disable notifications for item matches.
+
 ##### [10.11.2024] - Version 0.11.1
 *  Simpler regular expressions for Amazon domain detection
 *  Don't announce that this is the master session on none vine pages
