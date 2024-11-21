@@ -2009,6 +2009,16 @@ async function cleanUpDatabase(cb = () => {}) {
 
         let _updated = 0;
         let _deleted = 0;
+        let _vendorCleanupDate = toUnixTimestamp(localStorage.getItem('AVE_CLEANUP_LAST_TIME') || 0);
+        let _normalCleanupDate = _vendorCleanupDate;
+        if (_vendorCleanupDate < unixTimeStamp() - SECONDS_PER_DAY) {
+            // potluck removal starts at last cleanup time or after a day, whichever comes later 
+            _vendorCleanupDate = unixTimeStamp() - SECONDS_PER_DAY;
+        }
+        if (_normalCleanupDate < unixTimeStamp() - SECONDS_PER_WEEK) {
+            // normal removal starts at last cleanup time or after 7 days, whichever comes later 
+            _normalCleanupDate = unixTimeStamp() - SECONDS_PER_WEEK;
+        }
 
         for (const _currEntry of prodArr) {
             _workersProms.push(new Promise((resolve, reject) => {
@@ -2029,10 +2039,10 @@ async function cleanUpDatabase(cb = () => {}) {
                 }
 
                 let _notSeenCounter = _currEntry.notSeenCounter;
-                if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen < (unixTimeStamp() - SECONDS_PER_DAY)) { // If PotLuck start revoving after 1 day
+                if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen < _vendorCleanupDate) { // If PotLuck start revoving after 1 day
                     _notSeenCounter++;
                     if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} increased notSeenCounter to ${_notSeenCounter}`);
-                } else if (_currEntry.ts_lastSeen < (unixTimeStamp() - SECONDS_PER_WEEK)) { // Normal Product Start Removing after 1 week
+                } else if (_currEntry.ts_lastSeen < _normalCleanupDate) { // Normal Product Start Removing after 1 week
                     _notSeenCounter++;
                     if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} increased notSeenCounter to ${_notSeenCounter}`);
                 }
@@ -2063,6 +2073,8 @@ async function cleanUpDatabase(cb = () => {}) {
         Promise.allSettled(_workersProms).then(() => {
             if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
             _dbCleanIcon.remove();
+            // store current date 
+            localStorage.setItem('AVE_CLEANUP_LAST_TIME', Date.now());
             cb(true);
         })
 
