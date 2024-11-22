@@ -19,10 +19,11 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
-##### [14.11.2024] - Version 0.11.1
+##### [22.11.2024] - Version 0.11.1
 *  A value of 0 for "Desktop Notifikation Delay (Seconds)" disables those notifications. This does not disable notifications for item matches.
 *  Up to now, database cleanup started after one day after an item was last seen for potluck items and after 7 days for other items.
    Now it starts after the time of the last cleanup.
+*  Bug fix: if the number of last page to scan is a multiple of 100, an exception was thrown and the scan was aborted.
 
 ##### [10.11.2024] - Version 0.11.1
 *  Simpler regular expressions for Amazon domain detection

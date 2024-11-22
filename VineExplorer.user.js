@@ -1987,10 +1987,12 @@ function getPageinationData(localDocument = document) {
     let _currChild = _paginationContainer.lastChild;
 
     while ((!_ret.href || !_ret.maxPage) && _currChild) {
-        const _curr = _currChild.childNodes[0];
+        const _curr = _currChild.firstChild;
 
-        if (_curr.hasAttribute('href')) _ret.href = _curr.getAttribute('href').replace(/=[0-9]+/, '=');
-        if (parseInt(_curr.text)) _ret.maxPage = parseInt(_curr.text);
+        if (_curr) {
+            if (_curr.hasAttribute('href')) _ret.href = _curr.getAttribute('href').replace(/=[0-9]+/, '=');
+            if (parseInt(_curr.text)) _ret.maxPage = parseInt(_curr.text);
+        }
         _currChild = _currChild.previousSibling
     }
     return _ret;
