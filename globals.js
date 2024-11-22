@@ -229,6 +229,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationDelay', type: 'number
 SETTINGS_USERCONFIG_DEFINES.push({key: 'SearchBarInputDelay', type: 'number', min: 100, max: 1000, name: 'Search Bar Input Delay until auto search(Milliseconds)', description: 'When typing in the search bar, start searching when no key pressed this long milliseconds'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'NotSeenMaxCount', type: 'number', min: 0, max: 9, name: 'Not Seen Max Count after which items get removed from the database', description: 'If an item ist not found more often than this during full background scans, it will be removed from the database'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'MaxItemsPerPage', type: 'number', min: 20, max: 1000, name: 'Maximum items per page', description: 'Maximum items that will show up one one page'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'ShowFirstSeen', type: 'bool', name: 'Show first seen instead of last seen', description: 'Instead of the "Last seen" date in the product box show the date, the item was first seen'});
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Colors and Styles', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorNewProducts', type: 'color', name: 'Button Color New Products', description: ''});
@@ -274,6 +275,7 @@ class SETTINGS_DEFAULT {
     EnableBtnAll = true;
     EnablePaginationTop = true;
     EnableBtnMarkAllAsSeen = true;
+    ShowFirstSeen = false;
 
     BtnColorFavorites = '#ffe143';
     BtnColorNewProducts = '#00FF00';

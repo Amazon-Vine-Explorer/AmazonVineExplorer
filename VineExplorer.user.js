@@ -619,10 +619,16 @@ function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
 }
 
 function createLasSeenElement(prod, index = Math.round(Math.random()* 10000)) {
+    const _showFirstSeen = SETTINGS.ShowFirstSeen || false;
+
     const _lastSeenElement = document.createElement('div');
     _lastSeenElement.setAttribute("id", `ave-p-lastSeen-${index || Math.round(Math.random() * 5000)}`);
     _lastSeenElement.classList.add('ave-last-seen');
-    _lastSeenElement.textContent = 'Last seen: ' + timeAgo(new Date(toTimestamp(prod.ts_lastSeen)));
+    if (_showFirstSeen) {
+        _lastSeenElement.textContent = 'First seen: ' + timeAgo(new Date(toTimestamp(prod.ts_firstSeen)));
+    } else {
+        _lastSeenElement.textContent = 'Last seen: ' + timeAgo(new Date(toTimestamp(prod.ts_lastSeen)));
+    }
     _lastSeenElement.style.float = 'left';
     _lastSeenElement.style.display = 'flex';
     return _lastSeenElement;
