@@ -24,6 +24,7 @@ We are aware of the issue and are working on a fix.
 *  Up to now, database cleanup started after one day after an item was last seen for potluck items and after 7 days for other items.
    Now it starts after the time of the last cleanup.
 *  New configuration button "Show first seen instead of last seen". Instead of the "Last seen" date in the product box show the date, the item was first seen.
+*  Tax price is displayed with current locale and two fraction digits.
 *  Bug fix: if the number of last page to scan is a multiple of 100, an exception was thrown and the scan was aborted.
 
 ##### [10.11.2024] - Version 0.11.1

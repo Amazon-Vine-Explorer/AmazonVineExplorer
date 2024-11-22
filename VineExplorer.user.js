@@ -795,7 +795,7 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     _taxElement_span.classList.add('ave-taxinfo-text');
     const _prize = prod.data_estimated_tax_prize;
     console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
-    _taxElement_span.innerText = `Tax Price: ${(typeof(_prize) == 'number') ? _prize :'--.--'} ${_currencySymbol}`;
+    _taxElement_span.innerText = `Tax Price: ${(typeof(_prize) == 'number') ? Intl.NumberFormat(undefined, {minimumFractionDigits: 2}).format(_prize) : '--.--'} ${_currencySymbol}`;
     console.log('createTaxInfo(): After innerText');
 
     _taxElement.appendChild(_taxElement_span);
