@@ -2794,6 +2794,7 @@ async function requestProductDetails(prod) {
                 const _promArray = new Array();
                 prod.data_estimated_tax_prize = prod.data_estimated_tax_prize || 0;
                 for (const _child of prod.data_childs) {
+                    await delay(10000);
                     _promArray.push(fetch(`${window.location.origin}/vine/api/recommendations/${(prod.id).replace(/#/g, '%23')}/item/${_child.asin}`.replace(/#/g, '%23')).then(r => r.json()).then((childData) => {
                         console.log('CHILD_DATA:', childData);
                         if (!childData.error) {
