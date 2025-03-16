@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.2.2
+// @version      0.11.2.3
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
 // @author       MarkusSR1984, Christof121, Olum-hack, Deburau
 // @match        *://www.amazon.de/*
