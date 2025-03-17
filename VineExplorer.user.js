@@ -2777,46 +2777,47 @@ function addStyleToTile(_currTile, _product) {
 
 async function requestProductDetails(prod) {
     return new Promise(async (resolve, reject) => {
-        if (prod.data_asin_is_parent) {// Lets get the Childs first
-            fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}`.replace(/#/g, '%23')).then(r => r.json()).then(async (res) => {
-                if (res.error) {
-                    if (res.error.exceptionType == 'ITEM_NOT_IN_ENROLLMENT') {
-                        prod.forceRemove = true;
-                        resolve(prod);
-                    } else {
-                        console.error('requestProductDetails():ERROR:', res.error);
-                        reject(res.error.exceptionType);
-                    }
-                }
-                const _data = res.result;
-                console.log('DATA:', _data)
-                prod.data_childs = _data.variations || [];
-                const _promArray = new Array();
-                prod.data_estimated_tax_prize = prod.data_estimated_tax_prize || 0;
-                for (const _child of prod.data_childs) {
-                    await delay(1000);
-                    _promArray.push(fetch(`${window.location.origin}/vine/api/recommendations/${(prod.id).replace(/#/g, '%23')}/item/${_child.asin}`.replace(/#/g, '%23')).then(r => r.json()).then((childData) => {
-                        console.log('CHILD_DATA:', childData);
-                        if (!childData.error) {
+        // if (prod.data_asin_is_parent) {// Lets get the Childs first
+        //     fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}`.replace(/#/g, '%23')).then(r => r.json()).then(async (res) => {
+        //         if (res.error) {
+        //             if (res.error.exceptionType == 'ITEM_NOT_IN_ENROLLMENT') {
+        //                 prod.forceRemove = true;
+        //                 resolve(prod);
+        //             } else {
+        //                 console.error('requestProductDetails():ERROR:', res.error);
+        //                 reject(res.error.exceptionType);
+        //             }
+        //         }
+        //         const _data = res.result;
+        //         console.log('DATA:', _data)
+        //         prod.data_childs = _data.variations || [];
+        //         const _promArray = new Array();
+        //         prod.data_estimated_tax_prize = prod.data_estimated_tax_prize || 0;
+        //         for (const _child of prod.data_childs) {
+        //             await delay(1000);
+        //             _promArray.push(fetch(`${window.location.origin}/vine/api/recommendations/${(prod.id).replace(/#/g, '%23')}/item/${_child.asin}`.replace(/#/g, '%23')).then(r => r.json()).then((childData) => {
+        //                 console.log('CHILD_DATA:', childData);
+        //                 if (!childData.error) {
 
-                            // Copy over all returned datapoints od child asin
-                            for (const _datapoint of Object.keys(childData.result)) {
-                                _child[_datapoint] = childData.result[_datapoint];
-                            }
+        //                     // Copy over all returned datapoints od child asin
+        //                     for (const _datapoint of Object.keys(childData.result)) {
+        //                         _child[_datapoint] = childData.result[_datapoint];
+        //                     }
 
-                            if (prod.data_estimated_tax_prize < _child.taxValue) {
-                                prod.data_estimated_tax_prize = _child.taxValue;
-                                prod.data_tax_currency = _child.taxCurrency;
-                            }
-                        }
-                    }))
-                }
-                Promise.all(_promArray).then((values) => {
-                    console.log('All fetches returned: ', values);
-                    resolve(prod);
-                });
-            })
-        } else {
+        //                     if (prod.data_estimated_tax_prize < _child.taxValue) {
+        //                         prod.data_estimated_tax_prize = _child.taxValue;
+        //                         prod.data_tax_currency = _child.taxCurrency;
+        //                     }
+        //                 }
+        //             }))
+        //         }
+        //         Promise.all(_promArray).then((values) => {
+        //             console.log('All fetches returned: ', values);
+        //             resolve(prod);
+        //         });
+        //     })
+        // } else {
+        if (!prod.data_asin_is_parent) {
             fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}/item/${prod.data_asin}`.replace(/#/g, '%23')).then(r => r.json()).then(ret => {
                 console.log('RETURN:', ret);
                 if (ret.error) {
