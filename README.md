@@ -19,7 +19,11 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
-##### [22.11.2024] - Version 0.11.1
+##### [2025-03-18] - Version 0.11.3
+*  Olum found the reason (or at leat one of them) for getting temporarily blocked: fetching the estimated tax price for items with variants.  
+   As a workaround, this was removed with the consequence, that estimated tax prices are not shown for this items.
+
+##### [2024-11-22] - Version 0.11.2
 *  A value of 0 for "Desktop Notifikation Delay (Seconds)" disables those notifications. This does not disable notifications for item matches.
 *  Up to now, database cleanup started after one day after an item was last seen for potluck items and after 7 days for other items.
    Now it starts after the time of the last cleanup.
@@ -27,24 +31,24 @@ We are aware of the issue and are working on a fix.
 *  Tax price is displayed with current locale and two fraction digits.
 *  Bug fix: if the number of last page to scan is a multiple of 100, an exception was thrown and the scan was aborted.
 
-##### [10.11.2024] - Version 0.11.1
+##### [2024-11-10] - Version 0.11.1
 *  Simpler regular expressions for Amazon domain detection
 *  Don't announce that this is the master session on none vine pages
 *  Removed "Deburau Development Fork" from branding text.
    Be aware that you have to reinstall the script and remove the old one
 
-##### [04.11.2024] - Version 0.11.0
+##### [2024-11-04] - Version 0.11.0
 *  Make it possible to edit the MaxItemsPerPage variable. Change contributed by Olum-hack.
 *  Bumped version number from 0.10.9.0.1.deburau.18 to 0.11.0
 
-##### [09.10.2024] - Version 0.10.9.0.1.deburau.18
+##### [2024-10-09] - Version 0.10.9.0.1.deburau.18
 * Every five minues AVE performs a fast scan. That means, potluck and last_chance are scanned and then
   encore until three consecutive pages without new products are found.
 
-##### [30.09.2024] - Version 0.10.9.0.1.deburau.17
+##### [2024-09-30] - Version 0.10.9.0.1.deburau.17
 * Not Seen Max Count is configurable in AVE settings
 
-##### [19.09.2024] - Version 0.10.9.0.1.deburau.16
+##### [2024-09-19] - Version 0.10.9.0.1.deburau.16
 * The database cleanup now happens right after a complete scan is finished. Prior to this change,
   the cleanup was performed after waiting for three hours, just before a new scan was started
 * Add missing SECONDS_PER_WEEK to globals.js, fixes database cleanup not working.
@@ -53,64 +57,64 @@ We are aware of the issue and are working on a fix.
   scan needs about one to two hours plus three hours delay until the next scan starts. This sums
   up to one to two days until cleaning up old entries effectivly starts
 
-##### [18.09.2024] - Version 0.10.9.0.1.deburau.15
+##### [2024-09-18] - Version 0.10.9.0.1.deburau.15
 * An alert notification is show after product data import finished
 * Restart background scan after import finished
 
-##### [16.09.2024] - Version 0.10.9.0.1.deburau.14
+##### [2024-09-16] - Version 0.10.9.0.1.deburau.14
 * Desktop notifications for products with keyword matches now open the Amazon product page
 
-##### [14.09.2024] - Version 0.10.9.0.1.deburau.13
+##### [2024-09-14] - Version 0.10.9.0.1.deburau.13
 * Included pull request #41 from DeMoehn from original repo
 
-##### [09.09.2024] - Version 0.10.9.0.1.deburau.12
+##### [2024-09-09] - Version 0.10.9.0.1.deburau.12
 * Multiple desktop notification keywords can be entered seperated by new lines
 * BREAKING CHANGE: Database Import now clears the database prior to importing new data
 * Command for database merging is removed
 
-##### [08.09.2024] - Version 0.10.9.0.1.deburau.11
+##### [2024-09-08] - Version 0.10.9.0.1.deburau.11
 * When the enter key is pressed in the search bar, the search is executed immediately instead of waiting for the input timeout 
 * The search bar input delay was increased to 500 milliseconds
 
-##### [03.09.2024] - Version 0.10.9.0.1.deburau.10
+##### [2024-09-03] - Version 0.10.9.0.1.deburau.10
 * New command **DATABASE MERGE +++** in AVE Settings. It reads a database export and merges it into the existing database.
   New entrires are added, existing entries are overwritten. This differs from **DATABASE IMPORT <<<**, where existing entries are skipped.
 
-##### [28.08.2024] - Version 0.10.9.0.1.deburau.9
+##### [2024-08-28] - Version 0.10.9.0.1.deburau.9
 * Defaults for **BackGroundScanDelayPerPage** and **BackGroundScannerRandomness** set to 6000
 
-##### [28.08.2024] - Version 0.10.9.0.1.deburau.8
+##### [2024-08-28] - Version 0.10.9.0.1.deburau.8
 * When upgrading from a former database version, a check for duplicate ASINs is performed. This check fails for newly created databases with the error message
   `Something was going wrong while init database` and `DB_HANDLER.#getStore: Database Object is not defined`
   Now this check is only performed for upgrading existing databases
 
-##### [19.08.2024] - Version 0.10.9.0.1.deburau.7
+##### [2024-08-19] - Version 0.10.9.0.1.deburau.7
 * The field "id" is used as thè primary key of the IndexedDB database. Unfortunatly it may change over
   time. This often ruslts in errors like this, because the data_asin stays constant even if the id changes.:
   `vine-items:1 Uncaught (in promise) DB_HANDLER.add(): ConstraintError: Unable to add key to index 'data_asin': at least one key does not satisfy the uniqueness requirements.`
   Now it tries to get the object first with the ID an if not found, try with the ASIN
 
-##### [16.08.2024] - Version 0.10.9.0.1.deburau.6
+##### [2024-08-16] - Version 0.10.9.0.1.deburau.6
 * Search Bar Input Delay is now configurable
 
-##### [16.08.2024] - Version 0.10.9.0.1.deburau.5
+##### [2024-08-16] - Version 0.10.9.0.1.deburau.5
 * Recently my IP address was temporarely blocked several times by amazon, visiting the vine site 
   returned status 503. So I raised the default for "Background Scan Per Page Min Delay(Milliseconds)"
   to 10.000 and the maximal possible value to 20.000
 
-##### [15.08.2024] - Version 0.10.9.0.1.deburau.4
+##### [2024-08-15] - Version 0.10.9.0.1.deburau.4
 * Use ESLint and fix errors in requestProductDetails
 
-##### [05.08.2024] - Version 0.10.9.0.1.deburau.3
+##### [2024-08-05] - Version 0.10.9.0.1.deburau.3
 * Incorporated changes from Olum (see further down)
 
-##### [05.08.2024] - Version 0.10.9.0.1.deburau.2
+##### [2024-08-05] - Version 0.10.9.0.1.deburau.2
 * Enhancements
   - Mark all seen now only updates new products, not all products
   - Desktop notifications for products with keyword matches now open the
     Amazon product page
     
-##### [05.08.2024] - Version 0.10.9.0.1.deburau.1
+##### [2024-08-05] - Version 0.10.9.0.1.deburau.1
 * Enhancements
   - isNew and isFav are now indexed. Since IndexedDB does not support 
 	booleans as index, the type was changed to integer 0 and 1
@@ -125,10 +129,10 @@ We are aware of the issue and are working on a fix.
   - notifications are only sent once per product. Fixes #18
 
 ### Changelog Olum
-##### [04.08.2024] - Version O_5
+##### [2024-08-04] - Version O_5
 * Anzeige wann das Produkt das letzte Mal vom Scanner gefunden wurde
   
-##### [28.06.2024] - Version O_4
+##### [2024-06-28] - Version O_4
 * Background sanner stops for 3 hours after full scan
 * Background sanner starts at page 0 after 10 hours
 * Show status of background scanner active page / max page
