@@ -2716,7 +2716,7 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
     const _btnInner = document.createElement('span');
     _btnInner.classList.add('a-button-inner');
     _btnInner.style.backgroundColor = color;
-    _btnInner.style.display = 'flex';
+    // _btnInner.style.display = 'flex';
     _btn.append(_btnInner);
 
     const _btnInnerText = document.createElement('span');
