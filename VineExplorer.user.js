@@ -2710,7 +2710,7 @@ function desktopNotifikation(title, message, image = null, requireInteraction = 
 function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeValue) {
     const _btn = document.createElement('span');
     _btn.setAttribute('id', mainID);
-    _btn.setAttribute('class', 'a-button a-button-normal a-button-toggle');
+    _btn.setAttribute('class', 'a-button a-button-normal a-button-toggle vvp-items-button');
     _btn.addEventListener('click', onclick);
 
     const _btnInner = document.createElement('span');
