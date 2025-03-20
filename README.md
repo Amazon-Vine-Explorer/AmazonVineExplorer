@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-03-21] - Version 0.11.4
+*  Fix button height after changes on the vine site.
+
 ##### [2025-03-18] - Version 0.11.3
 *  Olum found the reason (or at leat one of them) for getting temporarily blocked: fetching the estimated tax price for items with variants.  
    As a workaround, this was removed with the consequence, that estimated tax prices are not shown for this items.
