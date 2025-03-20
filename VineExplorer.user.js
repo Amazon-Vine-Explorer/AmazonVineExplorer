@@ -2716,7 +2716,7 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
     const _btnInner = document.createElement('span');
     _btnInner.classList.add('a-button-inner');
     _btnInner.style.backgroundColor = color;
-    // _btnInner.style.display = 'flex';
+    _btnInner.style.display = 'flex';
     _btn.append(_btnInner);
 
     const _btnInnerText = document.createElement('span');
@@ -2884,7 +2884,8 @@ function init(hasTiles) {
 
     _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Alle Produkte', '', SETTINGS.BtnColorAllProducts, () => {createNewSite(PAGETYPE.ALL);}));
     _searchbarContainer.appendChild(createNavButton('ave-btn-favorites', 'Favoriten', '', SETTINGS.BtnColorFavorites, () => {createNewSite(PAGETYPE.FAVORITES);}));
-    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn', SETTINGS.BtnColorNewProducts, () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
+//    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn', SETTINGS.BtnColorNewProducts, () => {createNewSite(PAGETYPE.NEW_ITEMS);}, 'ave-new-items-btn-badge', '-'));
+    _searchbarContainer.appendChild(createNavButton('ave-btn-list-new', 'Neue Einträge', 'ave-new-items-btn', SETTINGS.BtnColorNewProducts, () => {createNewSite(PAGETYPE.NEW_ITEMS);}));
 
     updateNewProductsBtn();
 
