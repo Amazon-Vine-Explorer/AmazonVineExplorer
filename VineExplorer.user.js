@@ -199,9 +199,7 @@ ave_eventhandler.on('ave-database-changed', () => {
 })
 
 window.onscroll = () => { // ONSCROLL Event handler
-    stickElementToTopScrollEVhandler('ave-btn-allseen', '5px');
-    stickElementToTopScrollEVhandler('ave-btn-db-allseen', '40px');
-    stickElementToTopScrollEVhandler('ave-btn-backtotop', '75px');
+    stickElementToTopScrollEVhandler('ave-left-side-container', '0');
 
     if (currentMainPage == PAGETYPE.ALL) handleInfiniteScroll();
 
@@ -455,21 +453,25 @@ function reloadPageWithSubpageTarget(target) {
 }
 
 function addLeftSideButtons(forceClean) {
-    const _nodesContainer = document.getElementById('vvp-browse-nodes-container');
+    const _outerNodesContainer = document.getElementById('vvp-browse-nodes-container');
 
-    if (forceClean) _nodesContainer.innerHTML = '';
+    if (forceClean) _outerNodesContainer.innerHTML = '';
 
+    const _nodesContainer = document.createElement('div');
+    _nodesContainer.id = 'ave-left-side-container'
+    _nodesContainer.style.paddingTop = '15px'
+    _nodesContainer.style.width = '240px'
 
-    _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
+    _outerNodesContainer.appendChild(_nodesContainer); // A bit of Space above our Buttons
 
-    const _setAllSeenBtn = createButton('Aktuelle Seite als gesehen markieren','ave-btn-allseen',  `width: 240px; background-color: ${SETTINGS.BtnColorMarkCurrSiteAsSeen};`, () => {
+    const _setAllSeenBtn = createButton('Seite als gelesen markieren','ave-btn-allseen',  `width: 238px; background-color: ${SETTINGS.BtnColorMarkCurrSiteAsSeen};`, () => {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
         window.scrollTo(0, 0);
     });
 
-    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', `left: 0; width: 240px; background-color: ${SETTINGS.BtnColorMarkAllAsSeen};`, () => {
+    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', `left: 0; width: 238px; background-color: ${SETTINGS.BtnColorMarkAllAsSeen};`, () => {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         setTimeout(() => {
@@ -486,7 +488,7 @@ function addLeftSideButtons(forceClean) {
         }, 30);
     });
 
-    const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  `width: 240px; background-color: ${SETTINGS.BtnColorBackToTop};`, () => {
+    const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  `width: 238px; background-color: ${SETTINGS.BtnColorBackToTop};`, () => {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked back to Top Button');
         window.scrollTo(0, 0);
@@ -502,6 +504,9 @@ function addLeftSideButtons(forceClean) {
     // });
 
     // _nodesContainer.appendChild(_clearDBBtn);
+
+    // Stick lest sidebar if necessary
+    stickElementToTopScrollEVhandler('ave-left-side-container', '0');
 }
 
 function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
@@ -2581,8 +2586,13 @@ function stickElementToTopScrollEVhandler(elemID, dist) {
         requestAnimationFrame(() => {
             const _elemRect = _elem.getBoundingClientRect();
 
-            const _elemInitialTop = parseInt(_elem.getAttribute('ave-data-default-top'));
-            if (!_elemInitialTop) {_elem.setAttribute('ave-data-default-top', (window.scrollY + _elemRect.top)); return;}
+            const _elemInitialTopValue = parseInt(_elem.getAttribute('ave-data-default-top'));
+            let _elemInitialTop = _elemInitialTopValue
+            if (!_elemInitialTopValue) {
+                _elemInitialTop = (window.scrollY + _elemRect.top);
+                _elem.setAttribute('ave-data-default-top', _elemInitialTop);
+            }
+
 
             if (SETTINGS.DebugLevel > 10) console.log(`### scrollY:${window.scrollY} maxScrollHeigt ${maxScrollHeight} initialTop: ${_elemInitialTop}`);
 
