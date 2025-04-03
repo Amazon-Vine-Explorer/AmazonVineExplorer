@@ -2332,7 +2332,7 @@ function initBackgroundScan() {
 
                             let _pagedate = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
                             if (_pagedate) {
-                                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX', _maxPage);
+                                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX', _pagedate.maxPage);
                             }
                         }
 
