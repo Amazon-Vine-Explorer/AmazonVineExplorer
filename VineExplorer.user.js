@@ -468,7 +468,6 @@ function addLeftSideButtons(forceClean) {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
         markAllCurrentSiteProductsAsSeen();
-        window.scrollTo(0, 0);
     });
 
     const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', `left: 0; width: 238px; background-color: ${SETTINGS.BtnColorMarkAllAsSeen};`, () => {
