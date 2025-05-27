@@ -6,9 +6,14 @@
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
 // @author       MarkusSR1984, Christof121, Olum-hack, Deburau
-// @match        *://www.amazon.de/*
-// @match        *://www.amazon.com/*
-// @match        *://www.amazon.co.uk/*
+// @match        https://www.amazon.com/*
+// @match        https://www.amazon.ca/*
+// @match        https://www.amazon.co.uk/*
+// @match        https://www.amazon.de/*
+// @match        https://www.amazon.fr/*
+// @match        https://www.amazon.it/*
+// @match        https://www.amazon.es/*
+// @match        https://www.amazon.co.jp/*
 // @license      MIT
 // @icon         https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/vine_logo.png
 // @run-at       document-start
