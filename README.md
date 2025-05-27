@@ -19,6 +19,12 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-05-27] - Version 0.11.6
+*  Enable match for all vine countries (Merge pull request #11 from adripo).
+
+##### [2025-05-27] - Version 0.11.5
+*  Items are sorted descending by time last seen (Merge pull request #10 from Olum-hack).
+
 ##### [2025-03-21] - Version 0.11.4
 *  Fix button height after changes on the vine site.
 

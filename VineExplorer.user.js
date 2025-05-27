@@ -1,14 +1,19 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.4
+// @version      0.11.6
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
-// @author       MarkusSR1984, Christof121, Olum-hack, Deburau
-// @match        *://www.amazon.de/*
-// @match        *://www.amazon.com/*
-// @match        *://www.amazon.co.uk/*
+// @author       MarkusSR1984, Christof121, Olum-hack, Deburau, adripo
+// @match        https://www.amazon.com/*
+// @match        https://www.amazon.ca/*
+// @match        https://www.amazon.co.uk/*
+// @match        https://www.amazon.de/*
+// @match        https://www.amazon.fr/*
+// @match        https://www.amazon.it/*
+// @match        https://www.amazon.es/*
+// @match        https://www.amazon.co.jp/*
 // @license      MIT
 // @icon         https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/vine_logo.png
 // @run-at       document-start
@@ -810,6 +815,8 @@ function insertHtmlElementAfter(referenceNode, newNode) {
 async function createProductSite(siteType, productArray, cb) {
     if (!productArray) return;
 
+    productArray = sort_by_key(productArray, 'ts_lastSeen');
+    
     const _productArrayLength = productArray.length;
     const _fastCount = Math.min(_productArrayLength, SETTINGS.MaxItemsPerPage);
     if (SETTINGS.DebugLevel > 10) console.log(`Create Overview for ${_productArrayLength} Products`);
@@ -3000,4 +3007,14 @@ function init(hasTiles) {
         _pageinationContainer.appendChild(_btn);
         _pageinationContainer.appendChild(_AveNextArrow);
     }
+}
+
+//Sort Items by key
+function sort_by_key(array, key, order)
+{
+    return array.sort(function(a, b) {
+        var x = a[key]; var y = b[key];
+        const multiplier = order === "asc" ? 1 : -1;
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0))*multiplier;
+    });
 }
