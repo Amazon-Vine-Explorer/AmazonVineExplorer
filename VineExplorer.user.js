@@ -2411,7 +2411,7 @@ function initBackgroundScan() {
                         break;
                     }
                     case 4: { //Warten für drei Stunden nach dem der Scan abgeschlossen ist
-                        updateBackgroundScanScreenText(`${_scannerName} Time Waiting: ${TimeWaitingMin}`);
+                        updateBackgroundScanScreenText(`${_scannerName} Time Waiting: ${_timeConversion(TimeWaitingMS)}`);
 
                         if(TimeWaitingMin > 180)
                         {
@@ -2422,6 +2422,7 @@ function initBackgroundScan() {
                         break;
                     }
                 }
+                
                 function _scanFinished(newCount) {
                     if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished(): newCount=${newCount} _backGroundScanStage=${_backGroundScanStage} _subStage=${_subStage} AVE_FAST_SCAN_IS_RUNNING=${localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING')}`);
                     localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
@@ -2464,6 +2465,31 @@ function initBackgroundScan() {
                     if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): Scantime: ', timeElapsed, ' Delay: ', delay);
 
                     backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, delay);
+                }
+
+                function _timeConversion(duration) {
+                    const portions = [];
+                    
+                    const msInHour = 1000 * 60 * 60;
+                    const hours = Math.trunc(duration / msInHour);
+                    if (hours > 0) {
+                        portions.push(hours + 'h');
+                        duration = duration - (hours * msInHour);
+                    }
+                    
+                    const msInMinute = 1000 * 60;
+                    const minutes = Math.trunc(duration / msInMinute);
+                    if (minutes > 0) {
+                        portions.push(minutes + 'm');
+                        duration = duration - (minutes * msInMinute);
+                    }
+                    
+                    const seconds = Math.trunc(duration / 1000);
+                    if (seconds > 0) {
+                        portions.push(seconds + 's');
+                    }
+                    
+                    return portions.join(' ');
                 }
             }
         }
