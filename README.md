@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-05-27] - Version 0.11.7
+*  Show formatted time for Background Scanner Time Waiting (Merge pull request #12 from adripo).
+
 ##### [2025-05-27] - Version 0.11.6
 *  Enable match for all vine countries (Merge pull request #11 from adripo).
 
