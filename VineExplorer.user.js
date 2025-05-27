@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.4
+// @version      0.11.5
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -815,6 +815,8 @@ function insertHtmlElementAfter(referenceNode, newNode) {
 async function createProductSite(siteType, productArray, cb) {
     if (!productArray) return;
 
+    productArray = sort_by_key(productArray, 'ts_lastSeen');
+    
     const _productArrayLength = productArray.length;
     const _fastCount = Math.min(_productArrayLength, SETTINGS.MaxItemsPerPage);
     if (SETTINGS.DebugLevel > 10) console.log(`Create Overview for ${_productArrayLength} Products`);
@@ -2979,4 +2981,14 @@ function init(hasTiles) {
         _pageinationContainer.appendChild(_btn);
         _pageinationContainer.appendChild(_AveNextArrow);
     }
+}
+
+//Sort Items by key
+function sort_by_key(array, key, order)
+{
+    return array.sort(function(a, b) {
+        var x = a[key]; var y = b[key];
+        const multiplier = order === "asc" ? 1 : -1;
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0))*multiplier;
+    });
 }
