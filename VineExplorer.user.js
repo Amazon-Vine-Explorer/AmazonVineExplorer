@@ -2031,11 +2031,11 @@ async function cleanUpDatabase(cb = () => {}) {
         let _vendorCleanupDate = toUnixTimestamp(localStorage.getItem('AVE_CLEANUP_LAST_TIME') || 0);
         let _normalCleanupDate = _vendorCleanupDate;
         if (_vendorCleanupDate < unixTimeStamp() - SECONDS_PER_DAY) {
-            // potluck removal starts at last cleanup time or after a day, whichever comes later 
+            // potluck removal starts at last cleanup time or after a day, whichever comes later
             _vendorCleanupDate = unixTimeStamp() - SECONDS_PER_DAY;
         }
         if (_normalCleanupDate < unixTimeStamp() - SECONDS_PER_WEEK) {
-            // normal removal starts at last cleanup time or after 7 days, whichever comes later 
+            // normal removal starts at last cleanup time or after 7 days, whichever comes later
             _normalCleanupDate = unixTimeStamp() - SECONDS_PER_WEEK;
         }
 
@@ -2092,7 +2092,7 @@ async function cleanUpDatabase(cb = () => {}) {
         Promise.allSettled(_workersProms).then(() => {
             if (SETTINGS.DebugLevel > 0) console.log(`Databasecleanup Finished: Entrys:${_prodArrLength} Updated:${_updated} Deleted:${_deleted}`);
             _dbCleanIcon.remove();
-            // store current date 
+            // store current date
             localStorage.setItem('AVE_CLEANUP_LAST_TIME', Date.now());
             cb(true);
         })
@@ -2212,34 +2212,18 @@ function initBackgroundScan() {
     BackGroundScanIsRunning = true;
     const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
 
-    // Create iFrame if not exists
-    if (!document.querySelector('#ave-iframe-backgroundloader')) {
-        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): create iFrame');
-        const iframe = document.createElement('iframe');
-        iframe.src = encodeURI(`${_baseUrl}?queue=encore&pn=&cn=&page=1`);
-        iframe.id = 'ave-iframe-backgroundloader';
-        iframe.style.position = 'fixed';
-        iframe.style.top = '0';
-        iframe.style.left = '-10000';
-        iframe.style.width = '100%';
-        iframe.style.height = '100%';
-        iframe.style.display = 'none';
-        iframe.style.zIndex = '100';
-        document.body.appendChild(iframe);
-    }
-
     showBackgroundScanScreen('Start Background Scanner');
 
     const _paginatinWaitLoop = setInterval(() => {
 
-        const _pageinationData = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
-        if (_pageinationData) {
+        const _maxPage = localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX') || 100;
+        if (_maxPage) {
             clearInterval(_paginatinWaitLoop);
             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): pagination WaitLoop');
 
             if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_IS_RUNNING') == 'true')) {
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): init localStorage Variables');
-                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX',_pageinationData.maxPage);
+                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX', _maxPage);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_IS_RUNNING', true);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', 0);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', 0);
@@ -2288,7 +2272,7 @@ function initBackgroundScan() {
                         localStorage.setItem('AVE_FAST_SCAN_IS_RUNNING', false);
                     }
                 }
-    
+
                 let TimeWaitingMS = Date.now() - (localStorage.getItem('AVE_BACKGROUND_SCAN_LAST_TIME') || 0);
                 let TimeWaitingMin = TimeWaitingMS / 1000 / 60;
 
@@ -2316,6 +2300,24 @@ function initBackgroundScan() {
                     _scannerName = 'Background Scanner';
                 }
 
+                // Create iFrame if not exists
+                if (!document.querySelector('#ave-iframe-backgroundloader')) {
+                    // Create iFrame only if scan is running
+                    if (!(_backGroundScanStage == 4)) {
+                        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): create iFrame');
+                        const iframe = document.createElement('iframe');
+                        iframe.id = 'ave-iframe-backgroundloader';
+                        iframe.style.position = 'fixed';
+                        iframe.style.top = '0';
+                        iframe.style.left = '-10000';
+                        iframe.style.width = '100%';
+                        iframe.style.height = '100%';
+                        iframe.style.display = 'none';
+                        iframe.style.zIndex = '100';
+                        document.body.appendChild(iframe);
+                    }
+                }
+
                 switch (_backGroundScanStage) {
                     case 0:{ // potluck, last_chance
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
@@ -2341,7 +2343,7 @@ function initBackgroundScan() {
 
                             let _pagedate = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
                             if (_pagedate) {
-                                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX', _pageinationData.maxPage);
+                                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX', _pagedate.maxPage);
                             }
                         }
 
