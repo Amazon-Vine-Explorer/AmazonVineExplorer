@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-05-27] - Version 0.11.8
+*  Fix left side buttons (Merge pull request #15 from adripo).
+
 ##### [2025-05-27] - Version 0.11.7
 *  Show formatted time for Background Scanner Time Waiting (Merge pull request #12 from adripo).
 
