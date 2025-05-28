@@ -823,7 +823,7 @@ async function createProductSite(siteType, productArray, cb) {
 
 
     // Remove Pagination
-    const _pagination = document.querySelector('.a-pagination')
+    const _pagination = document.querySelectorAll('.a-pagination').forEach(e => e.remove());
     if (_pagination) _pagination.remove();
 
     const _contentContainer = document.querySelector('.a-section.vvp-tab-content');
@@ -882,7 +882,7 @@ async function createInfiniteScrollSite(siteType, cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called createInfiniteScrollSite()`);
 
     // Remove Pagination
-    const _pagination = document.querySelector('.a-pagination')
+    const _pagination = document.querySelectorAll('.a-pagination').forEach(e => e.remove());
     if (_pagination) _pagination.remove();
 
     const _contentContainer = document.querySelector('.a-section.vvp-tab-content');
@@ -2959,8 +2959,8 @@ function init(hasTiles) {
     if (SETTINGS.EnableBackgroundScan) initBackgroundScan();
 
     // Modify Pageination if exists
-    const _pageinationContainer = document.getElementsByClassName('a-pagination')[0];
-    if (_pageinationContainer) {
+    const _paginationContainers = document.querySelectorAll('.a-pagination');
+    _paginationContainers.forEach(_pageinationContainer => {
         if (SETTINGS.DebugLevel > 10) console.log('Manipulating Pageination');
 
         const _nextBtn = _pageinationContainer.lastChild;
