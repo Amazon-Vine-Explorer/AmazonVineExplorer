@@ -823,7 +823,7 @@ async function createProductSite(siteType, productArray, cb) {
 
 
     // Remove Pagination
-    const _pagination = document.querySelectorAll('.a-pagination')
+    const _pagination = document.querySelector('.a-pagination')
     if (_pagination) _pagination.remove();
 
     const _contentContainer = document.querySelector('.a-section.vvp-tab-content');
@@ -882,7 +882,7 @@ async function createInfiniteScrollSite(siteType, cb) {
     if (SETTINGS.DebugLevel > 10) console.log(`Called createInfiniteScrollSite()`);
 
     // Remove Pagination
-    const _pagination = document.querySelectorAll('.a-pagination')
+    const _pagination = document.querySelector('.a-pagination')
     if (_pagination) _pagination.remove();
 
     const _contentContainer = document.querySelector('.a-section.vvp-tab-content');
