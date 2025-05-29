@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-05-29] - Version 0.11.10
+*  Revert Fix left side buttons (Merge pull request #15 from adripo).
+
 ##### [2025-05-29] - Version 0.11.9
 *  Fix: iframe loads only when necessary (Merge pull request #16 from adripo).
 
