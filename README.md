@@ -19,6 +19,10 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-05-30] - Version 0.11.11
+*  Re-apply Fix left side buttons (Merge pull request #15 from adripo).
+*  Fix side buttons vertical distance.
+
 ##### [2025-05-29] - Version 0.11.10
 *  Revert Fix left side buttons (Merge pull request #15 from adripo).
 

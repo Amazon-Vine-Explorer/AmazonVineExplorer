@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.10
+// @version      0.11.11
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -202,9 +202,16 @@ ave_eventhandler.on('ave-database-changed', () => {
 })
 
 window.onscroll = () => { // ONSCROLL Event handler
-    stickElementToTopScrollEVhandler('ave-btn-allseen', '5px');
-    stickElementToTopScrollEVhandler('ave-btn-db-allseen', '40px');
-    stickElementToTopScrollEVhandler('ave-btn-backtotop', '75px');
+    var _top = 5;
+    stickElementToTopScrollEVhandler('ave-btn-allseen', `${_top}px`);
+    _top = _top + 35;
+    
+    if(SETTINGS.EnableBtnMarkAllAsSeen) {
+        stickElementToTopScrollEVhandler('ave-btn-db-allseen', `${_top}px`);
+        _top = _top + 35;        
+    }
+            
+    stickElementToTopScrollEVhandler('ave-btn-backtotop', `${_top}px`);
 
     if (currentMainPage == PAGETYPE.ALL) handleInfiniteScroll();
 
@@ -462,8 +469,10 @@ function addLeftSideButtons(forceClean) {
 
     if (forceClean) _nodesContainer.innerHTML = '';
 
+    const _div = _nodesContainer.appendChild(document.createElement('div'));
+    _div.setAttribute('class', 'parent-node');
 
-    _nodesContainer.appendChild(document.createElement('p')); // A bit of Space above our Buttons
+    _div.appendChild(document.createElement('p')); // A bit of Space above our Buttons
 
     const _setAllSeenBtn = createButton('Seite als gesehen markieren','ave-btn-allseen',  `width: 240px; background-color: ${SETTINGS.BtnColorMarkCurrSiteAsSeen};`, () => {
 
@@ -471,33 +480,34 @@ function addLeftSideButtons(forceClean) {
         markAllCurrentSiteProductsAsSeen();
         window.scrollTo(0, 0);
     });
+    _div.appendChild(_setAllSeenBtn);
 
-    const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', `left: 0; width: 240px; background-color: ${SETTINGS.BtnColorMarkAllAsSeen};`, () => {
+    if(SETTINGS.EnableBtnMarkAllAsSeen) {
+        const _setAllSeenDBBtn = createButton('Alle als gesehen markieren','ave-btn-db-allseen', `left: 0; width: 240px; background-color: ${SETTINGS.BtnColorMarkAllAsSeen};`, () => {
 
-        if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
-        setTimeout(() => {
-            database.getNewEntries().then((prodsArr) => {
-                const _prodsArryLength = prodsArr.length;
-                for (let i = 0; i < _prodsArryLength; i++) {
-                    const _currProd = prodsArr[i];
-                    if (_currProd.isNew) {
-                        _currProd.isNew = 0;
-                        database.update(_currProd);
+            if (SETTINGS.DebugLevel > 10) console.log('Clicked All Seen Button');
+            setTimeout(() => {
+                database.getNewEntries().then((prodsArr) => {
+                    const _prodsArryLength = prodsArr.length;
+                    for (let i = 0; i < _prodsArryLength; i++) {
+                        const _currProd = prodsArr[i];
+                        if (_currProd.isNew) {
+                            _currProd.isNew = 0;
+                            database.update(_currProd);
+                        }
                     }
-                }
-            })
-        }, 30);
-    });
+                })
+            }, 30);
+        });
+        _div.appendChild(_setAllSeenDBBtn);
+    }
 
     const _backToTopBtn = createButton('Zum Seitenanfang','ave-btn-backtotop',  `width: 240px; background-color: ${SETTINGS.BtnColorBackToTop};`, () => {
 
         if (SETTINGS.DebugLevel > 10) console.log('Clicked back to Top Button');
         window.scrollTo(0, 0);
     });
-
-    _nodesContainer.appendChild(_setAllSeenBtn);
-    if(SETTINGS.EnableBtnMarkAllAsSeen) _nodesContainer.appendChild(_setAllSeenDBBtn);
-    _nodesContainer.appendChild(_backToTopBtn);
+    _div.appendChild(_backToTopBtn);
 
     // const _clearDBBtn = createButton('Datenbank Bereinigen', 'background-color: orange;', () => {
     //     if (SETTINGS.DebugLevel > 10) console.log('Clicked clear DB Button');
