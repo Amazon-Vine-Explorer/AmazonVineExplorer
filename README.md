@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-05-30] - Version 0.11.12
+*  Show page numbers from 1 to max instead of 0 to max - 1.
+
 ##### [2025-05-30] - Version 0.11.11
 *  Re-apply Fix left side buttons (Merge pull request #15 from adripo).
 *  Fix side buttons vertical distance.

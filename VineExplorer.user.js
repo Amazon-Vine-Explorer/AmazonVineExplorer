@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.11
+// @version      0.11.12
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2326,7 +2326,7 @@ function initBackgroundScan() {
                     case 0:{ // potluck, last_chance
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage);
                         if (_stageZeroSites[_subStage]) {
-                            updateBackgroundScanScreenText(`${_scannerName} ${_stageZeroSites[_subStage].replace('queue=', '')} Page: ${_subStage} / ${_PageMax}`);
+                            updateBackgroundScanScreenText(`${_scannerName} ${_stageZeroSites[_subStage].replace('queue=', '')} Page: ${_subStage + 1} / ${_PageMax}`);
                             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.0 with _subStage: ', _subStage, ' inside IF');
                             backGroundTileScanner(`${_baseUrl}?${_stageZeroSites[_subStage]}` , (newCount) => {_scanFinished(newCount)});
                             _subStage++
@@ -2354,10 +2354,10 @@ function initBackgroundScan() {
                         _PageMax = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0;
 
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
-                        updateBackgroundScanScreenText(`${_scannerName} encore Page: ${_subStage} / ${_PageMax}`);
 
                         //Wenn die maximale Seitenzahl nicht erreicht ist, wird gescannt
                         if (_subStage < _PageMax) {
+                            updateBackgroundScanScreenText(`${_scannerName} encore Page: ${_subStage + 1} / ${_PageMax}`);
                             backGroundTileScanner(`${_baseUrl}?queue=encore&pn=&cn=&page=${_subStage + 1}` , (newCount) => {_scanFinished(newCount)});
                             _subStage++
                             localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
