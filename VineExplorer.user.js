@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.13
+// @version      0.11.14
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -824,7 +824,8 @@ function insertHtmlElementAfter(referenceNode, newNode) {
 async function createProductSite(siteType, productArray, cb) {
     if (!productArray) return;
 
-    productArray = sort_by_key(productArray, 'ts_lastSeen');
+    const _showFirstSeen = SETTINGS.ShowFirstSeen || false;
+    productArray = sort_by_key(productArray, _showFirstSeen ? 'ts_firstSeen' : 'ts_lastSeen');
     
     const _productArrayLength = productArray.length;
     const _fastCount = Math.min(_productArrayLength, SETTINGS.MaxItemsPerPage);
@@ -1054,6 +1055,8 @@ function createNewSite(type, data) {
                     })
                 } else {
                     database.getAll().then((prodArr) => {
+                        const _showFirstSeen = SETTINGS.ShowFirstSeen || false;
+                        prodArr = sort_by_key(prodArr, _showFirstSeen ? 'ts_firstSeen' : 'ts_lastSeen');
                         infiniteScrollTilesBufferArray = prodArr;
                         appendInfiniteScrollTiles();
                     });

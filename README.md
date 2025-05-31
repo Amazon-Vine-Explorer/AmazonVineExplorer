@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-05-31] - Version 0.11.14
+*  Order of items shown on product sites now depends on the setting of "Show first seen instead of last seen".
+
 ##### [2025-05-31] - Version 0.11.13
 *  Fix: Product not seen counter was not reset when a product was seen again during a scan.
 
