@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.12
+// @version      0.11.13
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -377,6 +377,7 @@ async function parseTileData(tile) {
             if (_ret) {
                 _ret.gotFromDB = true;
                 _ret.ts_lastSeen = unixTimeStamp();
+                _ret.notSeenCounter = 0;
                 if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): got DB Entry`);
                 database.update(_ret);
                 resolve(_ret);

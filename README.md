@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-05-31] - Version 0.11.13
+*  Fix: Product not seen counter was not reset when a product was seen again during a scan.
+
 ##### [2025-05-30] - Version 0.11.12
 *  Show page numbers from 1 to max instead of 0 to max - 1.
 
