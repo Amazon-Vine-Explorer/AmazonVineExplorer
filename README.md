@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-06-06] - Version 0.11.15
+*  The product pages ("Für Sie empfohlen", "Verfügbar für alle" and "Zusätzliche Artikel") now always show the time it was first seen because time of last seen is always the current time.
+
 ##### [2025-05-31] - Version 0.11.14
 *  Order of items shown on product sites now depends on the setting of "Show first seen instead of last seen".
 

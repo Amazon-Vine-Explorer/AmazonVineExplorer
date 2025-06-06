@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.14
+// @version      0.11.15
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -611,7 +611,7 @@ async function createTileFromProduct(product, btnID, cb) {
             </div>
         `;
         _tile.prepend(createFavStarElement(product, btnID));
-        _tile.prepend(createLasSeenElement(product, btnID));
+        _tile.prepend(createTimeSeenElement(product, btnID));
         _tile.prepend(createShareElement(product, btnID));
         waitForHtmlElmement('.vvp-item-product-title-container', (_elem) => {
             insertHtmlElementAfter(_elem, createTaxInfoElement(product, btnID));
@@ -632,20 +632,24 @@ function createFavStarElement(prod, index = Math.round(Math.random()* 10000)) {
     return _favElement;
 }
 
-function createLasSeenElement(prod, index = Math.round(Math.random()* 10000)) {
-    const _showFirstSeen = SETTINGS.ShowFirstSeen || false;
+function createFirstSeenElement(prod, index = Math.round(Math.random()* 10000)) {
+    return createTimeSeenElement(prod, index, true);
+}
 
-    const _lastSeenElement = document.createElement('div');
-    _lastSeenElement.setAttribute("id", `ave-p-lastSeen-${index || Math.round(Math.random() * 5000)}`);
-    _lastSeenElement.classList.add('ave-last-seen');
+function createTimeSeenElement(prod, index = Math.round(Math.random()* 10000), showFirstSeen) {
+    const _showFirstSeen = showFirstSeen === false || showFirstSeen === true ? showFirstSeen : SETTINGS.ShowFirstSeen || false;
+
+    const _timeSeenElement = document.createElement('div');
+    _timeSeenElement.setAttribute("id", `ave-p-timeSeen-${index || Math.round(Math.random() * 5000)}`);
+    _timeSeenElement.classList.add('ave-last-seen');
     if (_showFirstSeen) {
-        _lastSeenElement.textContent = 'First seen: ' + timeAgo(new Date(toTimestamp(prod.ts_firstSeen)));
+        _timeSeenElement.textContent = 'First seen: ' + timeAgo(new Date(toTimestamp(prod.ts_firstSeen)));
     } else {
-        _lastSeenElement.textContent = 'Last seen: ' + timeAgo(new Date(toTimestamp(prod.ts_lastSeen)));
+        _timeSeenElement.textContent = 'Last seen: ' + timeAgo(new Date(toTimestamp(prod.ts_lastSeen)));
     }
-    _lastSeenElement.style.float = 'left';
-    _lastSeenElement.style.display = 'flex';
-    return _lastSeenElement;
+    _timeSeenElement.style.float = 'left';
+    _timeSeenElement.style.display = 'flex';
+    return _timeSeenElement;
 }
 
 function timeAgo(date) {
@@ -2792,7 +2796,7 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
     return _btn;
 }
 
-function addStyleToTile(_currTile, _product) {
+function addStyleToTile(_currTile, _product, showFirstSeen) {
 
     if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
         database.add(_product);
@@ -2813,7 +2817,7 @@ function addStyleToTile(_currTile, _product) {
         // Update Timestamps
     }
     _currTile.prepend(createFavStarElement(_product));
-    _currTile.prepend(createLasSeenElement(_product));
+    _currTile.prepend(createFirstSeenElement(_product));
     _currTile.prepend(createShareElement(_product));
     // insertHtmlElementAfter((_currTile.getElementsByClassName('vvp-item-product-title-container')[0]), createTaxInfoElement(_product));
     waitForHtmlElmement('.vvp-item-product-title-container', (_elem) => {
@@ -2908,7 +2912,7 @@ function init(hasTiles) {
             _currTile.style.cssText = "background-color: yellow;";
             _tilePorms.push(parseTileData(_currTile).then((_product) => {
                 if (SETTINGS.DebugLevel > 14) console.log('Come Back from parseTileData <<<<<<<<<< INIT <<<<<<<<<<<<<<<<<<<<<<<', _currTile, _product);
-                addStyleToTile(_currTile, _product);
+                addStyleToTile(_currTile, _product, true);
 
             }));
         }
