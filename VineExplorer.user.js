@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.15.2
+// @version      0.11.15.3
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -48,6 +48,49 @@
     Todo:
 */
 
+/*  global
+        AUTO_SCAN_IS_RUNNING,
+        AUTO_SCAN_PAGE_CURRENT,
+        AUTO_SCAN_PAGE_MAX,
+        AVE_IS_THIS_SESSION_MASTER,
+        AVE_TITLE,
+        AVE_VERSION,
+        AVE_VERSION,
+        DATABASE_NAME,
+        DATABASE_NAME, 
+        DATABASE_OBJECT_STORE_NAME,
+        DATABASE_OBJECT_STORE_NAME,
+        DATABASE_VERSION,
+        DATABASE_VERSION,
+        DB_HANDLER:writable,
+        INIT_AUTO_SCAN,
+        PAGE_LOAD_TIMESTAMP,
+        Product,
+        SECONDS_PER_DAY,
+        SECONDS_PER_WEEK,
+        SETTINGS,
+        SETTINGS,
+        SETTINGS_USERCONFIG_DEFINES,
+        SITE_IS_SHOPPING,
+        SITE_IS_SHOPPING,                 
+        SITE_IS_VINE,
+        SITE_IS_VINE,
+        addBranding,
+        addBranding,
+        ave_eventhandler,
+        ave_eventhandler,
+        fastStyleChanges,
+        fastStyleChanges,
+        loadSettings,
+        loadSettings,
+        toTimestamp,
+        toUnixTimestamp,
+        unixTimeStamp,
+        unixTimeStamp,
+        unsafeWindow,
+        waitForHtmlElmement,
+        waitForHtmlElmement,         */
+
 'use strict';
 console.log(`Init Vine Voices Explorer ${AVE_VERSION}`);
 
@@ -63,7 +106,6 @@ fastStyleChanges();
 let searchInputTimeout;
 let backGroundScanTimeout;
 
-let TimeouteScrollTilesBufferArray = [];
 let BackGroundScanIsRunning = false;
 
 // Make some things accessable from console
@@ -325,7 +367,7 @@ function handleInfiniteScroll() {
             blockHandleInfiniteScroll = false;
             return;
         } else if (infiniteScrollTilesBufferArray.length < 1000 && infiniteScrollLastPreloadedPage < infiniteScrollMaxPreloadPage) {
-            const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
+            const _baseUrl = (/(http[s]{0,1}:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
             infiniteScrollLastPreloadedPage++;
             getTilesFromURL(`${_baseUrl}?queue=encore&pn=&cn=&page=${infiniteScrollLastPreloadedPage}`, (tiles) =>{
                 infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles);
@@ -346,7 +388,7 @@ function getUrlParameter(name) {
 }
 
 function detectCurrentPageType(){
-    if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items$/.test(window.location.href)) {
+    if (/http[s]{0,1}:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items$/.test(window.location.href)) {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
     } else if (getUrlParameter('queue') == 'last_chance') {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
@@ -707,7 +749,6 @@ function createShareElement(prod, index = Math.round(Math.random()* 10000)) {
     return _shareElement;
 }
 
-let run = 0;
 function shareEventHandlerClick(event, _data){
     if(_data.recommendation_id){
         console.log("[AVE]",_data);
@@ -753,7 +794,6 @@ ${_data.tax}
 
 ${newUrl}`
 
-        const cursorPosition = event.target.selectionStart;
         const inputRect = event.target.getBoundingClientRect();
 
         const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
@@ -1031,7 +1071,7 @@ function createNewSite(type, data) {
         case PAGETYPE.ALL:{
             currentMainPage = PAGETYPE.ALL;
             createInfiniteScrollSite(currentMainPage,(tilesContainer) => {
-                const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
+                const _baseUrl = (/(http[s]{0,1}:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
                 const _preloadPages = ['potluck', 'last_chance', 'encore']
                 infiniteScrollLastPreloadedPage = 1;
                 infiniteScrollMaxPreloadPage = 100;
@@ -1101,7 +1141,7 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
                 cb(_retArr);
 
                 const _paginationData = getPageinationData();
-                if (_paginationData) infiniteScrollMaxPreloadPage = _pageinationData.maxPage;
+                if (_paginationData) infiniteScrollMaxPreloadPage = _paginationData.maxPage;
             }, _doc);
         }
     })
@@ -1203,7 +1243,7 @@ function addTileEventhandlers(_currTile) {
     _btn.addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
 
     for(let j = 0; j < _childs.length; j++) {
-        if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
+        if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Children ${j} of Tile ${_currTile}`);
         _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
     }
 
@@ -1785,70 +1825,6 @@ function createSettingsKeywordsTableElement(dat, index, entry){
     return _tableRow;
 }
 
-function addOverlays() { // Old Settings Code
-    const _overlayBackground = document.createElement('div');
-    _overlayBackground.style.position = 'fixed';
-    _overlayBackground.style.backgroundColor = '#000000b0';
-    _overlayBackground.style.zIndex = '1750';
-    _overlayBackground.style.width = '100%';
-    _overlayBackground.style.height = '100%';
-    _overlayBackground.style.top = '0';
-
-    document.body.appendChild(_overlayBackground);
-
-    const _settingsDiv = document.createElement('div');
-    _settingsDiv.style.position = 'fixed';
-    _settingsDiv.style.zIndex = '1750';
-    _settingsDiv.style.width = '100%';
-    _settingsDiv.style.height = '100%';
-    _settingsDiv.style.top = '0';
-    _settingsDiv.style.display = 'flex';
-    _settingsDiv.style.justifyContent = 'center';
-    _settingsDiv.style.alignItems = 'center';
-
-    _settingsDiv.innerHTML = `
-    <style>
-    .ave-setting {
-    padding: 0 0 7px;
-    }
-    </style>
-    <div style="background-color: white;border-radius: 8px;width: 50%;min-width: 250px;height: 75%;overflow: hidden;">
-      <div id="settingsInner"width: 100%; height: 100%;"> <!--- Inner Start -->
-        <div id="settingsNav" style="background-color: #F0F2F2;border-bottom: 1px solid #D5D9D9;display: flex;height: 50px;align-items: center;padding: 0 24px;"> <!--- Nav Start -->
-         <div style="color: #444;font-size: 16px;font-weight: 700;">Amazon Vine Explorer Einstellungen</div>
-         <div style="color: #444;margin-left: auto;width: 50px;height: 50px;display: flex;justify-content: center;align-items: center;font-weight: 600;font-size: larger;cursor: pointer;transform: translate(50%, 0);">
-           <i class="a-icon a-icon-close"></i>
-         </div>
-        </div> <!--- Nav End -->
-        <div style="padding: 16px 24px;color: #0F111"> <!--- Content Start -->
-        <div class="ave-setting">
-          <input type="number" value="${SETTINGS.DebugLevel}" onchange="console.log('Setting Changed')"> - Debug Level
-        </div>
-        <div class="ave-setting">
-        <input type="checkbox" checked="${SETTINGS.EnableFullWidth}" onchange="console.log('Setting Changed')"> - Full Width
-        </div>
-        <div class="ave-setting">
-        <input type="checkbox" checked="${SETTINGS.DisableFooter}" onchange="console.log('Setting Changed')"> - Disable Footer
-        </div>
-        <div class="ave-setting">
-        <input type="checkbox" checked="${SETTINGS.DisableSuggestions}" onchange="console.log('Setting Changed')"> - Disable Suggestions
-        </div>
-        <div class="ave-setting">
-        <input type="checkbox" checked="${SETTINGS.DisableFooterShopping}" onchange="console.log('Setting Changed')"> - Disable Footer Shopping
-        </div>
-        <div class="ave-setting">
-        <input type="checkbox" checked="${SETTINGS.DisableSuggestionsShopping}" onchange="console.log('Setting Changed')"> - Disable Suggestions Shopping
-        </div>
-        </div> <!--- Content End -->
-        <div> <!--- Footer Start -->
-        </div> <!--- Footer End -->
-      </div> <!--- Inner End -->
-    </div>
-`
-
-    document.body.appendChild(_settingsDiv);
-}
-
 function componentToHex(c) {
     const _c = Math.min(c, 255)
     const _hex = _c.toString(16);
@@ -1871,11 +1847,11 @@ function colorToHex(color) {
         return '#ffffff';
     } else if (_color == 'black'){
         return '#000000';
-    } else if (_cache = /rgb\(([\d]+),([\d]+),([\d]+)\)/.exec(_color)){ // rgb(0,0,0)
+    } else if ((_cache = /rgb\(([\d]+),([\d]+),([\d]+)\)/.exec(_color))){ // rgb(0,0,0)
         return rgbToHex(_cache[1], _cache[2], _cache[3]);
-    } else if (_cache = /rgba\(([\d]+),([\d]+),([\d]+),([\d]+|[\d]*.[\d]+)\)/.exec(_color)){ // rgba(0,0,0,0)
+    } else if ((_cache = /rgba\(([\d]+),([\d]+),([\d]+),([\d]+|[\d]*.[\d]+)\)/.exec(_color))){ // rgba(0,0,0,0)
         return rgbaToHex(_cache[1], _cache[2], _cache[3], _cache[4]);
-    } else if (/\#[0-9a-fA-F]{6}|[0-9a-fA-F]{8}$/.exec(_color)){ // #000000
+    } else if (/#[0-9a-fA-F]{6}|[0-9a-fA-F]{8}$/.exec(_color)){ // #000000
         return _color;
     }
 
@@ -2110,6 +2086,7 @@ async function cleanUpDatabase(cb = () => {}) {
 
 unsafeWindow.ave.dbCleanup = cleanUpDatabase;
 
+// eslint-disable-next-line no-unused-vars
 function exportDatabase() {
     console.log('Create Database Dump...');
 
@@ -2218,7 +2195,7 @@ function initBackgroundScan() {
     if  (!SETTINGS.EnableBackgroundScan) {console.warn('initBackgroundScan(): Backgroundscan is disabled => Exit');return;}
     if (!AVE_IS_THIS_SESSION_MASTER) {console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan'); return;}
     BackGroundScanIsRunning = true;
-    const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
+    const _baseUrl = (/(http[s]{0,1}:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
 
     showBackgroundScanScreen('Start Background Scanner');
 
@@ -2592,7 +2569,6 @@ function startAutoScan() {
 }
 
 function handleAutoScan() {
-    let _href;
     const _delay = Math.max(SETTINGS.PageLoadMinDelay - (Date.now() - PAGE_LOAD_TIMESTAMP), 0) + 500;
     if (SETTINGS.DebugLevel > 10) console.log(`handleAutoScan() - _delay: ${_delay}`);
     if (AUTO_SCAN_PAGE_CURRENT < AUTO_SCAN_PAGE_MAX) {
@@ -2650,7 +2626,7 @@ function updateNewProductsBtn() {
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
     database.getNewEntries().then((prodArr) => {
         const _btnBadge = document.getElementById('ave-new-items-btn-badge');
-        const _pageTitle = document.title.replace(/^[^\|]*\|/, '').trim();
+        const _pageTitle = document.title.replace(/^[^|]*\|/, '').trim();
         const _prodArrLength = prodArr.length;
         if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
 
@@ -2672,7 +2648,7 @@ function updateNewProductsBtn() {
             const _configKeyWords = SETTINGS.DesktopNotifikationKeywords;
 
             // see https://stackoverflow.com/questions/874709/converting-user-input-string-to-regular-expression
-            var stringToRegex = (s, m) => (m = s.match(/^\/(.*?)\/([gimsuy]*)$/)) ? new RegExp(m[1], m[2].split('').filter((i, p, s) => s.indexOf(i) === p).join('')) : undefined;
+            var stringToRegex = (s, m) => ((m = s.match(/^\/(.*?)\/([gimsuy]*)$/))) ? new RegExp(m[1], m[2].split('').filter((i, p, s) => s.indexOf(i) === p).join('')) : undefined;
 
             for (let i = 0; i < _prodArrLength; i++) {
                 const _prod = prodArr[i];
@@ -2902,7 +2878,6 @@ function init(hasTiles) {
 
         const _tilesLength = _tiles.length;
         const _tilePorms = [];
-        const _parseStartTime = Date.now();
         for (let i = 0; i < _tilesLength; i++) {
             const _currTile = _tiles[i];
             _currTile.style.cssText = "background-color: yellow;";

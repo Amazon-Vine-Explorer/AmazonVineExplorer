@@ -22,6 +22,7 @@ We are aware of the issue and are working on a fix.
 ##### [2025-06-xx] - Version 0.11.16
 *  Removed unused (at least by me) files.
 *  Make @require's relative.
+*  Fix some eslint warnings.
 
 ##### [2025-06-06] - Version 0.11.15
 *  The product pages ("Für Sie empfohlen", "Verfügbar für alle" and "Zusätzliche Artikel") now always show the time it was first seen because time of last seen is always the current time.

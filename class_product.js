@@ -1,3 +1,7 @@
+/* global
+    unixTimeStamp    
+    */
+   
 class Product {
     id;
     link;
