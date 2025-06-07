@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.15.4
+// @version      0.11.15.5
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -46,6 +46,51 @@
     - Automatisches Bestellen via Prioliste ?!?
 
     Todo:
+*/
+
+/*
+    global
+        AUTO_SCAN_IS_RUNNING,
+        AUTO_SCAN_PAGE_CURRENT,
+        AUTO_SCAN_PAGE_MAX,
+        AVE_IS_THIS_SESSION_MASTER,
+        AVE_TITLE,
+        AVE_VERSION,
+        AVE_VERSION,
+        DATABASE_NAME,
+        DATABASE_NAME, 
+        DATABASE_OBJECT_STORE_NAME,
+        DATABASE_OBJECT_STORE_NAME,
+        DATABASE_VERSION,
+        DATABASE_VERSION,
+        DB_HANDLER:writable,
+        INIT_AUTO_SCAN,
+        PAGE_LOAD_TIMESTAMP,
+        Product,
+        SECONDS_PER_DAY,
+        SECONDS_PER_WEEK,
+        SETTINGS,
+        SETTINGS,
+        SETTINGS_USERCONFIG_DEFINES,
+        SITE_IS_SHOPPING,
+        SITE_IS_SHOPPING,                 
+        SITE_IS_VINE,
+        SITE_IS_VINE,
+        addBranding,
+        addBranding,
+        ave_eventhandler,
+        ave_eventhandler,
+        fastStyleChanges,
+        fastStyleChanges,
+        loadSettings,
+        loadSettings,
+        toTimestamp,
+        toUnixTimestamp,
+        unixTimeStamp,
+        unixTimeStamp,
+        unsafeWindow,
+        waitForHtmlElmement,
+        waitForHtmlElmement,
 */
 
 'use strict';
@@ -325,7 +370,7 @@ function handleInfiniteScroll() {
             blockHandleInfiniteScroll = false;
             return;
         } else if (infiniteScrollTilesBufferArray.length < 1000 && infiniteScrollLastPreloadedPage < infiniteScrollMaxPreloadPage) {
-            const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
+            const _baseUrl = (/(http[s]{0,1}:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
             infiniteScrollLastPreloadedPage++;
             getTilesFromURL(`${_baseUrl}?queue=encore&pn=&cn=&page=${infiniteScrollLastPreloadedPage}`, (tiles) =>{
                 infiniteScrollTilesBufferArray = infiniteScrollTilesBufferArray.concat(tiles);
@@ -346,7 +391,7 @@ function getUrlParameter(name) {
 }
 
 function detectCurrentPageType(){
-    if (/http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items$/.test(window.location.href)) {
+    if (/http[s]{0,1}:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items$/.test(window.location.href)) {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
     } else if (getUrlParameter('queue') == 'last_chance') {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
@@ -1031,7 +1076,7 @@ function createNewSite(type, data) {
         case PAGETYPE.ALL:{
             currentMainPage = PAGETYPE.ALL;
             createInfiniteScrollSite(currentMainPage,(tilesContainer) => {
-                const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
+                const _baseUrl = (/(http[s]{0,1}:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
                 const _preloadPages = ['potluck', 'last_chance', 'encore']
                 infiniteScrollLastPreloadedPage = 1;
                 infiniteScrollMaxPreloadPage = 100;
@@ -1203,7 +1248,7 @@ function addTileEventhandlers(_currTile) {
     _btn.addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
 
     for(let j = 0; j < _childs.length; j++) {
-        if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Children ${j} of Tile ${i}`);
+        if (SETTINGS.DebugLevel > 10) console.log(`Adding Eventhandler to Children ${j} of Tile ${_currTile}`);
         _childs[j].addEventListener('click', (event) => {btnEventhandlerClick(event, _data)});
     }
 
@@ -1871,11 +1916,11 @@ function colorToHex(color) {
         return '#ffffff';
     } else if (_color == 'black'){
         return '#000000';
-    } else if (_cache = /rgb\(([\d]+),([\d]+),([\d]+)\)/.exec(_color)){ // rgb(0,0,0)
+    } else if ((_cache = /rgb\(([\d]+),([\d]+),([\d]+)\)/.exec(_color))){ // rgb(0,0,0)
         return rgbToHex(_cache[1], _cache[2], _cache[3]);
-    } else if (_cache = /rgba\(([\d]+),([\d]+),([\d]+),([\d]+|[\d]*.[\d]+)\)/.exec(_color)){ // rgba(0,0,0,0)
+    } else if ((_cache = /rgba\(([\d]+),([\d]+),([\d]+),([\d]+|[\d]*.[\d]+)\)/.exec(_color))){ // rgba(0,0,0,0)
         return rgbaToHex(_cache[1], _cache[2], _cache[3], _cache[4]);
-    } else if (/\#[0-9a-fA-F]{6}|[0-9a-fA-F]{8}$/.exec(_color)){ // #000000
+    } else if (/#[0-9a-fA-F]{6}|[0-9a-fA-F]{8}$/.exec(_color)){ // #000000
         return _color;
     }
 
@@ -2218,7 +2263,7 @@ function initBackgroundScan() {
     if  (!SETTINGS.EnableBackgroundScan) {console.warn('initBackgroundScan(): Backgroundscan is disabled => Exit');return;}
     if (!AVE_IS_THIS_SESSION_MASTER) {console.warn('initBackgroundScan(): This Instance is not the Master Session! => don´t start BackgroundScan'); return;}
     BackGroundScanIsRunning = true;
-    const _baseUrl = (/(http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
+    const _baseUrl = (/(http[s]{0,1}:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items)/.exec(window.location.href))[1];
 
     showBackgroundScanScreen('Start Background Scanner');
 
@@ -2650,7 +2695,7 @@ function updateNewProductsBtn() {
     if (SETTINGS.DebugLevel > 1) console.log('Called updateNewProductsBtn()');
     database.getNewEntries().then((prodArr) => {
         const _btnBadge = document.getElementById('ave-new-items-btn-badge');
-        const _pageTitle = document.title.replace(/^[^\|]*\|/, '').trim();
+        const _pageTitle = document.title.replace(/^[^|]*\|/, '').trim();
         const _prodArrLength = prodArr.length;
         if (SETTINGS.DebugLevel > 1) console.log(`updateNewProductsBtn(): Got Database Response: ${_prodArrLength} New Items`);
 
@@ -2672,7 +2717,7 @@ function updateNewProductsBtn() {
             const _configKeyWords = SETTINGS.DesktopNotifikationKeywords;
 
             // see https://stackoverflow.com/questions/874709/converting-user-input-string-to-regular-expression
-            var stringToRegex = (s, m) => (m = s.match(/^\/(.*?)\/([gimsuy]*)$/)) ? new RegExp(m[1], m[2].split('').filter((i, p, s) => s.indexOf(i) === p).join('')) : undefined;
+            var stringToRegex = (s, m) => ((m = s.match(/^\/(.*?)\/([gimsuy]*)$/))) ? new RegExp(m[1], m[2].split('').filter((i, p, s) => s.indexOf(i) === p).join('')) : undefined;
 
             for (let i = 0; i < _prodArrLength; i++) {
                 const _prod = prodArr[i];
