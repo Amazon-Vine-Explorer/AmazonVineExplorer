@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.15.1
+// @version      0.11.15.2
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -26,8 +26,6 @@
 // @require      globals.js
 // @require      class_db_handler.js
 // @require      class_product.js
-
-// ==External Source==
 // @require      https://raw.githubusercontent.com/eligrey/FileSaver.js/v2.0.4/src/FileSaver.js
 // @require      https://raw.githubusercontent.com/Christof121/VineFetchFix/main/fetchfix.js
 // ==/UserScript==
@@ -203,12 +201,12 @@ window.onscroll = () => { // ONSCROLL Event handler
     var _top = 5;
     stickElementToTopScrollEVhandler('ave-btn-allseen', `${_top}px`);
     _top = _top + 35;
-    
+
     if(SETTINGS.EnableBtnMarkAllAsSeen) {
         stickElementToTopScrollEVhandler('ave-btn-db-allseen', `${_top}px`);
-        _top = _top + 35;        
+        _top = _top + 35;
     }
-            
+
     stickElementToTopScrollEVhandler('ave-btn-backtotop', `${_top}px`);
 
     if (currentMainPage == PAGETYPE.ALL) handleInfiniteScroll();
@@ -828,7 +826,7 @@ async function createProductSite(siteType, productArray, cb) {
 
     const _showFirstSeen = SETTINGS.ShowFirstSeen || false;
     productArray = sort_by_key(productArray, _showFirstSeen ? 'ts_firstSeen' : 'ts_lastSeen');
-    
+
     const _productArrayLength = productArray.length;
     const _fastCount = Math.min(_productArrayLength, SETTINGS.MaxItemsPerPage);
     if (SETTINGS.DebugLevel > 10) console.log(`Create Overview for ${_productArrayLength} Products`);
@@ -2438,7 +2436,7 @@ function initBackgroundScan() {
                         break;
                     }
                 }
-                
+
                 function _scanFinished(newCount) {
                     if (SETTINGS.DebugLevel > 10) console.log(`initBackgroundScan()._scanFinished(): newCount=${newCount} _backGroundScanStage=${_backGroundScanStage} _subStage=${_subStage} AVE_FAST_SCAN_IS_RUNNING=${localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING')}`);
                     localStorage.setItem('AVE_BACKGROUND_SCAN_STAGE', _backGroundScanStage);
@@ -2485,26 +2483,26 @@ function initBackgroundScan() {
 
                 function _timeConversion(duration) {
                     const portions = [];
-                    
+
                     const msInHour = 1000 * 60 * 60;
                     const hours = Math.trunc(duration / msInHour);
                     if (hours > 0) {
                         portions.push(hours + 'h');
                         duration = duration - (hours * msInHour);
                     }
-                    
+
                     const msInMinute = 1000 * 60;
                     const minutes = Math.trunc(duration / msInMinute);
                     if (minutes > 0) {
                         portions.push(minutes + 'm');
                         duration = duration - (minutes * msInMinute);
                     }
-                    
+
                     const seconds = Math.trunc(duration / 1000);
                     if (seconds > 0) {
                         portions.push(seconds + 's');
                     }
-                    
+
                     return portions.join(' ');
                 }
             }

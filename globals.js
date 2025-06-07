@@ -18,8 +18,8 @@ let AVE_IS_THIS_SESSION_MASTER = false;
 // Obsolete sobald der Backgroundscan läuft
 const INIT_AUTO_SCAN = (localStorage.getItem('AVE_INIT_AUTO_SCAN') == 'true') ? true : false;
 const AUTO_SCAN_IS_RUNNING = (localStorage.getItem('AVE_AUTO_SCAN_IS_RUNNING') == 'true') ? true : false;
-const AUTO_SCAN_PAGE_CURRENT = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_CURRENT')) || -1 
-const AUTO_SCAN_PAGE_MAX = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_MAX')) || -1 
+const AUTO_SCAN_PAGE_CURRENT = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_CURRENT')) || -1
+const AUTO_SCAN_PAGE_MAX = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_MAX')) || -1
 const PAGE_LOAD_TIMESTAMP = Date.now();
 
 // Obsolete sobald die Datenbank über Tampermonkey läuft
@@ -37,7 +37,7 @@ class AVE_EVENTHANDLER {
     * A very basic and simple eventhandler/wrapper
     * @constructor
     * @return {AVE_EVENTHANDLER} AVE_EVENTHANDLER Object
-    */ 
+    */
     constructor(){}
 
     /**
@@ -152,13 +152,13 @@ setTimeout(() => {
         addBranding();
     }
 
-    setInterval(() => { // 
+    setInterval(() => { //
         const _sessions = JSON.parse(localStorage.getItem('AVE_SESSIONS', '[]'))
         let _noValidMaster = false;
         let _ownIndex = -1;
         for (let i = 0; i < _sessions.length; i++) {
             const _session = _sessions[i];
-            if (_session.id == AVE_SESSION_ID){ 
+            if (_session.id == AVE_SESSION_ID){
                 _session.ts = Date.now();
                 _ownIndex = i;
             } else if (_session.ts + 2500 < Date.now()) { // We have found a Invalid Session => Handle this
@@ -187,7 +187,7 @@ setTimeout(() => {
 
 
 window.onbeforeunload = function () {
-    console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY'); 
+    console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY');
     const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
     for (let i = 0; i < _sessions.length; i++) {
         const _elem = _sessions[i];
@@ -338,7 +338,7 @@ const SETTINGS = new SETTINGS_DEFAULT();
 
 /**
   * Load Settings from GM Storage
-  */ 
+  */
 function loadSettings() {
     const _settingsStore = GM_getValue('AVE_SETTINGS', {});
     console.log('Got Settings from GM:(', typeof(_settingsStore),')', _settingsStore);
@@ -356,7 +356,7 @@ function loadSettings() {
 
 /**
   * Save Settings to GM Storage
-  */ 
+  */
 function saveSettings() {
     SETTINGS.save();
 }
@@ -364,7 +364,7 @@ function saveSettings() {
 /**
   * Timestamp in Seconds
   * @return {number} unixTimestamp
-  */ 
+  */
 function unixTimeStamp () {
     return Math.floor(Date.now() / 1000)
 }
@@ -373,7 +373,7 @@ function unixTimeStamp () {
     * Convert Millis Timestamp to Seconds Timestamp
     * @param {number} now Millis Timestamp as from Date.now();
     * @return {number} unix Timestamp
-    */ 
+    */
 function toUnixTimestamp(now) {
     return Math.floor(now / 1000)
 }
@@ -383,7 +383,7 @@ function toUnixTimestamp(now) {
     * Convert Seconds Timestamp to Millis Timestamp
     * @param {number} unixTimestamp unix Timestamp
     * @return {number} Millis Timestamp as from Date.now();
-    */ 
+    */
 function toTimestamp(unixTimestamp) {
     return (unixTimestamp * 1000);
 }
@@ -392,9 +392,9 @@ function toTimestamp(unixTimestamp) {
 /**
     * Waits until a HTML Element exists ans fires callback if it is found
     * @param {string} selector querySelector
-    * @param {function} cb Callback Function 
+    * @param {function} cb Callback Function
     * @param {object} [altDocument] Alternativ document root
-    */ 
+    */
 async function waitForHtmlElmement(selector, cb, altDocument = document) {
     if (typeof(selector) != 'string') throw new Error('waitForHtmlElement(): selector is not defined or is not type of string');
     if (typeof(cb) != 'function') throw new Error('waitForHtmlElement(): cb is not defined or is not type of string');
@@ -464,7 +464,7 @@ async function findActiveMenuButton() {
  *  USE ONLY IN ASYNC FUNCTIONS
  *  await delay(1000); for wait one second
  * @param {number} milliseconds
- * @returns 
+ * @returns
  */
 async function delay(milliseconds) {
     return new Promise(resolve => {
@@ -478,7 +478,7 @@ async function delay(milliseconds) {
 
 /**
     * This Function will Monitor and fire Style Changes asap
-    */ 
+    */
 async function fastStyleChanges() {
 
     if (SITE_IS_VINE) {
@@ -498,7 +498,7 @@ async function fastStyleChanges() {
                 elem.style.display = 'none';
                 // elem.style.visibility = 'hidden';
             });
-            
+
             waitForHtmlElmement('#vvp-logo-link > img', (elem) => {
                 elem.style.display = 'none';
                 // elem.style.visibility = 'hidden';

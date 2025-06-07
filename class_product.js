@@ -1,5 +1,4 @@
 class Product {
-  
     id;
     link;
     description_full;
