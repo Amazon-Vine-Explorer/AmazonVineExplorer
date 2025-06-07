@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.15.5
+// @version      0.11.15.6
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -1814,7 +1814,7 @@ function createSettingsKeywordsTableElement(dat, index, entry){
     _tableRow_td1_button.setAttribute('ave-data-keyword', entry);
     _tableRow_td1_button.addEventListener('click', (elm, ev) =>{
         // console.log('DELETE_BTN:: ', elm)
-        if (true) SETTINGS[dat.key].splice(index, 1);
+        SETTINGS[dat.key].splice(index, 1);
         SETTINGS.save();
         const _table = document.getElementById(dat.key);
         _table.innerHTML = '';
@@ -2837,7 +2837,7 @@ function createNavButton(mainID, text, textID, color, onclick, badgeId, badgeVal
     return _btn;
 }
 
-function addStyleToTile(_currTile, _product, showFirstSeen) {
+function addStyleToTile(_currTile, _product) {
 
     if (!_product.gotFromDB) { // We have a new one ==> Save it to our Database ;)
         database.add(_product);
@@ -2953,7 +2953,7 @@ function init(hasTiles) {
             _currTile.style.cssText = "background-color: yellow;";
             _tilePorms.push(parseTileData(_currTile).then((_product) => {
                 if (SETTINGS.DebugLevel > 14) console.log('Come Back from parseTileData <<<<<<<<<< INIT <<<<<<<<<<<<<<<<<<<<<<<', _currTile, _product);
-                addStyleToTile(_currTile, _product, true);
+                addStyleToTile(_currTile, _product);
 
             }));
         }
