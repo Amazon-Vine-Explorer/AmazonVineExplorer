@@ -2285,7 +2285,7 @@ function initBackgroundScan() {
 
             let _loopIsWorking = false;
             let _subStage = 0;
-            let _PageMax = 0;
+            let _PageMax = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0;
             const _stageZeroSites = ['queue=potluck', 'queue=last_chance']
 
             backGroundScanTimeout = setTimeout(initBackgroundScanSubFunctionScannerLoop, SETTINGS.BackGroundScanDelayPerPage);
@@ -2390,8 +2390,8 @@ function initBackgroundScan() {
                     case 1: { // queue=encore | queue=encore&pn=&cn=&page=2...x
                         _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT')) || 0;
 
-                        // Alle 100 Seiten wird die maximale Seitenzahl geprüft
-                        if((_subStage % 100) == 0) {
+                        // Alle 100 Seiten oder am Ende wird die maximale Seitenzahl geprüft
+                        if((_subStage % 100) == 0 || _subStage >= _PageMax - 1) {
                             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 update PAGE_MAX');
 
                             let _pagedate = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
