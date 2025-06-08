@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.15.7
+// @version      0.11.15.8
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2389,18 +2389,17 @@ function initBackgroundScan() {
                     }
                     case 1: { // queue=encore | queue=encore&pn=&cn=&page=2...x
                         _subStage = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT')) || 0;
+                        
+                        if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 update PAGE_MAX');
 
-                        // Alle 100 Seiten oder am Ende wird die maximale Seitenzahl geprüft
-                        if(true /*(_subStage % 100) == 0 || _subStage >= _PageMax - 1*/) {
-                            if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 update PAGE_MAX');
-
-                            let _pagedate = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
-                            if (_pagedate) {
-                                localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX', _pagedate.maxPage);
-                            }
+                        let _pagedate = getPageinationData(document.querySelector('#ave-iframe-backgroundloader').contentWindow.document);
+                        if (_pagedate) {
+                            _PageMax = _pagedate.maxPage;
+                            localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX', _PageMax);
                         }
-
-                        _PageMax = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0;
+                        else {
+                            _PageMax = parseInt(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX')) || 0;
+                        }
 
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan().loop.case.1 with _subStage: ', _subStage);
 
