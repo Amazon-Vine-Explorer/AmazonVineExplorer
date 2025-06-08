@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.15.12
+// @version      0.11.15.13
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -56,12 +56,8 @@
         AVE_IS_THIS_SESSION_MASTER,
         AVE_TITLE,
         AVE_VERSION,
-        AVE_VERSION,
         DATABASE_NAME,
-        DATABASE_NAME, 
         DATABASE_OBJECT_STORE_NAME,
-        DATABASE_OBJECT_STORE_NAME,
-        DATABASE_VERSION,
         DATABASE_VERSION,
         DB_HANDLER:writable,
         INIT_AUTO_SCAN,
@@ -70,26 +66,17 @@
         SECONDS_PER_DAY,
         SECONDS_PER_WEEK,
         SETTINGS,
-        SETTINGS,
         SETTINGS_USERCONFIG_DEFINES,
         SITE_IS_SHOPPING,
-        SITE_IS_SHOPPING,                 
-        SITE_IS_VINE,
         SITE_IS_VINE,
         addBranding,
-        addBranding,
-        ave_eventhandler,
         ave_eventhandler,
         fastStyleChanges,
-        fastStyleChanges,
-        loadSettings,
         loadSettings,
         toTimestamp,
         toUnixTimestamp,
         unixTimeStamp,
-        unixTimeStamp,
         unsafeWindow,
-        waitForHtmlElmement,
         waitForHtmlElmement,
 */
 
@@ -351,7 +338,7 @@ function injectDarkMode() {
 }
 
 function handleInfiniteScroll() {
-    console.log('Called handleInfiniteScroll()');
+    if (SETTINGS.DebugLevel > 10) console.log('Called handleInfiniteScroll()');
     if (!inifiniteScrollBlockAppend) {
         inifiniteScrollBlockAppend = true;
         // setTimeout(async ()=> {},10);
@@ -364,7 +351,7 @@ function handleInfiniteScroll() {
 
         const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
 
-        console.log(`handleInfiniteScroll(): _maxScrollHeight: ${_maxScrollHeight} window.scrollY+inner: ${window.scrollY + window.innerHeight}`);
+        if (SETTINGS.DebugLevel > 10) console.log(`handleInfiniteScroll(): _maxScrollHeight: ${_maxScrollHeight} window.scrollY+inner: ${window.scrollY + window.innerHeight}`);
 
         if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))){
             blockHandleInfiniteScroll = false;
@@ -841,7 +828,7 @@ ${newUrl}`
 }
 
 function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
-    console.log('Called createTaxInfo()');
+    if (SETTINGS.DebugLevel > 10) ('Called createTaxInfo()');
     let _currencySymbol = '';
     if (prod.data_tax_currency && prod.data_tax_currency == 'EUR') _currencySymbol = '€';
 
@@ -853,12 +840,12 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     _taxElement_span.setAttribute("id", `ave-taxinfo-${index}-text`);
     _taxElement_span.classList.add('ave-taxinfo-text');
     const _prize = prod.data_estimated_tax_prize;
-    console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
+    if (SETTINGS.DebugLevel > 10) console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
     _taxElement_span.innerText = `Tax Price: ${(typeof(_prize) == 'number') ? Intl.NumberFormat(undefined, {minimumFractionDigits: 2}).format(_prize) : '--.--'} ${_currencySymbol}`;
-    console.log('createTaxInfo(): After innerText');
+    if (SETTINGS.DebugLevel > 10) console.log('createTaxInfo(): After innerText');
 
     _taxElement.appendChild(_taxElement_span);
-    console.log('createTaxInfo(): END', _taxElement);
+    if (SETTINGS.DebugLevel > 10) console.log('createTaxInfo(): END', _taxElement);
     return _taxElement;
 }
 
@@ -982,7 +969,7 @@ async function createInfiniteScrollSite(siteType, cb) {
 
 async function appendInfiniteScrollTiles(cb = ()=>{}){
     // So lange tiles hinzufügen bis wir wieder über dem sichtbaren bereich sind
-    console.log('appendInfiniteScrollTiles(): ', infiniteScrollTilesBufferArray);
+    if (SETTINGS.DebugLevel > 10) console.log('appendInfiniteScrollTiles(): ', infiniteScrollTilesBufferArray);
     const _tilesContainer = document.getElementById('vvp-items-grid');
 
     // setTimeout(async () => {
@@ -1011,10 +998,10 @@ async function appendInfiniteScrollTiles(cb = ()=>{}){
         const _maxScrollHeight = Math.max(document.body.scrollHeight - window.innerHeight, document.documentElement.scrollHeight - window.innerHeight);
         if (_maxScrollHeight > (window.scrollY + (window.innerHeight * 2))) _stopCreation = true;
 
-        console.log(`appendInfiniteScrollTiles(): Inside WHILE: _maxScrollHeigt: ${_maxScrollHeight} currPosition ${window.scrollY}`);
+        if (SETTINGS.DebugLevel > 10) console.log(`appendInfiniteScrollTiles(): Inside WHILE: _maxScrollHeigt: ${_maxScrollHeight} currPosition ${window.scrollY}`);
     }
 
-    console.log(`appendInfiniteScrollTiles(): After WHILE: left tile to create: ${infiniteScrollTilesBufferArray.length}`);
+    if (SETTINGS.DebugLevel > 10) console.log(`appendInfiniteScrollTiles(): After WHILE: left tile to create: ${infiniteScrollTilesBufferArray.length}`);
     cb(true);
 
     // },100);
@@ -1136,7 +1123,7 @@ function getTilesFromURL(url, cb = (tilesArray) => {}) {
             const _doc = _parser.parseFromString(response.responseText, "text/html");
             lastGetTilesFromURLQuerry = Date.now();
             waitForHtmlElmement('#vvp-items-grid', (itemsContainer) => {
-                console.log('getTileFromURL(): itemsContainer:', itemsContainer);
+                if (SETTINGS.DebugLevel > 10) console.log('getTileFromURL(): itemsContainer:', itemsContainer);
                 // cb(itemsContainer.getElementsByClassName('vvp-item-tile'));
                 const _retArr = [];
                 const _elemArr = itemsContainer.querySelectorAll('.vvp-item-tile');
@@ -1232,7 +1219,7 @@ function initTileEventHandlers() {
 }
 
 function addTileEventhandlers(_currTile) {
-    console.log('Tile Event Handler');
+    if (SETTINGS.DebugLevel > 10) console.log('Tile Event Handler');
     // const _favStar = _currTile.querySelector('.ave-favorite-star');
     const _btn = _currTile.querySelector('.vvp-details-btn input');
 

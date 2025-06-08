@@ -1,3 +1,9 @@
+/*
+    global
+        SETTINGS,
+        ave_eventhandler,
+*/
+
 console.log('loaded db_handler.js');
 class DB_HANDLER {
     #version;
@@ -209,18 +215,18 @@ class DB_HANDLER {
             this.get(id)
                 .then((_prod) => {
                     if (_prod) {
-                        // console.info(`got object with ID "${id}": "${_prod}"`);
+                        if (SETTINGS.DebugLevel > 10) console.info(`got object with ID "${id}": "${_prod}"`);
                         _resolve(_prod);
                     } else {
                         const _data_asin = id.split('#')[1];
-                        //console.debug(`object with ID "${id}" not found, trying to get it with ASIN "${_data_asin}"`);
+                        if (SETTINGS.DebugLevel > 1) console.debug(`object with ID "${id}" not found, trying to get it with ASIN "${_data_asin}"`);
                         this.getByASIN(_data_asin)
                             .then((_prod) => {
-                                // if (_prod) {
-                                //     console.debug(`got object with ID "${id}" and ASIN "${_data_asin}": "${_prod}"`);
+                                if (_prod) {
+                                    if (SETTINGS.DebugLevel > 1) console.debug(`got object with ID "${id}" and ASIN "${_data_asin}": "${_prod}"`);
                                 // } else {
                                 //     console.warn(`object with ID "${id}" and ASIN "${_data_asin}" not found`);
-                                // }
+                                }
 
                                 _resolve(_prod);
                             })
@@ -262,7 +268,7 @@ class DB_HANDLER {
     */
     async update(obj) {
         return new Promise((resolve, reject) => {
-            console.log('Called DB_HANDLER:update()');
+            if (SETTINGS.DebugLevel > 1) console.log('Called DB_HANDLER:update()');
             if (typeof (obj) != 'object') reject('DB_HANDLER.update(): obj is not defined or is not type of object');
             // console.log('Called DB_HANDLER:update() Stage 2');
 
