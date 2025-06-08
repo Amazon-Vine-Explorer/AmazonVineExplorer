@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.15.8
+// @version      0.11.15.9
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2059,7 +2059,7 @@ function getPageinationData(localDocument = document) {
     while ((!_ret.href || !_ret.maxPage) && _currChild) {
         const _curr = _currChild.firstChild;
 
-        if (_curr) {
+        if (_curr && typeof _curr.hasAttribute === "function") {
             if (_curr.hasAttribute('href')) _ret.href = _curr.getAttribute('href').replace(/=[0-9]+/, '=');
             if (parseInt(_curr.text)) _ret.maxPage = parseInt(_curr.text);
         }
