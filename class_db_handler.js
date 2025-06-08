@@ -213,14 +213,14 @@ class DB_HANDLER {
                         _resolve(_prod);
                     } else {
                         const _data_asin = id.split('#')[1];
-                        console.debug(`object with ID "${id}" not found, trying to get it with ASIN "${_data_asin}"`);
+                        //console.debug(`object with ID "${id}" not found, trying to get it with ASIN "${_data_asin}"`);
                         this.getByASIN(_data_asin)
                             .then((_prod) => {
-                                if (_prod) {
-                                    console.debug(`got object with ID "${id}" and ASIN "${_data_asin}": "${_prod}"`);
+                                // if (_prod) {
+                                //     console.debug(`got object with ID "${id}" and ASIN "${_data_asin}": "${_prod}"`);
                                 // } else {
                                 //     console.warn(`object with ID "${id}" and ASIN "${_data_asin}" not found`);
-                                }
+                                // }
 
                                 _resolve(_prod);
                             })
