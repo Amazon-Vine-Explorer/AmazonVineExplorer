@@ -2458,7 +2458,7 @@ function initBackgroundScan() {
                     case 4: { //Warten für drei Stunden nach dem der Scan abgeschlossen ist
                         updateBackgroundScanScreenText(`${_scannerName} Time Waiting: ${_timeConversion(TimeWaitingMS)}`);
 
-                        if(TimeWaitingMin > 180)
+                        if(TimeWaitingMin > SETTINGS.IdlePeriodAfterScan)
                         {
                             _backGroundScanStage = 0;
                             _subStage = 0;

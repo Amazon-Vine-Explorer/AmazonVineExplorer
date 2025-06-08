@@ -228,6 +228,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScanDelayPerPage', type: 'numb
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScannerRandomness', type: 'number', min: 100, max: 10000, name: 'Background Scan Randomness per Page(Milliseconds)', description: 'A Value that gives the maximal range for the Randomy added delay per page load'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationDelay', type: 'number', min: 0, max: 3600, name: 'Desktop Notifikation Delay (Seconds)', description: 'Minimal time between desktop notifikations, exept notifikations for keyword matches. A value of 0 disables this notifications.'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'SearchBarInputDelay', type: 'number', min: 100, max: 1000, name: 'Search Bar Input Delay until auto search(Milliseconds)', description: 'When typing in the search bar, start searching when no key pressed this long milliseconds'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'IdlePeriodAfterScan', type: 'number', min: 0, max: 1440, name: 'Idle period after a scan', description: 'Number of minutes to wait until next scan starts'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'NotSeenMaxCount', type: 'number', min: 0, max: 9, name: 'Not Seen Max Count after which items get removed from the database', description: 'If an item ist not found more often than this during full background scans, it will be removed from the database'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'MaxItemsPerPage', type: 'number', min: 20, max: 1000, name: 'Maximum items per page', description: 'Maximum items that will show up one one page'});
 
@@ -301,6 +302,7 @@ class SETTINGS_DEFAULT {
     BackGroundScannerRandomness = 6000;
     DesktopNotifikationDelay = 60;
     SearchBarInputDelay = 500;
+    IdlePeriodAfterScan = 180;
     DesktopNotifikationKeywords = [];
 
     CssProductNewTag = "border: 2mm ridge rgba(218, 247, 166, .6); background-color: rgba(218, 247, 166, .2)";
