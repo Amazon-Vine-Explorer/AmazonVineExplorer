@@ -445,10 +445,12 @@ async function findActiveMenuButton() {
             const innerSpan = buttonSpan.querySelector('.a-button-inner');
             if (innerSpan) {
                 const link = innerSpan.querySelector('a');
-                if (link && link.getAttribute('aria-checked') === 'true') {
-                    return id;
+                if (link) {
+                    if (link.getAttribute('aria-checked') === 'true') {
+                        return id;
+                    }
                 } else {
-                    console.warn(`findActiveMenuButton(): link is null or undefined for ${id}`);
+                    console.warn(`findActiveMenuButton(): link is null or undefined for ${id} ${link}`);
                 }
             } else {
                 console.warn(`findActiveMenuButton(): innerSpan is null or undefined for ${id}`);
