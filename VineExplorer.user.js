@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.15.18
+// @version      0.11.15.19
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -107,11 +107,11 @@ unsafeWindow.ave = {
     event: ave_eventhandler,
 };
 
-const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATABASE_VERSION, (res, err) => {
-    if (err) {
-        console.error(`Something was going wrong while init database :(`);
-        return;
-    } else {
+let database;
+(async () => {
+    try {
+        database = await DB_HANDLER.init(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATABASE_VERSION);
+
         let _execLock = false;
         console.log('Lets Check where we are....');
         if (SITE_IS_VINE){
@@ -133,24 +133,20 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                     aveShareElementTmp.innerHTML = `
                 <span class="a-button a-button-primary vvp-details-btn" id="a-autoid-0">
                 <span class="a-button-inner">
-                <input data-asin="${_data.asin}" data-is-parent-asin="${_data.isParentAsin}" data-recommendation-id="${_data.recommendationId}" data-recommendation-type="VENDOR_TARGETED" class="a-button-input" type="submit" aria-labelledby="a-autoid-0-announce">
+                <input data-asin="${_data.asin}" data-is-parent-asin="${_data.isParentAsin}" data-recommendation-id="${_data.recommendationId}" data-recommendation-type="VENDOR_TARGETED" class="a-butt[...]
                 <span class="a-button-text" aria-hidden="true" id="a-autoid-0-announce">Weitere Details
                 </span>
                 </span>
                 </span>
                 `;
                     document.body.appendChild(aveShareElementTmp);
-                    // Warte auf das nächste Ereigniszyklus, um sicherzustellen, dass das Element vollständig gerendert wurde
                     setTimeout(() => {
                         aveShareElementTmp.querySelector('input').click();
                         setTimeout(() => {
-                            //aveShareElementTmp.remove();
                             localStorage.removeItem('ave-share-details');
                         }, 200);
                     }, 500);
-
                 })
-                //https://www.amazon.de/vine/api/recommendations/A1PA6795UKMFR9%23B0CW9Q5N53%23vine.enrollment.41aad59f-9ff3-49c4-a3e1-d3f3c43c2536/item/B0CW9Q5N53?imageSize=180
             }
             addAveSettingsTab();
             addAVESettingsMenu();
@@ -159,10 +155,9 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 _execLock = true;
                 addBranding();
                 detectCurrentPageType();
-
                 let _tileCount = 0;
                 const _initialWaitForAllTiles = setInterval(() => {
-                    const _count = document.getElementsByClassName('vvp-details-btn').length // Buttons take a bit more time as tiles
+                    const _count = document.getElementsByClassName('vvp-details-btn').length;
                     if (_count > _tileCount) {
                         _tileCount = _count;
                     } else {
@@ -183,28 +178,28 @@ const database = new DB_HANDLER(DATABASE_NAME, DATABASE_OBJECT_STORE_NAME, DATAB
                 init(false);
             });
         } else if (SITE_IS_SHOPPING) {
-            console.log('We are on Amazon Shopping'); // We are on normal amazon shopping - maybe i hve forgotten any other site then we have to add it as not here
+            console.log('We are on Amazon Shopping');
             _execLock = true;
             waitForHtmlElmement('body', () => {
-                addBranding(); // For now, olny show that the script is active
+                addBranding();
             });
-            useEnrollmentData() // Function to use enrollment data from URL
+            useEnrollmentData();
 
             function useEnrollmentData() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const aveData = urlParams.get('vine-data');
                 if (aveData) {
                     const enrollmentData = JSON.parse(decodeURIComponent(aveData));
-                    //Redirect to Vine and Open Item
                     localStorage.setItem('ave-share-details', JSON.stringify(enrollmentData));
-
                     window.open(`${window.location.origin}/vine/vine-items`, '_blank');
-
                 }
             }
         }
+    } catch (err) {
+        console.error(`Something was going wrong while init database :'(`, err);
+        return;
     }
-});
+})();
 
 unsafeWindow.ave.database = database;
 
