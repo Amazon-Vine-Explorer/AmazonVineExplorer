@@ -48,7 +48,6 @@ class DB_HANDLER {
             const _storeName = this.#storeName; // private class variable is not accessable inside _request functions
 
             console.log('IndexedDB init()');
-            console.log(_request);
 
             _request.onerror = (event) => {
                 reject(event);
