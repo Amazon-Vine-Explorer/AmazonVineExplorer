@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.15.17
+// @version      0.11.15.18
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2455,8 +2455,8 @@ function initBackgroundScan() {
                         _scanFinished();
                         break;
                     }
-                    case 4: { //Warten für drei Stunden nach dem der Scan abgeschlossen ist
-                        updateBackgroundScanScreenText(`${_scannerName} Time Waiting: ${_timeConversion(TimeWaitingMS)}`);
+                    case 4: {
+                        updateBackgroundScanScreenText(`${_scannerName} Time Waiting: ${_timeConversion(SETTINGS.IdlePeriodAfterScan * 60 * 1000 - TimeWaitingMS)}`);
 
                         if(TimeWaitingMin > SETTINGS.IdlePeriodAfterScan)
                         {
