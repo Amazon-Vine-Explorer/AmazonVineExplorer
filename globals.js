@@ -421,7 +421,7 @@ async function waitForHtmlElmement(selector, cb, altDocument = document) {
 }
 
 // Wrap waitForHtmlElmement in a Promise to use it with async/await
-function waitForHtmlElementPromise(selector, altDocument = document) {
+async function waitForHtmlElementPromise(selector, altDocument = document) {
     return new Promise((resolve, reject) => {
         waitForHtmlElmement(selector, resolve, altDocument);
         setTimeout(() => {

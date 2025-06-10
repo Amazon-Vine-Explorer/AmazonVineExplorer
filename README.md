@@ -27,6 +27,7 @@ We are aware of the issue and are working on a fix.
 *  The idle period between scans can now be configured.
 *  Display time until next scan instead of time since last scan.
 *  Fix error message in console log while openening the database.
+*  Code refactorings to use async/await.
 
 ##### [2025-06-06] - Version 0.11.15
 *  The product pages ("Für Sie empfohlen", "Verfügbar für alle" and "Zusätzliche Artikel") now always show the time it was first seen because time of last seen is always the current time.

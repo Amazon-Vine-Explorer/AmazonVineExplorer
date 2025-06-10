@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.15.21
+// @version      0.11.15.22
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -78,6 +78,7 @@
         unixTimeStamp,
         unsafeWindow,
         waitForHtmlElmement,
+        waitForHtmlElementPromise,
 */
 
 'use strict';
@@ -390,95 +391,76 @@ function detectCurrentPageType(){
 }
 
 async function parseTileData(tile) {
-    return new Promise((resolve, reject) => {
+    if (SETTINGS.DebugLevel > 12) console.log(`Called parseTileData(`, tile, ')');
 
-        if (SETTINGS.DebugLevel > 12) console.log(`Called parseTileData(`, tile, ')');
+    const _id = tile.getAttribute('data-recommendation-id');
+    const _ret = await database.getById(_id);
 
-        const _id = tile.getAttribute('data-recommendation-id');
+    if (_ret) {
+        _ret.gotFromDB = true;
+        _ret.ts_lastSeen = unixTimeStamp();
+        _ret.notSeenCounter = 0;
+        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): got DB Entry`);
+        await database.update(_ret);
+        return _ret;
+    }
 
-        database.getById(_id).then((_ret) => {
-            if (_ret) {
-                _ret.gotFromDB = true;
-                _ret.ts_lastSeen = unixTimeStamp();
-                _ret.notSeenCounter = 0;
-                if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): got DB Entry`);
-                database.update(_ret);
-                resolve(_ret);
-            } else {
-                //We have to wait for a lot of Stuff
-                waitForHtmlElmement('.vvp-item-tile-content',async () => {
-                    const _div_vpp_item_tile_content  = tile.getElementsByClassName('vvp-item-tile-content')[0];
-                    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 1`);
-                    waitForHtmlElmement('img', async () => {
-                        const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
-                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 2`);
-                        waitForHtmlElmement('.vvp-item-product-title-container', async () => {
-                            const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
-                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 3`);
-                            waitForHtmlElmement('a', async () => {
-                                const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
-                                if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 4`);
-                                waitForHtmlElmement('.a-button-inner', async () => {
-                                    const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
-                                    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 5`);
-                                    waitForHtmlElmement('input', async () => {
-                                        const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
-                                        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 6`);
-                                        const _newProduct = new Product(_id);
-                                        _newProduct.data_recommendation_id = _id;
-                                        _newProduct.data_img_url = tile.getAttribute('data-img-url');
-                                        _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
-                                        _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
-                                        _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
+    await waitForHtmlElementPromise('.vvp-item-tile-content', tile);
+    const _div_vpp_item_tile_content = tile.getElementsByClassName('vvp-item-tile-content')[0];
 
-                                        _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
-                                        _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-                                        _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
+    await waitForHtmlElementPromise('img', _div_vpp_item_tile_content);
+    const _div_vpp_item_tile_content_img = _div_vpp_item_tile_content.getElementsByTagName('img')[0];
 
-                                        _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+    await waitForHtmlElementPromise('.vvp-item-product-title-container', _div_vpp_item_tile_content);
+    const _div_vvp_item_product_title_container = _div_vpp_item_tile_content.getElementsByClassName('vvp-item-product-title-container')[0];
 
+    await waitForHtmlElementPromise('a', _div_vvp_item_product_title_container);
+    const _div_vvp_item_product_title_container_a = _div_vvp_item_product_title_container.getElementsByTagName('a')[0];
 
-                                        if (_newProduct.description_short == '') {
-                                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): we don´t have a shot description`);
-                                            let _timeLoopCounter = 0;
-                                            const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
-                                            const _halfdelay = (SETTINGS.FetchRetryTime / 2)
-                                            function timeLoop() {
-                                                if (_timeLoopCounter++ < _maxLoops){
-                                                    setTimeout(() => {
-                                                        const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-                                                        if (_short != ""){
-                                                            _newProduct.description_short = _short;
-                                                            resolve(_newProduct);
-                                                        } else {
-                                                            timeLoop();
-                                                        }
-                                                    }, _halfdelay + Math.round(Math.random() * _halfdelay * 2));
-                                                } else {
-                                                    _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
-                                                    _newProduct.generated_short = true;
-                                                    resolve(_newProduct);
-                                                }
-                                            }
-                                            timeLoop();
-                                        } else {
-                                            if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): END`);
-                                            resolve(_newProduct);
-                                        }
+    await waitForHtmlElementPromise('.a-button-inner', _div_vpp_item_tile_content);
+    const _div_vpp_item_tile_content_button_inner = _div_vpp_item_tile_content.getElementsByClassName('a-button-inner')[0];
 
-                                        // if (SETTINGS.DebugLevel > 10) console.log(`parseTileData(${tile}) RETURNS :: ${JSON.stringify(_newProduct, null, 4)}`);
+    await waitForHtmlElementPromise('input', _div_vpp_item_tile_content_button_inner);
+    const _div_vpp_item_tile_content_button_inner_input = _div_vpp_item_tile_content_button_inner.getElementsByTagName('input')[0];
 
-                                    }, _div_vpp_item_tile_content_button_inner)
-                                }, _div_vpp_item_tile_content)
-                            }, _div_vvp_item_product_title_container)
-                        }, _div_vpp_item_tile_content);
-                    }, _div_vpp_item_tile_content);
-                }, tile)
+    if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): wait 6`);
+
+    const _newProduct = new Product(_id);
+    _newProduct.data_recommendation_id = _id;
+    _newProduct.data_img_url = tile.getAttribute('data-img-url');
+    _newProduct.data_img_alt = _div_vpp_item_tile_content_img.getAttribute('alt') || "";
+    _newProduct.link = _div_vvp_item_product_title_container_a.getAttribute('href');
+    _newProduct.description_full = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-full')[0].textContent;
+
+    _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
+    _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
+    _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
+
+    _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+
+    // If short description is empty, try to fetch it with retries
+    if (_newProduct.description_short == '') {
+        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): we don´t have a short description`);
+        let _timeLoopCounter = 0;
+        const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
+        const _halfdelay = (SETTINGS.FetchRetryTime / 2);
+
+        while (_timeLoopCounter++ < _maxLoops) {
+            await new Promise(res => setTimeout(res, _halfdelay + Math.round(Math.random() * _halfdelay * 2)));
+            const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
+            if (_short != "") {
+                _newProduct.description_short = _short;
+                return _newProduct;
             }
-        });
-    })
+        }
+        _newProduct.description_short = `${_newProduct.description_full.substr(0,50)}...`;
+        _newProduct.generated_short = true;
+        return _newProduct;
+    } else {
+        if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): END`);
+        return _newProduct;
+    }
 }
-
 
 function reloadPageWithSubpageTarget(target) {
     if (window.location.href.includes('?')) {
