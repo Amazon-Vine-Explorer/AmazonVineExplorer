@@ -19,7 +19,7 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
-##### [2025-06-xx] - Version 0.11.16
+##### [2025-06-10] - Version 0.11.16
 *  Removed unused (at least by me) files.
 *  Make @require's relative.
 *  Fix some eslint warnings.
