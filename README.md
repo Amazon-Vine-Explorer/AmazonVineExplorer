@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-06-xx] - Version 0.11.17
+*  Search box is smaller to avoid wrapping for portrait monitors.
+
 ##### [2025-06-10] - Version 0.11.16
 *  Removed unused (at least by me) files.
 *  Make @require's relative.

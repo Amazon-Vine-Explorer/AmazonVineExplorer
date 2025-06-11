@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.16
+// @version      0.11.16.1
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2952,7 +2952,7 @@ function init(hasTiles) {
     _searchBarInput.setAttribute('type', 'search');
     _searchBarInput.setAttribute('placeholder', 'Suche Vine Produkte');
     _searchBarInput.setAttribute('name', 'ave-search');
-    _searchBarInput.style.cssText = `width: 30em;`;
+    _searchBarInput.style.cssText = `width: 15em;`;
     _searchBarInput.addEventListener('keyup', (ev) => {
         const _input = _searchBarInput.value.toLowerCase();
         if (SETTINGS.DebugLevel > 10) console.log(`Updated Input: ${_input}`);
