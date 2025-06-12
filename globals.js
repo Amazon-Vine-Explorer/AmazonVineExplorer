@@ -229,7 +229,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScannerRandomness', type: 'num
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationDelay', type: 'number', min: 0, max: 3600, name: 'Desktop Notifikation Delay (Seconds)', description: 'Minimal time between desktop notifikations, exept notifikations for keyword matches. A value of 0 disables this notifications.'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'SearchBarInputDelay', type: 'number', min: 100, max: 1000, name: 'Search Bar Input Delay until auto search(Milliseconds)', description: 'When typing in the search bar, start searching when no key pressed this long milliseconds'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'IdlePeriodAfterScan', type: 'number', min: 0, max: 1440, name: 'Idle period after a scan', description: 'Number of minutes to wait until next scan starts'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'NotSeenMaxCount', type: 'number', min: 0, max: 9, name: 'Not Seen Max Count after which items get removed from the database', description: 'If an item ist not found more often than this during full background scans, it will be removed from the database'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'HoursBeforeCleanup', type: 'number', min: 0, max: 168, name: 'Number of hours to wait before items get removed from the database', description: 'If an item was not seen this many hours during full background scans, it will be removed from the database. For a value of zero, the items will be removed as soon as they where not seen during a scan.'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'MaxItemsPerPage', type: 'number', min: 20, max: 1000, name: 'Maximum items per page', description: 'Maximum items that will show up one one page'});
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Colors and Styles', description: ''});
@@ -292,7 +292,7 @@ class SETTINGS_DEFAULT {
     DarkModeBackgroundColor = '#191919';
     DarkModeColor = '#FFFFFF';
 
-    NotSeenMaxCount = 5;
+    HoursBeforeCleanup = 24;
     PageLoadMinDelay = 750;
     DebugLevel = 0;
     MaxItemsPerPage = 500;

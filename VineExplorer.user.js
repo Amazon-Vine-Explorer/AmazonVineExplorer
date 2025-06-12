@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.16.1
+// @version      0.11.16.2
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2055,6 +2055,9 @@ async function cleanUpDatabase(cb = () => {}) {
             _normalCleanupDate = unixTimeStamp() - SECONDS_PER_WEEK;
         }
 
+        let secondsBeforeCleanup = SETTINGS.HoursBeforeCleanup * 3600;
+        let currentTimeStamp = unixTimeStamp();
+
         for (const _currEntry of prodArr) {
             _workersProms.push(new Promise((resolve, reject) => {
                 let _needUpdate = false;
@@ -2088,9 +2091,7 @@ async function cleanUpDatabase(cb = () => {}) {
                     _needUpdate = true;
                 }
 
-
-
-                if ((_currEntry.notSeenCounter > SETTINGS.NotSeenMaxCount || _currEntry.forceRemove) && !_currEntry.isFav) {
+                if ((_currEntry.notSeenCounter > 0 && currentTimeStamp - _currEntry.ts_lastSeen >= secondsBeforeCleanup || _currEntry.forceRemove) && !_currEntry.isFav) {
                     if (SETTINGS.DebugLevel > 10) console.log(`cleanUpDatabase() - Removing Entry ${_currEntry.id}`);
 
                     database.removeID(_currEntry.id).then((ret) => {
