@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.16.2
+// @version      0.11.16.3
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -719,7 +719,7 @@ function createShareElement(prod, index = Math.round(Math.random()* 10000)) {
 let run = 0;
 function shareEventHandlerClick(event, _data){
     if(_data.recommendation_id){
-        console.log("[AVE]",_data);
+        if (SETTINGS.DebugLevel > 1) console.log("[AVE]",_data);
         const newUrl = `${window.location.origin}/dp/${_data.asin}?vine-data=${encodeURIComponent(JSON.stringify({
             asin: _data.asin,
             isParentAsin: _data.parent_asin,
@@ -1275,16 +1275,16 @@ function addAveSettingsTab(){
 
             const _contentContainer = document.body.querySelectorAll('.a-tab-container.vvp-tab-set-container > div');
             _contentContainer.forEach(element => element.classList.add('a-hidden'));
-            console.log(_contentContainer);
+            if (SETTINGS.DebugLevel > 1) console.log(_contentContainer);
 
             _upperSettingsButton.classList.add('a-active');
             const _settingsContent = document.body.querySelector('[data-a-name="ave-settings"]');
             _settingsContent.classList.remove('a-hidden');
 
             const _settingsContainer = _settingsContent.querySelector('#ave-settings-container');
-            console.log(_settingsContainer);
+            if (SETTINGS.DebugLevel > 1) console.log(_settingsContainer);
             for (const elem of SETTINGS_USERCONFIG_DEFINES) {
-                console.log('Creating Settings Menu Element: ', elem);
+                if (SETTINGS.DebugLevel > 1) console.log('Creating Settings Menu Element: ', elem);
                 _settingsContainer.appendChild(createSettingsMenuElement(elem));
             }
 
@@ -1724,7 +1724,7 @@ function createSettingsMenuElement(dat){
         _elem_keyword_input_input.setAttribute('rows', 1);
         _elem_keyword_input_input.setAttribute('placeholder', dat.inputPlaceholder);
         _elem_keyword_input_input.addEventListener('change', (elm, ev) => {
-            console.log('EVENTHANDLER CHANGE:', elm, 'event:', ev);
+            if (SETTINGS.DebugLevel > 1) console.log('EVENTHANDLER CHANGE:', elm, 'event:', ev);
             const _value = elm.target.value.trim();
             if (_value && _value.length > 0) {
                 for (let _key of _value.split('\n')) {
@@ -2844,7 +2844,7 @@ async function requestProductDetails(prod) {
                     }
                 }
                 const _data = res.result;
-                console.log('DATA:', _data)
+                if (SETTINGS.DebugLevel > 1) console.log('DATA:', _data)
                 prod.data_childs = _data.variations || [];
                 resolve(prod);
                 //
@@ -2877,7 +2877,7 @@ async function requestProductDetails(prod) {
             })
         } else {
             fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}/item/${prod.data_asin}`.replace(/#/g, '%23')).then(r => r.json()).then(ret => {
-                console.log('RETURN:', ret);
+                if (SETTINGS.DebugLevel > 1) console.log('RETURN:', ret);
                 if (ret.error) {
                     reject(ret.error.exceptionType) // => "ITEM_NOT_IN_ENROLLMENT"
                 } else {
