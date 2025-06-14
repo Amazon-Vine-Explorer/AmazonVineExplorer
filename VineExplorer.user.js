@@ -30,57 +30,6 @@
 // @require      https://raw.githubusercontent.com/Christof121/VineFetchFix/main/fetchfix.js
 // ==/UserScript==
 
-/*
-    Versioning:
-    a.b.c[.d]
-
-    a => Hauptversion(Major), ändert sich nur bei breaking oder anderen gravirenden änderungen. Solle In diesem Fall also die 1 nie überschreiten.
-    b => Feature(Minor), ändert sich nur wenn neue Features hinzukommen oder gößere umstellungen im Hintergrund passiert sind
-    c => Patch, kleinere Änderungen oder "größere" Bugfixes
-    d => Micro(OPTIONAL), kleine Bugfixes die nur wenige Zeilen Code beinhalten. Wird normalerweise nicht an die Versionnummer angehängt und nur in ausnahmefällen verwendet. Wie z.B. 0.6.4.1 - Das war nur eine Fehlerhafte Variablendeklaration. musste aber public gehen weil es ein Breaking Bug war
-
-    Sammlung der Ideen:
-    - Pageination nach oben schieben || Kopieren
-    - Tooltipp mit der langen Beschreibung auf der kurzen
-    - Bestellte Produkte mit Tag versehen ?
-    - Automatisches Bestellen via Prioliste ?!?
-
-    Todo:
-*/
-
-/*
-    global
-        AUTO_SCAN_IS_RUNNING,
-        AUTO_SCAN_PAGE_CURRENT,
-        AUTO_SCAN_PAGE_MAX,
-        AVE_IS_THIS_SESSION_MASTER,
-        AVE_TITLE,
-        AVE_VERSION,
-        DATABASE_NAME,
-        DATABASE_OBJECT_STORE_NAME,
-        DATABASE_VERSION,
-        DB_HANDLER:writable,
-        INIT_AUTO_SCAN,
-        PAGE_LOAD_TIMESTAMP,
-        Product,
-        SECONDS_PER_DAY,
-        SECONDS_PER_WEEK,
-        SETTINGS,
-        SETTINGS_USERCONFIG_DEFINES,
-        SITE_IS_SHOPPING,
-        SITE_IS_VINE,
-        addBranding,
-        ave_eventhandler,
-        fastStyleChanges,
-        loadSettings,
-        toTimestamp,
-        toUnixTimestamp,
-        unixTimeStamp,
-        unsafeWindow,
-        waitForHtmlElmement,
-        waitForHtmlElementPromise,
-*/
-
 'use strict';
 console.log(`Init Vine Voices Explorer ${AVE_VERSION}`);
 
