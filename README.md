@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-06-15] - Version 0.11.18
+*  Code cleanup and fixing errors.
+
 ##### [2025-06-14] - Version 0.11.17
 *  Search box is smaller to avoid wrapping for portrait monitors.
 *  The old "Not Seen Max Count" setting is replaced by the new "Number of hours to wait" setting.
