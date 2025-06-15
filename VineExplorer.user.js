@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Amazon Vine Explorer
 // @namespace    http://tampermonkey.net/
-// @version      0.11.18
+// @version      0.11.19
 // @updateURL    https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @downloadURL  https://raw.githubusercontent.com/deburau/AmazonVineExplorer/main/VineExplorer.user.js
 // @description  Better View, Search and Explore for Amazon Vine Products - Vine Voices Edition
@@ -2206,7 +2206,7 @@ function initBackgroundScan() {
                 if (_loopIsWorking) return;
                 _loopIsWorking = true;
 
-                if (!(localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') === 'true')) {
+                if ('true'.localeCompare(localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING')) === 0) {
                     let _fastTimeWaitingMS = Date.now() - (localStorage.getItem('AVE_FAST_SCAN_LAST_TIME') || 0);
                     let _fastTimeWaitingMin = _fastTimeWaitingMS / 1000 / 60;
                     let _startFastScan = true;

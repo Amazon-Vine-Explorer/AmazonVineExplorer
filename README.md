@@ -19,6 +19,9 @@ We are aware of the issue and are working on a fix.
 
 ## Changelog Deburau
 
+##### [2025-06-15] - Version 0.11.19
+*  Fast scan did not stop in 0.11.18.
+
 ##### [2025-06-15] - Version 0.11.18
 *  Code cleanup and fixing errors.
 
