@@ -18,7 +18,6 @@ class DB_HANDLER {
     * @param {string} dbName Name your Database
     * @param {string} [storeName] Object Store Name
     * @param {number} [version] Object Store Name
-    * @param {function} [cb] Callback function executes when database initialisation is done
     * @return {DB_HANDLER} DBHANDLER Object
     */
 
@@ -113,9 +112,8 @@ class DB_HANDLER {
 
     /**
     * DB ASIN CHECKER
-    * @param {function} [cb] Callback function executes when database query is done
     */
-    #checkForDuplicatedASIN() {
+    async #checkForDuplicatedASIN() {
         const _request = this.#getStore().openCursor();
 
         const existingDataAsinValues = [];
@@ -137,7 +135,7 @@ class DB_HANDLER {
                 }
             }
         };
-        _request.onerror = (event) => { cb([]); throw new Error(`DB_HANDLER.#checkForDuplicatedAsin: ${event.target.error.name}`); };
+        _request.onerror = (event) => { throw new Error(`DB_HANDLER.#checkForDuplicatedAsin: ${event.target.error.name}`); };
     };
 
     /**
@@ -171,7 +169,7 @@ class DB_HANDLER {
     */
     async add(obj) {
         return new Promise((resolve, reject) => {
-            if (typeof (obj) != 'object') reject('DB_HANDLER.add(): obj is not defined or is not type of object');
+            if (typeof (obj) !== 'object') reject('DB_HANDLER.add(): obj is not defined or is not type of object');
 
             const _request = this.#getStore(true).add(obj);
 
@@ -200,7 +198,7 @@ class DB_HANDLER {
     */
     async get(id) {
         return new Promise((resolve, reject) => {
-            if (typeof (id) != 'string') reject('DB_HANDLER.get(): id is not defined or is not typeof string');
+            if (typeof (id) !== 'string') reject('DB_HANDLER.get(): id is not defined or is not typeof string');
 
             const _request = this.#getStore().get(id);
             _request.onerror = (event) => { reject(`DB_HANDLER.add(): ${event.target.error}`); };
@@ -257,7 +255,7 @@ class DB_HANDLER {
     */
     async getByASIN(asin) {
         return new Promise((resolve, reject) => {
-            if (typeof (asin) != 'string') reject('DB_HANDLER.get(): asin is not defined or is not typeof string');
+            if (typeof (asin) !== 'string') reject('DB_HANDLER.get(): asin is not defined or is not typeof string');
 
             const _index = this.#getStore().index('data_asin');
             const _request = _index.get(asin);
@@ -275,7 +273,7 @@ class DB_HANDLER {
     async update(obj) {
         return new Promise((resolve, reject) => {
             if (SETTINGS.DebugLevel > 1) console.log('Called DB_HANDLER:update()');
-            if (typeof (obj) != 'object') reject('DB_HANDLER.update(): obj is not defined or is not type of object');
+            if (typeof (obj) !== 'object') reject('DB_HANDLER.update(): obj is not defined or is not type of object');
             // console.log('Called DB_HANDLER:update() Stage 2');
 
             const _request = this.#getStore(true).put(obj);
@@ -302,13 +300,13 @@ class DB_HANDLER {
     */
     async query(query) {
         return new Promise((resolve, reject) => {
-            if (typeof (query) != 'string' && !Array.isArray(query)) reject('DB_HANDLER.query(): query is not defined or is not typeof string or array');
+            if (typeof (query) !== 'string' && !Array.isArray(query)) reject('DB_HANDLER.query(): query is not defined or is not typeof string or array');
 
             const _request = this.#getStore().openCursor();
             const _result = [];
 
             // Use a Array of words for search
-            const _keys = (typeof (query) == 'string') ? [query] : query;
+            const _keys = (typeof (query) === 'string') ? [query] : query;
             for (let _key of _keys) { _key = _key.toLowerCase(); }
 
             _request.onsuccess = (event) => {
@@ -377,7 +375,7 @@ class DB_HANDLER {
      * @async
      * @returns {Promise<Product[]>}
      */
-    async getFavEntries(cb) {
+    async getFavEntries() {
         return new Promise((resolve, reject) => {
             const _result = [];
             const _onlyTrue = IDBKeyRange.only(1);
@@ -417,7 +415,7 @@ class DB_HANDLER {
     */
     async removeID(id) {
         return new Promise((resolve, reject) => {
-            if (typeof (id) != 'string') (reject('DB_HANDLER.removeID(): id is not defined or is not typeof string'));
+            if (typeof (id) !== 'string') (reject('DB_HANDLER.removeID(): id is not defined or is not typeof string'));
 
             const _request = this.#getStore(true).delete(id);
             _request.onsuccess = (event) => {

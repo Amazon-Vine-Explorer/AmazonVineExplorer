@@ -45,7 +45,6 @@ fastStyleChanges();
 let searchInputTimeout;
 let backGroundScanTimeout;
 
-let TimeouteScrollTilesBufferArray = [];
 let BackGroundScanIsRunning = false;
 
 // Make some things accessable from console
@@ -186,7 +185,7 @@ window.onscroll = () => { // ONSCROLL Event handler
 
     stickElementToTopScrollEVhandler('ave-btn-backtotop', `${_top}px`);
 
-    if (currentMainPage == PAGETYPE.ALL) handleInfiniteScroll();
+    if (currentMainPage === PAGETYPE.ALL) handleInfiniteScroll();
 
 
 };
@@ -325,11 +324,11 @@ function getUrlParameter(name) {
 function detectCurrentPageType(){
     if (/http[s]{0,1}:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\/vine-items$/.test(window.location.href)) {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
-    } else if (getUrlParameter('queue') == 'last_chance') {
+    } else if (getUrlParameter('queue') === 'last_chance') {
         currentMainPage = PAGETYPE.ORIGINAL_LAST_CHANCE;
-    } else if (getUrlParameter('queue') == 'potluck') {
+    } else if (getUrlParameter('queue') === 'potluck') {
         currentMainPage = PAGETYPE.OROGINAL_POTLUCK;
-    } else if (getUrlParameter('queue') == 'encore') {
+    } else if (getUrlParameter('queue') === 'encore') {
         currentMainPage = PAGETYPE.ORIGINAL_SELLER;
     }
 
@@ -383,12 +382,12 @@ async function parseTileData(tile) {
 
     _newProduct.data_asin = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-asin');
     _newProduct.data_recommendation_type = _div_vpp_item_tile_content_button_inner_input.getAttribute('data-recommendation-type');
-    _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') == 'true');
+    _newProduct.data_asin_is_parent = (_div_vpp_item_tile_content_button_inner_input.getAttribute('data-is-parent-asin') === 'true');
 
     _newProduct.description_short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
 
     // If short description is empty, try to fetch it with retries
-    if (_newProduct.description_short == '') {
+    if (_newProduct.description_short === '') {
         if (SETTINGS.DebugLevel > 14) console.log(`parseTileData(): we don´t have a short description`);
         let _timeLoopCounter = 0;
         const _maxLoops = Math.round(SETTINGS.FetchRetryMaxTime / SETTINGS.FetchRetryTime);
@@ -397,7 +396,7 @@ async function parseTileData(tile) {
         while (_timeLoopCounter++ < _maxLoops) {
             await new Promise(res => setTimeout(res, _halfdelay + Math.round(Math.random() * _halfdelay * 2)));
             const _short = _div_vvp_item_product_title_container_a.getElementsByClassName('a-truncate-cut')[0].textContent;
-            if (_short != "") {
+            if (_short !== "") {
                 _newProduct.description_short = _short;
                 return _newProduct;
             }
@@ -485,7 +484,7 @@ function markAllCurrentSiteProductsAsSeen(cb = () => {}) {
             database.update(prod).then( () => {
                 updateTileStyle(prod);
                 _returned++;
-                if (_returned == _tilesLength) cb();
+                if (_returned === _tilesLength) cb();
             })
         })
     }
@@ -497,7 +496,7 @@ function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
         const _prodsLength = prods.length;
         let _returned = 0;
         if (SETTINGS.DebugLevel > 10) console.log(`markAllCurrentDatabaseProductsAsSeen() - Got ${_prodsLength} Products with Tag isNew`);
-        if (_prodsLength == 0) {
+        if (_prodsLength === 0) {
             cb(true);
             return;
         }
@@ -507,7 +506,7 @@ function markAllCurrentDatabaseProductsAsSeen(cb = () => {}) {
             database.update(_currProd, ()=> {
                 if (SETTINGS.DebugLevel > 10) console.log(`markAllCurrentDatabaseProductsAsSeen() - Updated ${_currProd.id}`);
                 _returned++
-                if (_returned == _prodsLength) cb(true);
+                if (_returned === _prodsLength) cb(true);
             })
         }
     });
@@ -665,7 +664,6 @@ function createShareElement(prod, index = Math.round(Math.random()* 10000)) {
     return _shareElement;
 }
 
-let run = 0;
 function shareEventHandlerClick(event, _data){
     if(_data.recommendation_id){
         if (SETTINGS.DebugLevel > 1) console.log("[AVE]",_data);
@@ -681,7 +679,7 @@ function shareEventHandlerClick(event, _data){
         let queueParam = currentMainPage;
         //let queueParam = urlParams.get('queue');
         let pageParam = urlParams.get('page');
-        if(pageParam == null){pageParam = 1}
+        if(pageParam === null){pageParam = 1}
         let page = ""
 
         switch(queueParam){
@@ -756,7 +754,7 @@ ${newUrl}`
 function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     if (SETTINGS.DebugLevel > 10) ('Called createTaxInfo()');
     let _currencySymbol = '';
-    if (prod.data_tax_currency && prod.data_tax_currency == 'EUR') _currencySymbol = '€';
+    if (prod.data_tax_currency && prod.data_tax_currency === 'EUR') _currencySymbol = '€';
 
     const _taxElement = document.createElement('span');
     _taxElement.setAttribute("id", `ave-taxinfo-${index}`);
@@ -767,7 +765,7 @@ function createTaxInfoElement(prod, index = Math.round(Math.random()* 10000)) {
     _taxElement_span.classList.add('ave-taxinfo-text');
     const _prize = prod.data_estimated_tax_prize;
     if (SETTINGS.DebugLevel > 10) console.log('Called createTaxInfo(): We have a Taxprize of: ', _prize);
-    _taxElement_span.innerText = `Tax Price: ${(typeof(_prize) == 'number') ? Intl.NumberFormat(undefined, {minimumFractionDigits: 2}).format(_prize) : '--.--'} ${_currencySymbol}`;
+    _taxElement_span.innerText = `Tax Price: ${(typeof(_prize) === 'number') ? Intl.NumberFormat(undefined, {minimumFractionDigits: 2}).format(_prize) : '--.--'} ${_currencySymbol}`;
     if (SETTINGS.DebugLevel > 10) console.log('createTaxInfo(): After innerText');
 
     _taxElement.appendChild(_taxElement_span);
@@ -839,7 +837,7 @@ async function createProductSite(siteType, productArray, cb) {
             _tilesGrid.append(tile);
             _returned++;
             if (SETTINGS.DebugLevel > 10) console.log(`Created Tile (${_returned}/${_fastCount})`);
-            if (_returned == _fastCount) cb(true);
+            if (_returned === _fastCount) cb(true);
         });
     }
 
@@ -1115,14 +1113,14 @@ function updateTileStyle(prod) {
         const _tile = _tiles[i];
         const _id = _tile.getAttribute('data-recommendation-id');
 
-        if (_id == prod.data_recommendation_id) {
+        if (_id === prod.data_recommendation_id) {
             if (SETTINGS.DebugLevel > 10) console.log(`Found Tile with id: ${prod.id}`);
             _tile.setAttribute('style', (prod.isFav) ? SETTINGS.CssProductFavTag : (prod.isNew) ? SETTINGS.CssProductNewTag : SETTINGS.CssProductDefault);
             const _favStar = _tile.querySelector('.ave-favorite-star');
             _favStar.style.color = (prod.isFav) ? SETTINGS.FavStarColorChecked : 'white'; // SETTINGS.FavStarColorChecked = Gelb;
 
             const _taxValue = prod.data_estimated_tax_prize;
-            if (typeof(_taxValue) == 'number') {
+            if (typeof(_taxValue) === 'number') {
                 const _taxValueElem = _tile.querySelector('.ave-taxinfo-text');
                 _taxValueElem.innerText = (_taxValueElem.innerText).replace('--.--', _taxValue);
             }
@@ -1515,7 +1513,7 @@ function createSettingsMenuElement(dat){
     if (dat.key) _elem.setAttribute('ave-config-key', dat.key);
     _elem.classList.add('ave-settings-item');
 
-    if (dat.type == 'bool') {// Boolean Value
+    if (dat.type === 'bool') {// Boolean Value
 
         const _elem_item_left = document.createElement('div');
         _elem_item_left.classList.add('ave-item-left');
@@ -1540,11 +1538,11 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description != '') ? dat.description : dat.name}">${dat.name}</label>`
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description !== '') ? dat.description : dat.name}">${dat.name}</label>`
 
         _elem.appendChild(_elem_item_right);
 
-    } else if (dat.type == 'number') { // Number Value
+    } else if (dat.type === 'number') { // Number Value
 
         const _elem_item_left = document.createElement('div');
         _elem_item_left.classList.add('ave-item-left');
@@ -1589,11 +1587,11 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description != '') ? dat.description : dat.name}">${dat.name}</label>`
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description !== '') ? dat.description : dat.name}">${dat.name}</label>`
 
         _elem.appendChild(_elem_item_right);
 
-    } else if (dat.type == 'button') { // Number Value
+    } else if (dat.type === 'button') { // Number Value
 
         const _elem_item_left = document.createElement('div');
 
@@ -1601,7 +1599,7 @@ function createSettingsMenuElement(dat){
 
 
         const _elem_item_left_input_label  = document.createElement('label');
-        _elem_item_left_input_label.setAttribute('data-ave-tooltip', (dat.description && dat.description != '') ? dat.description : dat.name);
+        _elem_item_left_input_label.setAttribute('data-ave-tooltip', (dat.description && dat.description !== '') ? dat.description : dat.name);
         _elem_item_left_input_label.setAttribute('class', 'a-button');
         _elem_item_left_input_label.style.width = "250px";
         if (dat.bgColor) _elem_item_left_input_label.style.backgroundColor = dat.bgColor;
@@ -1625,7 +1623,7 @@ function createSettingsMenuElement(dat){
         // _elem.appendChild(_elem_item_right);
 
 
-    } else if (dat.type == 'color') {
+    } else if (dat.type === 'color') {
 
         const _elem_item_left = document.createElement('div');
         _elem_item_left.classList.add('ave-item-left');
@@ -1640,11 +1638,11 @@ function createSettingsMenuElement(dat){
 
         const _elem_item_right = document.createElement('div');
         _elem_item_right.classList.add('ave-item-right');
-        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description != '') ? dat.description : dat.name}">${dat.name}</label>`
+        _elem_item_right.innerHTML = `<label class="ave-settings-label-setting" data-ave-tooltip="${(dat.description && dat.description !== '') ? dat.description : dat.name}">${dat.name}</label>`
 
         _elem.appendChild(_elem_item_right);
 
-    } else if (dat.type == 'title'){
+    } else if (dat.type === 'title'){
         const _elem_spacer_horizontal = document.createElement('hr');
         _elem_spacer_horizontal.style.width = '100%';
 
@@ -1656,7 +1654,7 @@ function createSettingsMenuElement(dat){
         _elem.style.flexWrap = 'wrap';
         _elem.appendChild(_elem_spacer_horizontal);
         _elem.appendChild(_elem_spacer_title);
-    } else if (dat.type == 'keywords') {
+    } else if (dat.type === 'keywords') {
         _elem.classList.remove('ave-settings-item');
         _elem.classList.add('ave-keyword-wrapper');
         _elem.innerHTML = `<h4>${dat.name}</h4>`;
@@ -1809,7 +1807,7 @@ function addOverlays() { // Old Settings Code
 function componentToHex(c) {
     const _c = Math.min(c, 255)
     const _hex = _c.toString(16);
-    return _hex.length == 1 ? "0" + _hex : _hex;
+    return _hex.length === 1 ? "0" + _hex : _hex;
 }
 
 function rgbToHex(r, g, b){
@@ -1824,9 +1822,9 @@ function colorToHex(color) {
     const _color = color.replace(/\s/g,''); // Remove all spaces
     let _cache;
 
-    if (_color == 'white'){
+    if (_color === 'white'){
         return '#ffffff';
-    } else if (_color == 'black'){
+    } else if (_color === 'black'){
         return '#000000';
     } else if ((_cache = /rgb\(([\d]+),([\d]+),([\d]+)\)/.exec(_color))){ // rgb(0,0,0)
         return rgbToHex(_cache[1], _cache[2], _cache[3]);
@@ -2026,7 +2024,7 @@ async function cleanUpDatabase(cb = () => {}) {
                 }
 
                 let _notSeenCounter = _currEntry.notSeenCounter;
-                if (_currEntry.data_recommendation_type == 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen < _vendorCleanupDate) { // If PotLuck start revoving after 1 day
+                if (_currEntry.data_recommendation_type === 'VENDOR_TARGETED' &&  _currEntry.ts_lastSeen < _vendorCleanupDate) { // If PotLuck start revoving after 1 day
                     _notSeenCounter++;
                     if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} increased notSeenCounter to ${_notSeenCounter}`);
                 } else if (_currEntry.ts_lastSeen < _normalCleanupDate) { // Normal Product Start Removing after 1 week
@@ -2034,7 +2032,7 @@ async function cleanUpDatabase(cb = () => {}) {
                     if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} increased notSeenCounter to ${_notSeenCounter}`);
                 }
 
-                if (_currEntry.notSeenCounter != _notSeenCounter) {
+                if (_currEntry.notSeenCounter !== _notSeenCounter) {
                     if (SETTINGS.DebugLevel > 14) console.log(`cleanUpDatabase() - Entry ${_currEntry.id} update notSeenCounter from ${_currEntry.notSeenCounter} to ${_notSeenCounter}`);
                     _currEntry.notSeenCounter = _notSeenCounter;
                     _needUpdate = true;
@@ -2187,7 +2185,7 @@ function initBackgroundScan() {
             clearInterval(_paginatinWaitLoop);
             if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): pagination WaitLoop');
 
-            if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_IS_RUNNING') == 'true')) {
+            if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_IS_RUNNING') === 'true')) {
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): init localStorage Variables');
                 localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_MAX', _maxPage);
                 localStorage.setItem('AVE_BACKGROUND_SCAN_IS_RUNNING', true);
@@ -2208,7 +2206,7 @@ function initBackgroundScan() {
                 if (_loopIsWorking) return;
                 _loopIsWorking = true;
 
-                if (!(localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true')) {
+                if (!(localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') === 'true')) {
                     let _fastTimeWaitingMS = Date.now() - (localStorage.getItem('AVE_FAST_SCAN_LAST_TIME') || 0);
                     let _fastTimeWaitingMin = _fastTimeWaitingMS / 1000 / 60;
                     let _startFastScan = true;
@@ -2221,7 +2219,7 @@ function initBackgroundScan() {
                     if (!(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_MAX') > 0)) {
                         _startFastScan = false;
                     }
-                    if (localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE') == 1 && !(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT') > 0)) {
+                    if (localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE') === 1 && !(localStorage.getItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT') > 0)) {
                         _startFastScan = false;
                     }
 
@@ -2260,7 +2258,7 @@ function initBackgroundScan() {
                 if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): loop with _backgroundScanStage ', _backGroundScanStage, ' and Substage: ', _subStage);
 
                 let _scannerName;
-                if (localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true') {
+                if (localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') === 'true') {
                     _scannerName = 'Fast Scanner';
                 } else {
                     _scannerName = 'Background Scanner';
@@ -2269,7 +2267,7 @@ function initBackgroundScan() {
                 // Create iFrame if not exists
                 if (!document.querySelector('#ave-iframe-backgroundloader')) {
                     // Create iFrame only if scan is running
-                    if (!(_backGroundScanStage == 4)) {
+                    if (!(_backGroundScanStage === 4)) {
                         if (SETTINGS.DebugLevel > 10) console.log('initBackgroundScan(): create iFrame');
                         const iframe = document.createElement('iframe');
                         iframe.id = 'ave-iframe-backgroundloader';
@@ -2343,7 +2341,7 @@ function initBackgroundScan() {
                         //     const _randCount = Math.round(Math.random() * 4);
                         //     for (const _prod of products) {
                         //         if (_needUpdate.length < _randCount) {
-                        //             if (typeof(_prod.data_estimated_tax_prize) != 'number') _needUpdate.push(_prod);
+                        //             if (typeof(_prod.data_estimated_tax_prize) !== 'number') _needUpdate.push(_prod);
                         //         } else {
                         //             break;
                         //         }
@@ -2400,7 +2398,7 @@ function initBackgroundScan() {
                     localStorage.setItem('AVE_BACKGROUND_SCAN_PAGE_CURRENT', _subStage);
                     _loopIsWorking = false;
 
-                    if (localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') == 'true') {
+                    if (localStorage.getItem('AVE_FAST_SCAN_IS_RUNNING') === 'true') {
                         let _stopFastScan = false;
 
                         const _backGroundScanStage = localStorage.getItem('AVE_BACKGROUND_SCAN_STAGE') || 0;
@@ -2410,10 +2408,10 @@ function initBackgroundScan() {
                         if (_backGroundScanStage > 1) {
                             _stopFastScan = true;
                         }
-                        if (_backGroundScanStage > 0 && newCount === 0 && localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT1') == 0 && localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT2') == 0) {
+                        if (_backGroundScanStage > 0 && newCount === 0 && localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT1') === 0 && localStorage.getItem('AVE_FAST_SCAN_PREVIOUS_NEW_COUNT2') === 0) {
                             _stopFastScan = true;
                         }
-                        if (_backGroundScanStage == 1 && _lastBackGroundScanStage == 1 && _scanPageCurrent > 0 && _scanPageCurrent >= _lastScanPageCurrent) {
+                        if (_backGroundScanStage === 1 && _lastBackGroundScanStage === 1 && _scanPageCurrent > 0 && _scanPageCurrent >= _lastScanPageCurrent) {
                             _stopFastScan = true;
                         }
 
@@ -2784,7 +2782,7 @@ async function requestProductDetails(prod) {
         if (prod.data_asin_is_parent) {// Lets get the Childs first
             fetch(`${window.location.origin}/vine/api/recommendations/${prod.id}`.replace(/#/g, '%23')).then(r => r.json()).then(async (res) => {
                 if (res.error) {
-                    if (res.error.exceptionType == 'ITEM_NOT_IN_ENROLLMENT') {
+                    if (res.error.exceptionType === 'ITEM_NOT_IN_ENROLLMENT') {
                         prod.forceRemove = true;
                         resolve(prod);
                     } else {
