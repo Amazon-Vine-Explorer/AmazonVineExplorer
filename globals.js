@@ -1,5 +1,5 @@
 'use strict';
-if (window.top !== window.self) return; //don't run on frames or iframes
+if (window.top != window.self) return; //don't run on frames or iframes
 
 // Constants Needed for some things
 const AVE_VERSION = (GM_info?.script?.version)
@@ -16,8 +16,8 @@ const AVE_SESSION_ID = generateSessionID();
 let AVE_IS_THIS_SESSION_MASTER = false;
 
 // Obsolete sobald der Backgroundscan läuft
-const INIT_AUTO_SCAN = (localStorage.getItem('AVE_INIT_AUTO_SCAN') === 'true') ? true : false;
-const AUTO_SCAN_IS_RUNNING = (localStorage.getItem('AVE_AUTO_SCAN_IS_RUNNING') === 'true') ? true : false;
+const INIT_AUTO_SCAN = (localStorage.getItem('AVE_INIT_AUTO_SCAN') == 'true') ? true : false;
+const AUTO_SCAN_IS_RUNNING = (localStorage.getItem('AVE_AUTO_SCAN_IS_RUNNING') == 'true') ? true : false;
 const AUTO_SCAN_PAGE_CURRENT = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_CURRENT')) || -1
 const AUTO_SCAN_PAGE_MAX = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_MAX')) || -1
 const PAGE_LOAD_TIMESTAMP = Date.now();
@@ -158,7 +158,7 @@ setTimeout(() => {
         let _ownIndex = -1;
         for (let i = 0; i < _sessions.length; i++) {
             const _session = _sessions[i];
-            if (_session.id === AVE_SESSION_ID){
+            if (_session.id == AVE_SESSION_ID){
                 _session.ts = Date.now();
                 _ownIndex = i;
             } else if (_session.ts + 2500 < Date.now()) { // We have found a Invalid Session => Handle this
@@ -171,7 +171,7 @@ setTimeout(() => {
             }
         }
 
-        if (!AVE_IS_THIS_SESSION_MASTER && (_noValidMaster || _sessions.length === 1)) {
+        if (!AVE_IS_THIS_SESSION_MASTER && (_noValidMaster || _sessions.length == 1)) {
             AVE_IS_THIS_SESSION_MASTER = true;
             _sessions[_ownIndex].master = true;
             addBranding();
@@ -191,7 +191,7 @@ window.onbeforeunload = function () {
     const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
     for (let i = 0; i < _sessions.length; i++) {
         const _elem = _sessions[i];
-        if (_elem.id === AVE_SESSION_ID) {
+        if (_elem.id == AVE_SESSION_ID) {
             _sessions.splice(i, 1);
             localStorage.setItem('AVE_SESSIONS', JSON.stringify(_sessions));
             console.log('SESSION ID GOT REMOVED');
@@ -344,7 +344,7 @@ const SETTINGS = new SETTINGS_DEFAULT();
 function loadSettings() {
     const _settingsStore = GM_getValue('AVE_SETTINGS', {});
     console.log('Got Settings from GM:(', typeof(_settingsStore),')', _settingsStore);
-    if (typeof(_settingsStore) === 'object' && _settingsStore !== null && _settingsStore !== undefined) {
+    if (typeof(_settingsStore) == 'object' && _settingsStore != null && _settingsStore != undefined) {
         const _keys = Object.keys(_settingsStore);
         const _keysLength = _keys.length;
 
@@ -398,8 +398,8 @@ function toTimestamp(unixTimestamp) {
     * @param {object} [altDocument] Alternativ document root
     */
 async function waitForHtmlElmement(selector, cb, altDocument = document) {
-    if (typeof(selector) !== 'string') throw new Error('waitForHtmlElement(): selector is not defined or is not type of string');
-    if (typeof(cb) !== 'function') throw new Error('waitForHtmlElement(): cb is not defined or is not type of string');
+    if (typeof(selector) != 'string') throw new Error('waitForHtmlElement(): selector is not defined or is not type of string');
+    if (typeof(cb) != 'function') throw new Error('waitForHtmlElement(): cb is not defined or is not type of string');
 
     if (altDocument.querySelector(selector)) {
         cb(altDocument.querySelector(selector));
@@ -582,7 +582,7 @@ async function fastStyleChanges() {
             const activeButtonId = await findActiveMenuButton();
             if (activeButtonId) {
                 console.log('EnablePaginationTop: Active menu button ID:', activeButtonId);
-                if (activeButtonId === "vvp-items-button--seller") {
+                if (activeButtonId == "vvp-items-button--seller") {
                     waitForHtmlElmement('div.a-text-center[role="navigation"]', (elem) => {
                         var clonedDiv = elem.cloneNode(true);
                         //clonedDiv.style.marginTop = '-25px';
