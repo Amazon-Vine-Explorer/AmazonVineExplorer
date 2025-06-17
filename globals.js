@@ -5,9 +5,8 @@ if (window.top != window.self) return; //don't run on frames or iframes
 const AVE_VERSION = (GM_info?.script?.version)
 const AVE_TITLE = (GM_info?.script?.name);
 const SECONDS_PER_DAY = 86400;
-const SECONDS_PER_WEEK = 604800;
-const SITE_IS_VINE = /https?:\/\/(www\.)?amazon(\.co)?\.[a-z]{2,}\/vine\//.test(window.location.href);
-const SITE_IS_SHOPPING = /https?:\/\/(www\.)?amazon(\.co)?\.[a-z]{2,}\/(?!vine)(?!gp\/video)(?!music)/.test(window.location.href);
+const SITE_IS_VINE = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/vine\//.test(window.location.href);
+const SITE_IS_SHOPPING = /http[s]{0,1}\:\/\/[w]{0,3}.amazon.[a-z]{1,}.{0,1}[a-z]{0,}\/(?!vine)(?!gp\/video)(?!music)/.test(window.location.href);
 const AVE_SESSION_ID = generateSessionID();
 
 /**
@@ -18,14 +17,14 @@ let AVE_IS_THIS_SESSION_MASTER = false;
 // Obsolete sobald der Backgroundscan läuft
 const INIT_AUTO_SCAN = (localStorage.getItem('AVE_INIT_AUTO_SCAN') == 'true') ? true : false;
 const AUTO_SCAN_IS_RUNNING = (localStorage.getItem('AVE_AUTO_SCAN_IS_RUNNING') == 'true') ? true : false;
-const AUTO_SCAN_PAGE_CURRENT = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_CURRENT')) || -1
-const AUTO_SCAN_PAGE_MAX = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_MAX')) || -1
+const AUTO_SCAN_PAGE_CURRENT = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_CURRENT')) || -1 
+const AUTO_SCAN_PAGE_MAX = parseInt(localStorage.getItem('AVE_AUTO_SCAN_PAGE_MAX')) || -1 
 const PAGE_LOAD_TIMESTAMP = Date.now();
 
 // Obsolete sobald die Datenbank über Tampermonkey läuft
 const DATABASE_NAME = 'VineVoiceExplorer';
 const DATABASE_OBJECT_STORE_NAME = `${DATABASE_NAME}_Objects`;
-const DATABASE_VERSION = 3;
+const DATABASE_VERSION = 2;
 
 // Make some things accessable from console
 unsafeWindow.ave = {};
@@ -37,7 +36,7 @@ class AVE_EVENTHANDLER {
     * A very basic and simple eventhandler/wrapper
     * @constructor
     * @return {AVE_EVENTHANDLER} AVE_EVENTHANDLER Object
-    */
+    */ 
     constructor(){}
 
     /**
@@ -60,7 +59,6 @@ class AVE_EVENTHANDLER {
 const ave_eventhandler = new AVE_EVENTHANDLER();
 
 function addBranding() {
-    const _isMasterSession = AVE_IS_THIS_SESSION_MASTER && SITE_IS_VINE;
 
     const _oldElem = document.getElementById('ave-branding-text');
     if (_oldElem) _oldElem.remove();
@@ -80,7 +78,7 @@ function addBranding() {
     width: fit-content;
     height: fit-content;
     margin-left: auto;
-    background-color: ${(_isMasterSession) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)'};
+    background-color: ${(AVE_IS_THIS_SESSION_MASTER) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)'};
     justify-content: center;
     display: flex;
     padding: 3px;
@@ -108,14 +106,14 @@ function addBranding() {
     _text.style.left = '10px';
     // _text.style.transform = 'translate(-50%, -50%)';
     _text.style.color = 'blue'; // Textfarbe
-    _text.style.backgroundColor = (_isMasterSession) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)';
+    _text.style.backgroundColor = (AVE_IS_THIS_SESSION_MASTER) ? 'rgba(218, 247, 166, .75)': 'rgba(255, 100, 100, .75)';
     _text.style.textAlign = 'left';
     _text.style.fontSize = '20px'; // Ändere die Schriftgröße hier
     _text.style.zIndex = '2000';
     _text.style.borderRadius = '3px';
     _text.innerHTML = `
     <p id="ave-brandig-text">
-      ${AVE_TITLE}${(_isMasterSession) ? ' - Master': ''} - ${AVE_VERSION}
+      ${AVE_TITLE}${(AVE_IS_THIS_SESSION_MASTER) ? ' - Master': ''} - ${AVE_VERSION}
     </p>
     <div class="ave-x-wrapper">
       <div class="ave-close-x" id="ave-branding-x">
@@ -152,13 +150,13 @@ setTimeout(() => {
         addBranding();
     }
 
-    setInterval(() => { //
+    setInterval(() => { // 
         const _sessions = JSON.parse(localStorage.getItem('AVE_SESSIONS', '[]'))
         let _noValidMaster = false;
         let _ownIndex = -1;
         for (let i = 0; i < _sessions.length; i++) {
             const _session = _sessions[i];
-            if (_session.id == AVE_SESSION_ID){
+            if (_session.id == AVE_SESSION_ID){ 
                 _session.ts = Date.now();
                 _ownIndex = i;
             } else if (_session.ts + 2500 < Date.now()) { // We have found a Invalid Session => Handle this
@@ -187,7 +185,7 @@ setTimeout(() => {
 
 
 window.onbeforeunload = function () {
-    console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY');
+    console.log('CLOSE OR RELOAD SESSION - REMOVE OUR SESSION ID FROM ARRAY'); 
     const _sessions = JSON.parse(localStorage.AVE_SESSIONS);
     for (let i = 0; i < _sessions.length; i++) {
         const _elem = _sessions[i];
@@ -216,21 +214,14 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnLastChance', type: 'bool', nam
 SETTINGS_USERCONFIG_DEFINES.push({key: 'DisableBtnSeller', type: 'bool', name: 'Disable Button Seller', description: 'Disables the Section Button Seller(ZA)'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableTopLogoChange', type: 'bool', name: 'Enable Top Logo Change', description: 'Enables the Change of the top logo to our AVE Logo'});
 
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Button All Products', description: 'Enable &quot;All Products&quot; Button'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnablePaginationTop', type: 'bool', name: 'Enable Pagination on top', description: 'Enable Pagination to be displayed on top for ZA page' });
+SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnAll', type: 'bool', name: 'Enable Button All Products', description: 'Enable "All Products" Button'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBackgroundScan', type: 'bool', name: 'Enable Background Scan', description: 'Enables the Background scan, if disabled you will find a Button for Autoscan on the Vine Website'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableInfiniteScrollLiveQuerry', type: 'bool', name: 'Enable Infiniti Scroll Live Querry', description: 'If enabled the Products of the All Products Page will get querryd from Amazon directls otherwise they will get loaded from Database(faster)'});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableDesktopNotifikation', type: 'bool', name: 'Enable Desktop Notifications', description: 'Enable Desktop Notifications if new Products are detected'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'EnableBtnMarkAllAsSeen', type: 'bool', name: 'Enable Button Mark all as seen', description: 'Enable the Button Mark all as seen'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'ShowFirstSeen', type: 'bool', name: 'Show first seen instead of last seen', description: 'Instead of the &quot;Last seen&quot; date in the product box show the date, the item was first seen'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notification Highlight Keywords', inputPlaceholder: 'Type in your highlight keywords one per line and click outside to submit', description: 'Create a List of words u want to Highlight if Product desciption containes one or more of them'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScanDelayPerPage', type: 'number', min: 2000, max: 20000, name: 'Background Scan Per Page Min Delay(Milliseconds)', description: 'Minimal Delay per Page load of Background Scan'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScannerRandomness', type: 'number', min: 100, max: 10000, name: 'Background Scan Randomness per Page(Milliseconds)', description: 'A Value that gives the maximal range for the Randomy added delay per page load'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationDelay', type: 'number', min: 0, max: 3600, name: 'Desktop Notifikation Delay (Seconds)', description: 'Minimal time between desktop notifikations, exept notifikations for keyword matches. A value of 0 disables this notifications.'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'SearchBarInputDelay', type: 'number', min: 100, max: 1000, name: 'Search Bar Input Delay until auto search(Milliseconds)', description: 'When typing in the search bar, start searching when no key pressed this long milliseconds'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'IdlePeriodAfterScan', type: 'number', min: 0, max: 1440, name: 'Idle period after a scan', description: 'Number of minutes to wait until next scan starts'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'HoursBeforeCleanup', type: 'number', min: 0, max: 168, name: 'Number of hours to wait before items get removed from the database', description: 'If an item was not seen this many hours during full background scans, it will be removed from the database. For a value of zero, the items will be removed as soon as they where not seen during a scan.'});
-SETTINGS_USERCONFIG_DEFINES.push({key: 'MaxItemsPerPage', type: 'number', min: 20, max: 1000, name: 'Maximum items per page', description: 'Maximum items that will show up one one page'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationKeywords', type: 'keywords', name: 'Desktop Notification Highlight Keywords', inputPlaceholder: 'Type in your highlight keyword and press [ENTER]', description: 'Create a List of words u want to Highlight if Product desciption containes one or more of them'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScanDelayPerPage', type: 'number', min: 2000, max: 10000, name: 'Background Scan Per Page Min Delay(Milliseconds)', description: 'Minimal Delay per Page load of Background Scan'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'BackGroundScannerRandomness', type: 'number', min: 100, max: 10000, name: 'Background Scan Randomness per Page(Milliseconds)', description: 'A Vale that gives the maximal range for the Randomy added delay per page load'});
+SETTINGS_USERCONFIG_DEFINES.push({key: 'DesktopNotifikationDelay', type: 'number', min: 1, max: 900, name: 'Desktop Notifikation Delay(Seconds)', description: 'Minimal Time between Desktop Notifikations. exept Notifikations with hitted keywords'});
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'title', name: 'Colors and Styles', description: ''});
 SETTINGS_USERCONFIG_DEFINES.push({key: 'BtnColorNewProducts', type: 'color', name: 'Button Color New Products', description: ''});
@@ -254,7 +245,7 @@ SETTINGS_USERCONFIG_DEFINES.push({key: 'DebugLevel', type: 'number', min: 0, max
 
 SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'RESET SETTINGS TO DEFAULT', bgColor: 'rgb(255,128,0)', description: 'It does what it says', btnClick: () => {SETTINGS.reset(); window.location.href = window.location.href} });
 SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DATABSE EXPORT >>>', bgColor: 'lime', description: 'Export the entire Database', btnClick: () => {exportDatabase();}});
-SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DATABSE IMPORT <<<', bgColor: 'yellow', description: 'Clear the current database and import data from an earlier exported file. Data is imported as is, i.e. there is no validation. Please wait for the completion notification after clicking the button', btnClick: () => {importDatabase();}});
+SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DATABSE IMPORT <<<', bgColor: 'yellow', description: 'Imports Database from earlyer exported file !! ATTENTION !! At the Moment there is NO VALIDATION CHECK', btnClick: () => {importDatabase();}});
 SETTINGS_USERCONFIG_DEFINES.push({type: 'button', name: 'DELETE DATABSE', bgColor: 'rgb(255,0,0)', description: 'A USER DOES NOT NEED TO DO THIS ! ITS ONLY FOR DEVELOPMENT PURPOSES', btnClick: () => {database.deleteDatabase().then(() => {window.location.href = window.location.href})}});
 
 class SETTINGS_DEFAULT {
@@ -274,9 +265,6 @@ class SETTINGS_DEFAULT {
     EnableInfiniteScrollLiveQuerry = false;
     EnableDesktopNotifikation = false;
     EnableBtnAll = true;
-    EnablePaginationTop = true;
-    EnableBtnMarkAllAsSeen = true;
-    ShowFirstSeen = false;
 
     BtnColorFavorites = '#ffe143';
     BtnColorNewProducts = '#00FF00';
@@ -292,17 +280,15 @@ class SETTINGS_DEFAULT {
     DarkModeBackgroundColor = '#191919';
     DarkModeColor = '#FFFFFF';
 
-    HoursBeforeCleanup = 24;
+    NotSeenMaxCount = 5;
     PageLoadMinDelay = 750;
     DebugLevel = 0;
     MaxItemsPerPage = 500;
     FetchRetryTime = 50;
     FetchRetryMaxTime = 5000;
-    BackGroundScanDelayPerPage = 6000;
-    BackGroundScannerRandomness = 6000;
+    BackGroundScanDelayPerPage = 4000;
+    BackGroundScannerRandomness = 4000;
     DesktopNotifikationDelay = 60;
-    SearchBarInputDelay = 500;
-    IdlePeriodAfterScan = 180;
     DesktopNotifikationKeywords = [];
 
     CssProductNewTag = "border: 2mm ridge rgba(218, 247, 166, .6); background-color: rgba(218, 247, 166, .2)";
@@ -340,7 +326,7 @@ const SETTINGS = new SETTINGS_DEFAULT();
 
 /**
   * Load Settings from GM Storage
-  */
+  */ 
 function loadSettings() {
     const _settingsStore = GM_getValue('AVE_SETTINGS', {});
     console.log('Got Settings from GM:(', typeof(_settingsStore),')', _settingsStore);
@@ -358,7 +344,7 @@ function loadSettings() {
 
 /**
   * Save Settings to GM Storage
-  */
+  */ 
 function saveSettings() {
     SETTINGS.save();
 }
@@ -366,7 +352,7 @@ function saveSettings() {
 /**
   * Timestamp in Seconds
   * @return {number} unixTimestamp
-  */
+  */ 
 function unixTimeStamp () {
     return Math.floor(Date.now() / 1000)
 }
@@ -375,7 +361,7 @@ function unixTimeStamp () {
     * Convert Millis Timestamp to Seconds Timestamp
     * @param {number} now Millis Timestamp as from Date.now();
     * @return {number} unix Timestamp
-    */
+    */ 
 function toUnixTimestamp(now) {
     return Math.floor(now / 1000)
 }
@@ -385,7 +371,7 @@ function toUnixTimestamp(now) {
     * Convert Seconds Timestamp to Millis Timestamp
     * @param {number} unixTimestamp unix Timestamp
     * @return {number} Millis Timestamp as from Date.now();
-    */
+    */ 
 function toTimestamp(unixTimestamp) {
     return (unixTimestamp * 1000);
 }
@@ -394,9 +380,9 @@ function toTimestamp(unixTimestamp) {
 /**
     * Waits until a HTML Element exists ans fires callback if it is found
     * @param {string} selector querySelector
-    * @param {function} cb Callback Function
+    * @param {function} cb Callback Function 
     * @param {object} [altDocument] Alternativ document root
-    */
+    */ 
 async function waitForHtmlElmement(selector, cb, altDocument = document) {
     if (typeof(selector) != 'string') throw new Error('waitForHtmlElement(): selector is not defined or is not type of string');
     if (typeof(cb) != 'function') throw new Error('waitForHtmlElement(): cb is not defined or is not type of string');
@@ -420,55 +406,12 @@ async function waitForHtmlElmement(selector, cb, altDocument = document) {
     });
 }
 
-// Wrap waitForHtmlElmement in a Promise to use it with async/await
-async function waitForHtmlElementPromise(selector, altDocument = document) {
-    return new Promise((resolve, reject) => {
-        waitForHtmlElmement(selector, resolve, altDocument);
-        setTimeout(() => {
-            reject(new Error(`Timeout waiting for element: ${selector}`));
-        }, 10000); // 10 seconds timeout
-    });
-}
-
-// Function to find the active menu button (used for top pagination)
-async function findActiveMenuButton() {
-    // Array of menu IDs
-    const buttonIds = [
-        'vvp-items-button--recommended',
-        'vvp-items-button--all',
-        'vvp-items-button--seller'
-    ];
-
-    for (const id of buttonIds) {
-        try {
-            const buttonSpan = await waitForHtmlElementPromise(`#${id}`);
-            const innerSpan = buttonSpan.querySelector('.a-button-inner');
-            if (innerSpan) {
-                const link = innerSpan.querySelector('a');
-                if (link) {
-                    if (link.getAttribute('aria-checked') === 'true') {
-                        return id;
-                    }
-                } else {
-                    console.warn(`findActiveMenuButton(): link is null or undefined for ${id} ${link}`);
-                }
-            } else {
-                console.warn(`findActiveMenuButton(): innerSpan is null or undefined for ${id}`);
-            }
-        } catch (error) {
-            console.warn(`findActiveMenuButton(): buttonSpan is null or undefined for ${id}`, error);
-        }
-    }
-
-    return null;
-}
-
 /**
  *  Wait for given amount of milliseconds
  *  USE ONLY IN ASYNC FUNCTIONS
  *  await delay(1000); for wait one second
  * @param {number} milliseconds
- * @returns
+ * @returns 
  */
 async function delay(milliseconds) {
     return new Promise(resolve => {
@@ -482,7 +425,7 @@ async function delay(milliseconds) {
 
 /**
     * This Function will Monitor and fire Style Changes asap
-    */
+    */ 
 async function fastStyleChanges() {
 
     if (SITE_IS_VINE) {
@@ -502,7 +445,7 @@ async function fastStyleChanges() {
                 elem.style.display = 'none';
                 // elem.style.visibility = 'hidden';
             });
-
+            
             waitForHtmlElmement('#vvp-logo-link > img', (elem) => {
                 elem.style.display = 'none';
                 // elem.style.visibility = 'hidden';
@@ -576,34 +519,6 @@ async function fastStyleChanges() {
                 elem.style.height = '100px';
             });
 
-        }
-
-        if (SETTINGS.EnablePaginationTop) {
-            const activeButtonId = await findActiveMenuButton();
-            if (activeButtonId) {
-                console.log('EnablePaginationTop: Active menu button ID:', activeButtonId);
-                if (activeButtonId == "vvp-items-button--seller") {
-                    waitForHtmlElmement('div.a-text-center[role="navigation"]', (elem) => {
-                        var clonedDiv = elem.cloneNode(true);
-                        //clonedDiv.style.marginTop = '-25px';
-                        clonedDiv.style.marginBottom = '10px';
-                        var parentContainer = document.getElementById('vvp-items-grid-container');
-                        if (parentContainer) {
-                            var pTag = parentContainer.querySelector('p');
-                            var vvpItemsGridDiv = document.getElementById('vvp-items-grid');
-                            if (pTag && vvpItemsGridDiv) {
-                                parentContainer.insertBefore(clonedDiv, vvpItemsGridDiv);
-                            } else {
-                                console.error('EnablePaginationTop: Required elements not found inside the parent container.');
-                            }
-                        } else {
-                            console.error('EnablePaginationTop: Parent container not found.');
-                        }
-                    });
-                }
-            } else {
-                console.log('EnablePaginationTop: No active menu button found.');
-            }
         }
     } else if (SITE_IS_SHOPPING) {
 
