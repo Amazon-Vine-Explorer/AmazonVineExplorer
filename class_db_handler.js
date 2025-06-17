@@ -1,9 +1,3 @@
-/*
-    global
-        SETTINGS,
-        ave_eventhandler,
-*/
-
 console.log('loaded db_handler.js');
 class DB_HANDLER {
     #version;
