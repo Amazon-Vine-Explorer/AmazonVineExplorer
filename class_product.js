@@ -1,5 +1,5 @@
+// eslint-disable-next-line no-unused-vars
 class Product {
-  
     id;
     link;
     description_full;
@@ -10,6 +10,7 @@ class Product {
     data_img_alt;
     data_asin;
     data_asin_is_parent;
+    data_is_pre_release;
     data_childs;
     data_estimated_tax;
     data_estimated_tax_prize;
@@ -19,8 +20,9 @@ class Product {
     data_limited_quantity;
     data_catalogSize;
     real_prize;
-    isFav = false;
-    isNew = true;
+    isFav = 0;
+    isNew = 1;
+    isNotified = false;
     gotRemoved = false;
     ts_firstSeen = unixTimeStamp();
     ts_lastSeen = unixTimeStamp();
