@@ -1,5 +1,3 @@
-# !!! Attention !!! Something seems to be severely broken, do not update !!!
-
 # Amazon Vine Explorer
 
 Makes the Amazon Vine Website even a bit better
