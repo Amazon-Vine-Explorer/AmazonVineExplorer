@@ -2,5 +2,3 @@ tempNotes.*
 local_only_test.js
 sqlite3.js
 .unotes/
-node_modules/
-package-lock.json
